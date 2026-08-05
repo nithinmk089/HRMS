@@ -1,0 +1,187 @@
+<div class="container-fluid p-4">
+  <!-- Header -->
+  <div class="d-flex justify-content-between align-items-center mb-4">
+    <div>
+      <h1 class="h3 fw-bold mb-1"><i class="bi bi-file-earmark-spreadsheet-fill text-primary me-2"></i> Enterprise Data Import Hub</h1>
+      <p class="text-muted small mb-0">Upload Excel/CSV data files for Master Data, Employee Directory, and Miscellaneous Data Items.</p>
+    </div>
+  </div>
+
+  <!-- Main Import Card -->
+  <div class="card border-0 shadow-sm rounded-4">
+    <!-- Tabs Header -->
+    <div class="card-header bg-transparent border-bottom p-0">
+      <ul class="nav nav-tabs card-header-tabs m-0 px-3">
+        <li class="nav-item">
+          <button class="nav-link px-4 py-3 fw-semibold" [ngClass]="{active: activeTab === 'employees'}" (click)="setTab('employees')">
+            <i class="bi bi-people-fill me-2 text-primary"></i> Employee Data Import
+          </button>
+        </li>
+        <li class="nav-item">
+          <button class="nav-link px-4 py-3 fw-semibold" [ngClass]="{active: activeTab === 'master-data'}" (click)="setTab('master-data')">
+            <i class="bi bi-diagram-3-fill me-2 text-success"></i> Master Data Import
+          </button>
+        </li>
+        <li class="nav-item">
+          <button class="nav-link px-4 py-3 fw-semibold" [ngClass]="{active: activeTab === 'operational'}" (click)="setTab('operational')">
+            <i class="bi bi-layers-fill me-2 text-warning"></i> Miscellaneous
+          </button>
+        </li>
+      </ul>
+    </div>
+
+    <div class="card-body p-4">
+      <!-- TAB 1: EMPLOYEE DATA IMPORT -->
+      @if (activeTab === 'employees') {
+        <div class="tab-pane-content">
+          <div class="d-flex justify-content-between align-items-center mb-3">
+            <div>
+              <h5 class="fw-bold mb-1">Employee Directory Upload</h5>
+              <p class="text-muted small mb-0">Bulk import employee records into HR master. Requires <span class="badge bg-primary">SYSADMIN</span> or <span class="badge bg-info">HRADMIN</span> authorization.</p>
+            </div>
+            <button class="btn btn-outline-primary btn-sm" (click)="downloadTemplate('employees')">
+              <i class="bi bi-download me-1"></i> Download Sample CSV Template
+            </button>
+          </div>
+        </div>
+      }
+
+      <!-- TAB 2: MASTER DATA IMPORT -->
+      @if (activeTab === 'master-data') {
+        <div class="tab-pane-content">
+          <div class="row align-items-center mb-3">
+            <div class="col-md-6">
+              <h5 class="fw-bold mb-1">Master Data Catalog Upload</h5>
+              <p class="text-muted small mb-0">Select master data type and upload CSV/Excel to populate organization structures.</p>
+            </div>
+            <div class="col-md-6 d-flex gap-2 justify-content-end">
+              <select class="form-select form-select-sm w-auto" [(ngModel)]="selectedMasterEntity">
+                @for (item of masterEntities; track item.code) {
+                  <option [value]="item.code">{{ item.name }}</option>
+                }
+              </select>
+              <button class="btn btn-outline-success btn-sm" (click)="downloadTemplate(selectedMasterEntity)">
+                <i class="bi bi-download me-1"></i> Download {{ selectedMasterEntity }} Template
+              </button>
+            </div>
+          </div>
+        </div>
+      }
+
+      <!-- TAB 3: MISCELLANEOUS DATA IMPORT -->
+      @if (activeTab === 'operational') {
+        <div class="tab-pane-content">
+          <div class="row align-items-center mb-3">
+            <div class="col-md-6">
+              <h5 class="fw-bold mb-1">Miscellaneous Data Upload</h5>
+              <p class="text-muted small mb-0">Import attendance logs, leave balances, or other operational records.</p>
+            </div>
+            <div class="col-md-6 d-flex gap-2 justify-content-end">
+              <select class="form-select form-select-sm w-auto" [(ngModel)]="selectedOpEntity">
+                @for (item of opEntities; track item.code) {
+                  <option [value]="item.code">{{ item.name }}</option>
+                }
+              </select>
+              <button class="btn btn-outline-warning btn-sm" (click)="downloadTemplate(selectedOpEntity)">
+                <i class="bi bi-download me-1"></i> Download {{ selectedOpEntity }} Template
+              </button>
+            </div>
+          </div>
+        </div>
+      }
+
+      <!-- Drag & Drop Upload Zone -->
+      <div class="drop-zone my-4 p-5 text-center rounded-3 border-2 border-dashed"
+           [ngClass]="{'border-primary bg-light': isDragging, 'border-secondary': !isDragging}"
+           (dragover)="onDragOver($event)"
+           (dragleave)="onDragLeave($event)"
+           (drop)="onDrop($event)">
+        <i class="bi bi-cloud-arrow-up-fill display-4 text-primary mb-3"></i>
+        <h5 class="fw-semibold">Drag & Drop CSV or Excel File Here</h5>
+        <p class="text-muted small">Supports <code>.csv</code>, <code>.xlsx</code> formats up to 10 MB</p>
+        <div class="mt-3">
+          <input type="file" #fileInput hidden (change)="onFileSelected($event)" accept=".csv,.xlsx">
+          <button type="button" class="btn btn-primary btn-sm px-4" (click)="fileInput.click()">
+            <i class="bi bi-folder2-open me-1"></i> Browse Computer File
+          </button>
+        </div>
+      </div>
+
+      <!-- File Selected State -->
+      @if (selectedFile) {
+        <div class="selected-file-card p-3 mb-4 rounded bg-light border d-flex align-items-center justify-content-between">
+          <div class="d-flex align-items-center gap-3">
+            <i class="bi bi-file-earmark-excel-fill fs-2 text-success"></i>
+            <div>
+              <div class="fw-bold">{{ selectedFile.name }}</div>
+              <small class="text-muted">{{ (selectedFile.size / 1024).toFixed(1) }} KB</small>
+            </div>
+          </div>
+          <div class="d-flex gap-2">
+            <button class="btn btn-outline-danger btn-sm" (click)="selectedFile = null" [disabled]="isUploading">
+              <i class="bi bi-x-circle"></i> Remove
+            </button>
+            <button class="btn btn-success btn-sm px-4" (click)="uploadFile()" [disabled]="isUploading">
+              @if (isUploading) {
+                <span class="spinner-border spinner-border-sm me-1" role="status"></span> Importing...
+              } @else {
+                <i class="bi bi-cloud-upload-fill me-1"></i> Start Import Now
+              }
+            </button>
+          </div>
+        </div>
+      }
+
+      @if (errorMessage) {
+        <div class="alert alert-danger mb-4">
+          <i class="bi bi-exclamation-octagon-fill me-2"></i> {{ errorMessage }}
+        </div>
+      }
+
+      <!-- Import Summary & Errors Report -->
+      @if (importResult) {
+        <div class="import-report mt-4">
+          <div class="alert" [ngClass]="{'alert-success': importResult.failedCount === 0, 'alert-warning': importResult.failedCount > 0}">
+            <h5 class="alert-heading fw-bold mb-1">
+              <i class="bi me-2" [ngClass]="{'bi-check-circle-fill': importResult.failedCount === 0, 'bi-exclamation-triangle-fill': importResult.failedCount > 0}"></i>
+              {{ importResult.message }}
+            </h5>
+            <div class="d-flex gap-4 mt-2">
+              <div><strong>Total Rows:</strong> {{ importResult.totalRows }}</div>
+              <div class="text-success"><strong>Successful:</strong> {{ importResult.successCount }}</div>
+              <div class="text-danger"><strong>Failed:</strong> {{ importResult.failedCount }}</div>
+            </div>
+          </div>
+
+          @if (importResult.errors && importResult.errors.length > 0) {
+            <div class="card border-danger mt-3">
+              <div class="card-header bg-danger text-white fw-bold">
+                <i class="bi bi-list-nested me-2"></i> Failed Rows & Errors Summary
+              </div>
+              <div class="table-responsive">
+                <table class="table table-sm table-hover mb-0">
+                  <thead>
+                    <tr>
+                      <th style="width: 80px;">Row #</th>
+                      <th>Identifier / Code</th>
+                      <th>Error Description</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    @for (err of importResult.errors; track err.rowIndex) {
+                      <tr>
+                        <td><span class="badge bg-secondary">Row {{ err.rowIndex }}</span></td>
+                        <td><code>{{ err.identifier }}</code></td>
+                        <td class="text-danger">{{ err.errorMessage }}</td>
+                      </tr>
+                    }
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          }
+        </div>
+      }
+    </div>
+  </div>
+</div>

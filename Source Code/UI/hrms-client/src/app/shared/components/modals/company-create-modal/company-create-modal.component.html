@@ -1,0 +1,100 @@
+@if (isOpen) {
+  <div class="modal-backdrop-custom"></div>
+  <div class="modal fade show d-block" tabindex="-1" role="dialog" aria-modal="true">
+    <div class="modal-dialog modal-dialog-centered modal-lg">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title">{{ company ? 'Edit Company' : 'Create New Company' }}</h5>
+          <button type="button" class="btn-close" (click)="onClose()" aria-label="Close"></button>
+        </div>
+        <form [formGroup]="companyForm" (ngSubmit)="onSubmit()">
+          <div class="modal-body">
+            <div class="row">
+              <div class="col-md-6 mb-3">
+                <label class="form-label">Tenant <span class="text-danger">*</span></label>
+                <select class="form-select w-100" formControlName="tenantId" [attr.disabled]="company !== null ? true : null">
+                  <option value="">Select Tenant</option>
+                  @for (t of tenants; track t.tenantId) {
+                    <option [value]="t.tenantId">{{ t.tenantName }}</option>
+                  }
+                </select>
+                @if (submitted && f['tenantId'].errors) {
+                  <div class="text-danger fs-8 mt-1">Tenant is required.</div>
+                }
+              </div>
+
+              <div class="col-md-6 mb-3">
+                <label class="form-label">Company Code <span class="text-danger">*</span></label>
+                <input type="text" class="form-control" formControlName="companyCode" [readonly]="company !== null" placeholder="e.g., HQ" maxlength="50">
+                @if (submitted && f['companyCode'].errors) {
+                  <div class="text-danger fs-8 mt-1">Company Code is required.</div>
+                }
+              </div>
+            </div>
+
+            <div class="row">
+              <div class="col-md-6 mb-3">
+                <label class="form-label">Company Name <span class="text-danger">*</span></label>
+                <input type="text" class="form-control" formControlName="companyName" placeholder="e.g., Globex HQ" maxlength="200">
+                @if (submitted && f['companyName'].errors) {
+                  <div class="text-danger fs-8 mt-1">
+                    @if (f['companyName'].errors['required']) {
+                      <span>Company Name is required.</span>
+                    }
+                    @if (f['companyName'].errors['maxlength']) {
+                      <span>Company Name cannot exceed 200 characters.</span>
+                    }
+                  </div>
+                }
+              </div>
+
+              <div class="col-md-6 mb-3">
+                <label class="form-label">Legal Name</label>
+                <input type="text" class="form-control" formControlName="legalName" placeholder="e.g., Globex Industries Inc" maxlength="250">
+              </div>
+            </div>
+
+            <div class="row">
+              <div class="col-md-6 mb-3">
+                <label class="form-label">Tax Number / VAT</label>
+                <input type="text" class="form-control" formControlName="taxNumber" placeholder="e.g., TX12345678" maxlength="50">
+              </div>
+
+              <div class="col-md-6 mb-3">
+                <label class="form-label">Email</label>
+                <input type="email" class="form-control" formControlName="email" placeholder="e.g., contact@globex.com" maxlength="200">
+                @if (submitted && f['email'].errors) {
+                  <div class="text-danger fs-8 mt-1">Please enter a valid email address.</div>
+                }
+              </div>
+            </div>
+
+            <div class="row">
+              <div class="col-md-6 mb-3">
+                <label class="form-label">Phone</label>
+                <input type="text" class="form-control" formControlName="phone" placeholder="e.g., +1 555-0199" maxlength="50">
+              </div>
+
+              <div class="col-md-6 mb-3">
+                <label class="form-label">Website</label>
+                <input type="text" class="form-control" formControlName="website" placeholder="e.g., https://globex.com" maxlength="200">
+              </div>
+            </div>
+
+            @if (errorMessage) {
+              <div class="alert alert-danger fs-8 p-2 my-2">
+                {{ errorMessage }}
+              </div>
+            }
+          </div>
+          <div class="modal-footer">
+            <button type="button" class="btn btn-outline" (click)="onClose()">Cancel</button>
+            <button type="submit" class="btn btn-primary" [disabled]="saving">
+              {{ saving ? 'Saving...' : 'Save Company' }}
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+}

@@ -1,0 +1,80 @@
+@if (isOpen) {
+  <div class="modal-backdrop-custom"></div>
+  <div class="modal fade show d-block" tabindex="-1" role="dialog" aria-modal="true">
+    <div class="modal-dialog modal-dialog-centered">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title">{{ department ? 'Edit Department' : 'Create New Department' }}</h5>
+          <button type="button" class="btn-close" (click)="onClose()" aria-label="Close"></button>
+        </div>
+        <form [formGroup]="deptForm" (ngSubmit)="onSubmit()">
+          <div class="modal-body">
+            <div class="mb-3">
+              <label class="form-label">Tenant <span class="text-danger">*</span></label>
+              <select class="form-select w-100" formControlName="tenantId" (change)="onTenantChange()" [attr.disabled]="department !== null ? true : null">
+                <option value="">Select Tenant</option>
+                @for (t of tenants; track t.tenantId) {
+                  <option [value]="t.tenantId">{{ t.tenantName }}</option>
+                }
+              </select>
+              @if (submitted && f['tenantId'].errors) {
+                <div class="text-danger fs-8 mt-1">Tenant is required.</div>
+              }
+            </div>
+
+            <div class="mb-3">
+              <label class="form-label">Business Unit <span class="text-danger">*</span></label>
+              <select class="form-select w-100" formControlName="businessUnitId">
+                <option value="">Select Business Unit</option>
+                @for (bu of businessUnits; track bu.businessUnitId) {
+                  <option [value]="bu.businessUnitId">{{ bu.businessUnitName }}</option>
+                }
+              </select>
+              @if (submitted && f['businessUnitId'].errors) {
+                <div class="text-danger fs-8 mt-1">Business Unit is required.</div>
+              }
+            </div>
+
+            <div class="mb-3">
+              <label class="form-label">Parent Department</label>
+              <select class="form-select w-100" formControlName="parentDepartmentId">
+                <option value="">None (Top-Level)</option>
+                @for (dept of potentialParents; track dept.departmentId) {
+                  <option [value]="dept.departmentId">{{ dept.departmentName }}</option>
+                }
+              </select>
+            </div>
+
+            <div class="mb-3">
+              <label class="form-label">Department Code <span class="text-danger">*</span></label>
+              <input type="text" class="form-control" formControlName="departmentCode" [readonly]="department !== null" placeholder="e.g., HR" maxlength="50">
+              @if (submitted && f['departmentCode'].errors) {
+                <div class="text-danger fs-8 mt-1">Department Code is required.</div>
+              }
+            </div>
+
+            <div class="mb-3">
+              <label class="form-label">Department Name <span class="text-danger">*</span></label>
+              <input type="text" class="form-control" formControlName="departmentName" placeholder="e.g., Human Resources" maxlength="200">
+              @if (submitted && f['departmentName'].errors) {
+                <div class="text-danger fs-8 mt-1">Department Name is required.</div>
+              }
+            </div>
+
+            @if (errorMessage) {
+              <div class="alert alert-danger fs-8 p-2 my-2">
+                {{ errorMessage }}
+              </div>
+            }
+          </div>
+          <div class="modal-footer">
+            <button type="button" class="btn btn-outline" (click)="onClose()">Cancel</button>
+            <button type="submit" class="btn btn-primary" [disabled]="saving">
+              {{ saving ? 'Saving...' : 'Save Department' }}
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+}

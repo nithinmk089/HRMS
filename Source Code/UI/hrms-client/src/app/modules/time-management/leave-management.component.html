@@ -1,0 +1,229 @@
+<div class="page-toolbar">
+  <div>
+    <h1 class="page-title text-main">Leave Management</h1>
+    <div class="text-secondary mt-1">Configure leave types, manage leave policies, and process approval queues</div>
+  </div>
+  <div class="d-flex gap-2">
+    <button class="btn btn-outline btn-sm" (click)="openPolicyModal()">
+      <i class="bi bi-file-earmark-text me-1"></i> Create Policy
+    </button>
+    <button class="btn btn-primary btn-sm" (click)="openTypeModal()">
+      <i class="bi bi-plus-lg me-1"></i> Add Leave Type
+    </button>
+  </div>
+</div>
+
+<!-- Search/Filter Panel -->
+<div class="card p-4 mb-4 mt-2">
+  <div class="row g-3">
+    <div class="col-12 col-md-5">
+      <label class="form-label fs-8 text-secondary">Tenant Group <span class="text-danger">*</span></label>
+      <select class="form-select w-100" [(ngModel)]="selectedTenantId" (change)="onTenantChange()">
+        @for (t of tenants; track t.tenantId) {
+          <option [value]="t.tenantId">{{ t.tenantName }}</option>
+        }
+      </select>
+    </div>
+    <div class="col-12 col-md-4">
+      <label class="form-label fs-8 text-secondary">Leave Types Summary</label>
+      <div class="d-flex flex-wrap gap-2 mt-1">
+        @for (lt of leaveTypes; track lt.leaveTypeId) {
+          <span class="badge" [ngClass]="lt.isPaid ? 'badge-success' : 'badge-warning'">
+            {{ lt.leaveCode }} · {{ lt.isPaid ? 'Paid' : 'Unpaid' }}
+          </span>
+        }
+        @if (leaveTypes.length === 0) {
+          <span class="text-muted fs-8">No leave types configured.</span>
+        }
+      </div>
+    </div>
+    <div class="col-12 col-md-3 d-flex gap-2 align-items-end">
+      <button class="btn btn-primary w-100" (click)="loadLeaveRequests()">Refresh Queue</button>
+    </div>
+  </div>
+</div>
+
+<!-- Data Grid -->
+<div class="card">
+  <div class="table-responsive">
+    <table class="table-enterprise">
+      <thead>
+        <tr>
+          <th>Employee</th>
+          <th>Leave Type</th>
+          <th>Period</th>
+          <th>Days</th>
+          <th>Status</th>
+          <th style="width: 150px; text-align: center;">Actions</th>
+        </tr>
+      </thead>
+      <tbody>
+        <!-- Loading Skeletons -->
+        @if (loading) {
+          @for (row of [1, 2, 3, 4, 5]; track $index) {
+            <tr>
+              @for (col of [1, 2, 3, 4, 5, 6]; track $index) {
+                <td>
+                  <div class="skeleton-shimmer" style="height: 16px; border-radius: 4px; background: #EAEFF4; width: 80%;"></div>
+                </td>
+              }
+            </tr>
+          }
+        }
+
+        <!-- Empty State -->
+        @if (!loading && leaveRequests.length === 0) {
+          <tr>
+            <td colspan="6" class="text-center py-5 text-secondary">
+              <i class="bi bi-folder-x fs-2 d-block mb-2 text-muted"></i>
+              No leave requests in the approval queue.
+            </td>
+          </tr>
+        }
+
+        <!-- Table Rows -->
+        @if (!loading) {
+          @for (lr of leaveRequests; track lr.leaveRequestId) {
+            <tr>
+              <td class="fw-bold">{{ lr.employeeName }}</td>
+              <td>{{ lr.leaveName }}</td>
+              <td>{{ lr.fromDate | date:'dd-MMM-yyyy' }} → {{ lr.toDate | date:'dd-MMM-yyyy' }}</td>
+              <td>{{ lr.totalDays }}</td>
+              <td>
+                <span class="badge" [ngClass]="{
+                  'badge-success': lr.requestStatus === 'Approved',
+                  'badge-danger': lr.requestStatus === 'Rejected',
+                  'badge-warning': lr.requestStatus === 'Pending' || lr.requestStatus === 'Submitted'
+                }">
+                  {{ lr.requestStatus }}
+                </span>
+              </td>
+              <td class="text-center">
+                <div class="d-flex justify-content-center gap-2">
+                  @if (lr.requestStatus === 'Pending' || lr.requestStatus === 'Submitted') {
+                    <button class="btn btn-outline btn-sm p-1" title="Approve" (click)="approveLeave(lr)">
+                      <i class="bi bi-check-circle text-success"></i>
+                    </button>
+                    <button class="btn btn-outline btn-sm p-1" title="Reject" (click)="rejectLeave(lr)">
+                      <i class="bi bi-x-circle text-danger"></i>
+                    </button>
+                  }
+                </div>
+              </td>
+            </tr>
+          }
+        }
+      </tbody>
+    </table>
+  </div>
+</div>
+
+<!-- Leave Type Create Modal -->
+@if (showTypeModal) {
+  <div class="modal-backdrop-custom"></div>
+}
+@if (showTypeModal) {
+  <div class="modal fade show d-block" tabindex="-1" role="dialog" aria-modal="true">
+    <div class="modal-dialog modal-dialog-centered">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title">Add Leave Type</h5>
+          <button type="button" class="btn-close" (click)="closeTypeModal()" aria-label="Close"></button>
+        </div>
+        <form [formGroup]="typeForm" (ngSubmit)="saveLeaveType()">
+          <div class="modal-body">
+            @if (errorMessage) {
+              <div class="alert alert-danger fs-8 p-2 my-2">
+                {{ errorMessage }}
+              </div>
+            }
+            <div class="mb-3">
+              <label class="form-label">Leave Code <span class="text-danger">*</span></label>
+              <input type="text" class="form-control" formControlName="leaveCode" placeholder="e.g., CL, SL, EL">
+            </div>
+            <div class="mb-3">
+              <label class="form-label">Leave Name <span class="text-danger">*</span></label>
+              <input type="text" class="form-control" formControlName="leaveName" placeholder="e.g., Casual Leave">
+            </div>
+            <div class="mb-3">
+              <label class="form-label">Paid Leave</label>
+              <div class="d-flex align-items-center gap-2 mt-1">
+                <input type="checkbox" formControlName="isPaid" id="paidSwitch" style="width: 16px; height: 16px;">
+                <label for="paidSwitch" class="fs-8 text-secondary">This leave type is paid</label>
+              </div>
+            </div>
+            <div class="mb-3">
+              <label class="form-label">Accrual Based</label>
+              <div class="d-flex align-items-center gap-2 mt-1">
+                <input type="checkbox" formControlName="isAccrualBased" id="accrualSwitch" style="width: 16px; height: 16px;">
+                <label for="accrualSwitch" class="fs-8 text-secondary">Leave accrues over time</label>
+              </div>
+            </div>
+          </div>
+          <div class="modal-footer">
+            <button type="button" class="btn btn-outline" (click)="closeTypeModal()">Cancel</button>
+            <button type="submit" class="btn btn-primary" [disabled]="saving || typeForm.invalid">
+              {{ saving ? 'Saving...' : 'Save Leave Type' }}
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+}
+
+<!-- Leave Policy Modal -->
+@if (showPolicyModal) {
+  <div class="modal-backdrop-custom"></div>
+}
+@if (showPolicyModal) {
+  <div class="modal fade show d-block" tabindex="-1" role="dialog" aria-modal="true">
+    <div class="modal-dialog modal-dialog-centered">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title">Create Leave Policy</h5>
+          <button type="button" class="btn-close" (click)="closePolicyModal()" aria-label="Close"></button>
+        </div>
+        <form [formGroup]="policyForm" (ngSubmit)="savePolicy()">
+          <div class="modal-body">
+            <div class="mb-3">
+              <label class="form-label">Policy Name <span class="text-danger">*</span></label>
+              <input type="text" class="form-control" formControlName="policyName" placeholder="e.g., Annual Leave Policy 2026">
+            </div>
+            <div class="mb-3">
+              <label class="form-label">Leave Type <span class="text-danger">*</span></label>
+              <select class="form-select w-100" formControlName="leaveTypeId">
+                @for (t of leaveTypes; track t.leaveTypeId) {
+                  <option [value]="t.leaveTypeId">{{ t.leaveName }}</option>
+                }
+              </select>
+            </div>
+            <div class="row">
+              <div class="col-6 mb-3">
+                <label class="form-label">Effective From <span class="text-danger">*</span></label>
+                <input type="date" class="form-control" formControlName="effectiveFrom">
+              </div>
+              <div class="col-6 mb-3">
+                <label class="form-label">Effective To</label>
+                <input type="date" class="form-control" formControlName="effectiveTo">
+              </div>
+            </div>
+          </div>
+          <div class="modal-footer">
+            <button type="button" class="btn btn-outline" (click)="closePolicyModal()">Cancel</button>
+            <button type="submit" class="btn btn-primary" [disabled]="saving || policyForm.invalid">
+              {{ saving ? 'Saving...' : 'Create Policy' }}
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+}
+
+<!-- Notification Toast -->
+@if (toastMessage) {
+  <div class="toast-custom bg-dark text-white p-3 rounded">
+    <i class="bi bi-info-circle-fill me-2 text-primary"></i> {{ toastMessage }}
+  </div>
+}

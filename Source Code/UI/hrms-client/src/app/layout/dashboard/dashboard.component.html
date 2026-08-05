@@ -1,0 +1,335 @@
+<div id="kt_app_wrapper">
+    <!-- SIDEBAR NAVIGATION MENU -->
+    <aside id="kt_app_sidebar">
+        <div class="sidebar-logo">
+            <i class="bi bi-cpu-fill text-primary"></i>
+            Enterprise HRMS
+        </div>
+        
+        <ul class="sidebar-menu">
+            <li>
+                <a routerLink="/dashboard" routerLinkActive="active" [routerLinkActiveOptions]="{exact: true}" class="nav-link-item">
+                    <i class="bi bi-grid-fill"></i> Dashboard
+                </a>
+            </li>
+            
+            <!-- System Administration Section -->
+            <li class="sidebar-section-label">Platform Control</li>
+            
+            <li>
+                <a routerLink="/data-import" routerLinkActive="active" class="nav-link-item">
+                    <i class="bi bi-file-earmark-spreadsheet-fill"></i> Data Import Hub
+                </a>
+            </li>
+            <li>
+                <a routerLink="/tenants" routerLinkActive="active" class="nav-link-item">
+                    <i class="bi bi-globe"></i> Tenants Registry
+                </a>
+            </li>
+            <li>
+                <a routerLink="/configurations" routerLinkActive="active" class="nav-link-item">
+                    <i class="bi bi-sliders"></i> Configurations
+                </a>
+            </li>
+
+            <!-- Organization Structure Section -->
+            <li class="sidebar-section-label">Organization Design</li>
+            
+            <li>
+                <a routerLink="/companies" routerLinkActive="active" class="nav-link-item">
+                    <i class="bi bi-buildings-fill"></i> Companies
+                </a>
+            </li>
+            <li>
+                <a routerLink="/business-units" routerLinkActive="active" class="nav-link-item">
+                    <i class="bi bi-briefcase-fill"></i> Business Units
+                </a>
+            </li>
+            <li>
+                <a routerLink="/departments" routerLinkActive="active" class="nav-link-item">
+                    <i class="bi bi-diagram-3-fill"></i> Departments Tree
+                </a>
+            </li>
+            <li>
+                <a routerLink="/designations" routerLinkActive="active" class="nav-link-item">
+                    <i class="bi bi-award-fill"></i> Designations
+                </a>
+            </li>
+            <li>
+                <a routerLink="/locations" routerLinkActive="active" class="nav-link-item">
+                    <i class="bi bi-geo-alt-fill"></i> Physical Locations
+                </a>
+            </li>
+            <li>
+                <a routerLink="/cost-centers" routerLinkActive="active" class="nav-link-item">
+                    <i class="bi bi-cash-stack"></i> Cost Centers
+                </a>
+            </li>
+
+            <!-- Core Human Resources Section -->
+            <li class="sidebar-section-label">Core HR Lifecycle</li>
+            
+            <li>
+                <a routerLink="/hr/employees" routerLinkActive="active" class="nav-link-item">
+                    <i class="bi bi-people-fill"></i> Employee Master
+                </a>
+            </li>
+            <li>
+                <a routerLink="/data-import" routerLinkActive="active" class="nav-link-item">
+                    <i class="bi bi-file-earmark-spreadsheet-fill"></i> Data Import Hub
+                </a>
+            </li>
+            <li>
+                <a routerLink="/hr/transfers" routerLinkActive="active" class="nav-link-item">
+                    <i class="bi bi-arrow-left-right"></i> Transfers Workflow
+                </a>
+            </li>
+            <li>
+                <a routerLink="/hr/promotions" routerLinkActive="active" class="nav-link-item">
+                    <i class="bi bi-graph-up"></i> Promotions Workflow
+                </a>
+            </li>
+            <li>
+                <a routerLink="/onboarding" routerLinkActive="active" class="nav-link-item">
+                    <i class="bi bi-person-plus-fill"></i> Onboarding Dashboard
+                </a>
+            </li>
+            <li>
+                <a routerLink="/offboarding" routerLinkActive="active" class="nav-link-item">
+                    <i class="bi bi-box-arrow-right"></i> Offboarding Dashboard
+                </a>
+            </li>
+            <li>
+                <a routerLink="/hr/self-service" routerLinkActive="active" class="nav-link-item">
+                    <i class="bi bi-person-badge"></i> Self Service Portal
+                </a>
+            </li>
+
+            <!-- Time & Attendance Section -->
+            <li class="sidebar-section-label">Time & Attendance</li>
+            
+            <li>
+                <a routerLink="/time/shifts" routerLinkActive="active" class="nav-link-item">
+                    <i class="bi bi-clock-fill"></i> Shift Rotations
+                </a>
+            </li>
+            <li>
+                <a routerLink="/time/attendance" routerLinkActive="active" class="nav-link-item">
+                    <i class="bi bi-calendar-check-fill"></i> Daily Logs
+                </a>
+            </li>
+            <li>
+                <a routerLink="/time/leaves" routerLinkActive="active" class="nav-link-item">
+                    <i class="bi bi-airplane-fill"></i> Leave Manager
+                </a>
+            </li>
+            <li>
+                <a routerLink="/time/overtime" routerLinkActive="active" class="nav-link-item">
+                    <i class="bi bi-alarm-fill"></i> Overtime Queue
+                </a>
+            </li>
+            <li>
+                <a routerLink="/time/self-service" routerLinkActive="active" class="nav-link-item">
+                    <i class="bi bi-clipboard-check-fill"></i> Self-Service Time
+                </a>
+            </li>
+
+            <!-- Access Security Section -->
+            <li class="sidebar-section-label">Security & Identity</li>
+            
+            <li>
+                <a routerLink="/users" routerLinkActive="active" class="nav-link-item">
+                    <i class="bi bi-people-fill"></i> User Accounts
+                </a>
+            </li>
+            <li>
+                <a routerLink="/roles" routerLinkActive="active" class="nav-link-item">
+                    <i class="bi bi-shield-lock-fill"></i> Security Roles
+                </a>
+            </li>
+            <li>
+                <a routerLink="/permissions" routerLinkActive="active" class="nav-link-item">
+                    <i class="bi bi-grid-3x3-gap-fill"></i> Access Matrix
+                </a>
+            </li>
+
+            <!-- Communications Section -->
+            <li class="sidebar-section-label">Communications Control</li>
+            
+            <li>
+                <a routerLink="/notifications/dashboard" routerLinkActive="active" class="nav-link-item">
+                    <i class="bi bi-bar-chart-line-fill"></i> Delivery Analytics
+                </a>
+            </li>
+            <li>
+                <a routerLink="/notifications" routerLinkActive="active" class="nav-link-item" [routerLinkActiveOptions]="{exact: true}">
+                    <i class="bi bi-clock-history"></i> Registry Queue
+                </a>
+            </li>
+            <li>
+                <a routerLink="/notifications/templates" routerLinkActive="active" class="nav-link-item">
+                    <i class="bi bi-file-earmark-text-fill"></i> Channel Templates
+                </a>
+            </li>
+            <li>
+                <a routerLink="/notifications/preferences" routerLinkActive="active" class="nav-link-item">
+                    <i class="bi bi-bell-fill"></i> Alert Preferences
+                </a>
+            </li>
+
+            <!-- Payroll & Tax Section -->
+            <li class="sidebar-section-label">Payroll & Tax</li>
+            <li>
+                <a routerLink="/payroll/dashboard" routerLinkActive="active" class="nav-link-item">
+                    <i class="bi bi-currency-dollar"></i> Payroll Dashboard
+                </a>
+            </li>
+            <li>
+                <a routerLink="/payroll/runs" routerLinkActive="active" class="nav-link-item">
+                    <i class="bi bi-play-circle-fill"></i> Process Payroll Run
+                </a>
+            </li>
+            <li>
+                <a routerLink="/payroll/tax" routerLinkActive="active" class="nav-link-item">
+                    <i class="bi bi-percent"></i> Tax Regimes & Slabs
+                </a>
+            </li>
+            <li>
+                <a routerLink="/payroll/payslips" routerLinkActive="active" class="nav-link-item">
+                    <i class="bi bi-file-earmark-pdf-fill"></i> Employee Payslips
+                </a>
+            </li>
+
+            <!-- Performance Management Section -->
+            <li class="sidebar-section-label">Performance (PMS)</li>
+            <li>
+                <a routerLink="/performance/dashboard" routerLinkActive="active" class="nav-link-item">
+                    <i class="bi bi-speedometer2"></i> PMS Dashboard
+                </a>
+            </li>
+            <li>
+                <a routerLink="/performance/goals" routerLinkActive="active" class="nav-link-item">
+                    <i class="bi bi-target"></i> Goal Management
+                </a>
+            </li>
+            <li>
+                <a routerLink="/performance/feedback" routerLinkActive="active" class="nav-link-item">
+                    <i class="bi bi-chat-left-text-fill"></i> 360 Feedback
+                </a>
+            </li>
+            <li>
+                <a routerLink="/performance/self-assessments" routerLinkActive="active" class="nav-link-item">
+                    <i class="bi bi-card-checklist"></i> Appraisals & Self-Assmt
+                </a>
+            </li>
+
+            <!-- Learning & Compliance Section -->
+            <li class="sidebar-section-label">Learning & Compliance</li>
+            <li>
+                <a routerLink="/learning/dashboard" routerLinkActive="active" class="nav-link-item">
+                    <i class="bi bi-mortarboard-fill"></i> LMS Dashboard
+                </a>
+            </li>
+            <li>
+                <a routerLink="/learning/courses" routerLinkActive="active" class="nav-link-item">
+                    <i class="bi bi-book-half"></i> Course Catalog
+                </a>
+            </li>
+            <li>
+                <a routerLink="/learning/assessments" routerLinkActive="active" class="nav-link-item">
+                    <i class="bi bi-patch-question-fill"></i> LMS Assessments
+                </a>
+            </li>
+            <li>
+                <a routerLink="/learning/compliance" routerLinkActive="active" class="nav-link-item">
+                    <i class="bi bi-shield-check"></i> Compliance Programs
+                </a>
+            </li>
+        </ul>
+    </aside>
+
+    <!-- MAIN LAYOUT WRAPPER -->
+    <div id="kt_app_main">
+        <!-- APPLICATION TOP APP BAR -->
+        <header id="kt_app_header">
+            <div class="d-flex align-items-center gap-2">
+                <button type="button" class="btn btn-sm btn-outline-primary d-flex align-items-center gap-1 shadow-sm" (click)="triggerLiveSignalRTest()" title="Trigger SignalR Live Notification Test">
+                    <i class="bi bi-broadcast text-danger"></i>
+                    <span class="d-none d-sm-inline fw-semibold fs-8">Test SignalR Live</span>
+                </button>
+            </div>
+            
+            <div class="d-flex align-items-center gap-3">
+                <!-- SIGNALR LIVE NOTIFICATION BELL ICON -->
+                <div class="position-relative me-1">
+                    <button type="button" class="btn btn-light btn-sm rounded-circle p-0 d-flex align-items-center justify-content-center shadow-none position-relative"
+                            style="width: 38px; height: 38px; background: #f1f5f9;" (click)="toggleDropdown()" title="Real-Time SignalR Notifications">
+                        <i class="bi bi-bell-fill fs-5 text-primary"></i>
+                        <span *ngIf="unreadCount > 0" class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger shadow-sm fs-9">
+                            {{ unreadCount > 99 ? '99+' : unreadCount }}
+                        </span>
+                    </button>
+
+                    <!-- NOTIFICATION DROPDOWN MENU -->
+                    <div *ngIf="showDropdown" class="position-absolute end-0 mt-2 card border-0 shadow-lg rounded-3 overflow-hidden" style="width: 340px; z-index: 1090;">
+                        <div class="card-header bg-primary text-white py-2 px-3 d-flex justify-content-between align-items-center">
+                            <span class="fw-bold fs-8 d-flex align-items-center gap-2">
+                                <i class="bi bi-broadcast"></i> SignalR Real-Time Alerts
+                            </span>
+                            <span class="badge bg-white text-primary fs-9">{{ recentNotifications.length }} Recent</span>
+                        </div>
+                        <div class="list-group list-group-flush overflow-auto" style="max-height: 280px;">
+                            <div *ngIf="recentNotifications.length === 0" class="text-center py-4 text-muted fs-8">
+                                No real-time notifications received yet.
+                            </div>
+                            <div *ngFor="let item of recentNotifications" class="list-group-item list-group-item-action p-3">
+                                <div class="d-flex justify-content-between align-items-start mb-1">
+                                    <span class="fw-bold text-dark fs-8">{{ item.subject || item.title || 'System Notification' }}</span>
+                                    <span class="text-muted fs-9">{{ item.createdDate | date:'shortTime' }}</span>
+                                </div>
+                                <p class="text-secondary small mb-0">{{ item.body || item.message }}</p>
+                            </div>
+                        </div>
+                        <div class="card-footer bg-light text-center py-2 border-top-0">
+                            <a routerLink="/notifications" class="text-primary text-decoration-none fw-semibold fs-8" (click)="showDropdown = false">
+                                View Full Notification Registry <i class="bi bi-arrow-right me-1"></i>
+                            </a>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="d-flex flex-column align-items-end">
+                  <span class="text-secondary fw-semibold fs-8">Admin Operator</span>
+                  <span class="text-muted fs-9">SYSADMIN</span>
+                </div>
+                <div class="user-avatar">
+                    OP
+                </div>
+                <!-- Sign Out -->
+                <button (click)="logout()" class="btn btn-outline btn-sm py-1 px-2 border-0" title="Logout Session" style="height: 32px; width: 32px;">
+                    <i class="bi bi-box-arrow-right text-danger fs-5"></i>
+                </button>
+            </div>
+        </header>
+
+        <!-- LIVE SIGNALR POPUP TOAST ALERT -->
+        <div *ngIf="activeToast" class="toast-container position-fixed top-0 end-0 p-3" style="z-index: 1100;">
+            <div class="toast show border-0 shadow-lg bg-dark text-white rounded-3 overflow-hidden" role="alert">
+                <div class="toast-header bg-primary text-white border-0 py-2">
+                    <i class="bi bi-broadcast me-2"></i>
+                    <strong class="me-auto fs-8">{{ activeToast.subject || activeToast.title || 'Live SignalR Alert' }}</strong>
+                    <small class="text-white-50">Just now</small>
+                    <button type="button" class="btn-close btn-close-white ms-2" (click)="closeToast()"></button>
+                </div>
+                <div class="toast-body p-3 fs-8">
+                    {{ activeToast.body || activeToast.message }}
+                </div>
+            </div>
+        </div>
+
+        <!-- WORKSPACE WORK AREA -->
+        <div id="kt_app_content">
+            <router-outlet></router-outlet>
+        </div>
+    </div>
+</div>

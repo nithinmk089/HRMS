@@ -1,0 +1,351 @@
+<div class="page-toolbar">
+  <div>
+    <h1 class="page-title text-main">Employee Self Service Hub</h1>
+    <div class="text-secondary mt-1">Review your corporate profile, update contact details, and manage document submissions</div>
+  </div>
+</div>
+
+@if (isLoading) {
+  <div class="card p-5 text-center">
+    <span class="spinner-border spinner-border-lg text-primary d-block mx-auto mb-3"></span>
+    <span class="text-secondary">Loading your profile record...</span>
+  </div>
+}
+
+@if (!isLoading && employee) {
+  <!-- Welcome Portal Header with Glassmorphism / Gradients -->
+  <div class="portal-header bg-portal-gradient text-white p-4 mb-4 mt-2 rounded">
+    <div class="d-flex flex-wrap gap-4 align-items-center justify-content-between">
+      <div class="d-flex align-items-center gap-3">
+        <div class="avatar-circle-self">
+          {{ employee.firstName.charAt(0) }}{{ employee.lastName.charAt(0) }}
+        </div>
+        <div>
+          <h2 class="text-white mb-1">Welcome, {{ employee.firstName }} {{ employee.lastName }}</h2>
+          <div class="d-flex flex-wrap gap-2 text-white-50 align-items-center fs-8">
+            <span class="fw-bold">{{ employee.employeeCode }}</span>
+            <span>&bull;</span>
+            <span>Biometric ID: {{ employee.employeeNumber }}</span>
+            @if (employee.departmentName) {
+              <span>&bull;</span>
+              <span>{{ employee.departmentName }}</span>
+            }
+            @if (employee.designationName) {
+              <span>&bull;</span>
+              <span>{{ employee.designationName }}</span>
+            }
+          </div>
+        </div>
+      </div>
+      <div>
+        <span class="badge badge-success p-2 bg-glass text-white"><i class="bi bi-shield-check me-1"></i> Verified Account</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- Main Tabs Navigation -->
+  <div class="card p-2 mb-4">
+    <div class="d-flex gap-2">
+      <button class="btn btn-outline border-none w-33" [ngClass]="{'active-tab-btn': activeTab === 'profile'}" (click)="setTab('profile')">
+        <i class="bi bi-person-circle me-1"></i> My Profile
+      </button>
+      <button class="btn btn-outline border-none w-33" [ngClass]="{'active-tab-btn': activeTab === 'documents'}" (click)="setTab('documents')">
+        <i class="bi bi-folder2-open me-1"></i> Document Vault
+      </button>
+      <button class="btn btn-outline border-none w-33" [ngClass]="{'active-tab-btn': activeTab === 'history'}" (click)="setTab('history')">
+        <i class="bi bi-clock-history me-1"></i> My Service Timeline
+      </button>
+    </div>
+  </div>
+
+  <!-- Content Areas -->
+
+  <!-- Tab 1: Profile -->
+  @if (activeTab === 'profile') {
+    <div class="row">
+      <!-- Personal & Contact Details -->
+      <div class="col-12 col-md-6 mb-4">
+        <div class="card p-4 h-100">
+          <div class="d-flex justify-content-between align-items-center mb-3">
+            <h3 class="section-title text-primary"><i class="bi bi-person me-1"></i> Personal Profile</h3>
+            <button class="btn btn-outline btn-sm" (click)="openProfileEdit()">Edit Profile</button>
+          </div>
+          <div class="row g-3">
+            <div class="col-6">
+              <span class="text-secondary d-block fs-8 uppercase">Preferred Name</span>
+              <span class="text-main fw-bold">{{ employee.preferredName || '-' }}</span>
+            </div>
+            <div class="col-6">
+              <span class="text-secondary d-block fs-8 uppercase">Marital Status</span>
+              <span class="text-main fw-bold">{{ employee.maritalStatus || '-' }}</span>
+            </div>
+            <div class="col-6">
+              <span class="text-secondary d-block fs-8 uppercase">Gender</span>
+              <span class="text-main fw-bold">{{ employee.gender || '-' }}</span>
+            </div>
+            <div class="col-6">
+              <span class="text-secondary d-block fs-8 uppercase">Nationality</span>
+              <span class="text-main fw-bold">{{ employee.nationality || '-' }}</span>
+            </div>
+            <div class="col-12">
+              <span class="text-secondary d-block fs-8 uppercase">Date of Birth</span>
+              <span class="text-main fw-bold">{{ employee.dateOfBirth | date:'longDate' }}</span>
+            </div>
+          </div>
+
+          <hr class="my-4 border-light">
+
+          <div class="d-flex justify-content-between align-items-center mb-3">
+            <h3 class="section-title text-primary"><i class="bi bi-telephone me-1"></i> Contact Details</h3>
+            <button class="btn btn-outline btn-sm" (click)="openContactEdit()">Edit Contacts</button>
+          </div>
+          <div class="row g-3">
+            <div class="col-12">
+              <span class="text-secondary d-block fs-8 uppercase">Personal Email</span>
+              <span class="text-main fw-bold">{{ employee.personalEmail || '-' }}</span>
+            </div>
+            <div class="col-12">
+              <span class="text-secondary d-block fs-8 uppercase">Mobile Number</span>
+              <span class="text-main fw-bold">{{ employee.mobileNumber || '-' }}</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Employment & Hierarchy Details -->
+      <div class="col-12 col-md-6 mb-4">
+        <div class="card p-4 h-100">
+          <h3 class="section-title text-primary mb-3"><i class="bi bi-briefcase me-1"></i> Employment Mappings</h3>
+          <div class="row g-3">
+            <div class="col-6">
+              <span class="text-secondary d-block fs-8 uppercase">Company</span>
+              <span class="text-main fw-bold">{{ employee.companyName || '-' }}</span>
+            </div>
+            <div class="col-6">
+              <span class="text-secondary d-block fs-8 uppercase">Business Unit</span>
+              <span class="text-main fw-bold">{{ employee.businessUnitName || '-' }}</span>
+            </div>
+            <div class="col-6">
+              <span class="text-secondary d-block fs-8 uppercase">Department</span>
+              <span class="text-main fw-bold">{{ employee.departmentName || '-' }}</span>
+            </div>
+            <div class="col-6">
+              <span class="text-secondary d-block fs-8 uppercase">Designation</span>
+              <span class="text-main fw-bold">{{ employee.designationName || '-' }}</span>
+            </div>
+            <div class="col-6">
+              <span class="text-secondary d-block fs-8 uppercase">Location</span>
+              <span class="text-main fw-bold">{{ employee.locationName || '-' }}</span>
+            </div>
+            <div class="col-6">
+              <span class="text-secondary d-block fs-8 uppercase">Cost Center</span>
+              <span class="text-main fw-bold">{{ employee.costCenterName || '-' }}</span>
+            </div>
+            <div class="col-6">
+              <span class="text-secondary d-block fs-8 uppercase">Joining Date</span>
+              <span class="text-main fw-bold">{{ employee.joiningDate | date:'longDate' }}</span>
+            </div>
+            <div class="col-6">
+              <span class="text-secondary d-block fs-8 uppercase">Employment Type</span>
+              <span class="text-main fw-bold">{{ employee.employmentType || '-' }}</span>
+            </div>
+            <div class="col-12">
+              <span class="text-secondary d-block fs-8 uppercase">Reporting Manager</span>
+              <span class="text-main fw-bold"><i class="bi bi-person-badge me-1"></i> {{ employee.managerFullName || 'No active manager mapped' }}</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  }
+
+  <!-- Tab 2: Document Vault -->
+  @if (activeTab === 'documents') {
+    <div class="card p-4">
+      <div class="d-flex justify-content-between align-items-center mb-3">
+        <h3 class="section-title"><i class="bi bi-folder me-1 text-primary"></i> My Uploaded Documents</h3>
+        <button class="btn btn-outline btn-sm" (click)="openDocUpload()"><i class="bi bi-upload me-1"></i> Upload New</button>
+      </div>
+      <div class="table-responsive">
+        <table class="table-enterprise">
+          <thead>
+            <tr>
+              <th>Doc Category</th>
+              <th>File Name</th>
+              <th>Uploaded Date</th>
+              <th>Mime Type</th>
+              <th>Version</th>
+            </tr>
+          </thead>
+          <tbody>
+            @for (d of documents; track d.employeeDocumentID) {
+              <tr>
+                <td class="fw-bold">{{ d.documentType }}</td>
+                <td><a [href]="d.filePath" target="_blank" class="fw-bold"><i class="bi bi-file-earmark-text me-1"></i> {{ d.fileName }}</a></td>
+                <td>{{ d.createdDate | date:'mediumDate' }}</td>
+                <td>{{ d.mimeType }}</td>
+                <td><span class="badge badge-info">v{{ d.versionNumber }}</span></td>
+              </tr>
+            }
+            @if (documents.length === 0) {
+              <tr><td colspan="5" class="text-center py-4 text-secondary">No documents uploaded.</td></tr>
+            }
+          </tbody>
+        </table>
+      </div>
+    </div>
+  }
+
+  <!-- Tab 3: Timeline -->
+  @if (activeTab === 'history') {
+    <div class="card p-4">
+      <h3 class="section-title mb-3"><i class="bi bi-clock-history me-1 text-primary"></i> My Corporate Timeline</h3>
+      <div class="timeline mt-3">
+        @for (h of serviceHistory; track h.recordID) {
+          <div class="timeline-item">
+            <div class="timeline-badge" [ngClass]="{
+              'bg-success': h.recordType.toLowerCase() === 'statuschange',
+              'bg-primary': h.recordType.toLowerCase() === 'transfer',
+              'bg-info': h.recordType.toLowerCase() === 'promotion'
+            }"></div>
+            <div class="timeline-card p-3 card bg-light border-light mb-3">
+              <div class="d-flex justify-content-between align-items-center">
+                <span class="badge badge-info">{{ h.recordType }}</span>
+                <span class="text-secondary fs-8">{{ h.effectiveDate | date:'mediumDate' }}</span>
+              </div>
+              <div class="text-main fw-bold mt-2">{{ h.detailText }}</div>
+              @if (h.reason) {
+                <div class="text-secondary fs-8 mt-1 italic">Note: {{ h.reason }}</div>
+              }
+            </div>
+          </div>
+        }
+        @if (serviceHistory.length === 0) {
+          <div class="text-center py-4 text-secondary">No history timeline events registered.</div>
+        }
+      </div>
+    </div>
+  }
+
+  <!-- Standalone Modals -->
+
+  <!-- Edit Personal Profile -->
+  @if (showProfileEditModal) {
+    <div class="modal-backdrop">
+      <div class="modal-container">
+        <div class="modal-header">
+          <h4 class="card-title text-main">Edit Personal Profile</h4>
+          <button class="btn-close" (click)="showProfileEditModal = false"><i class="bi bi-x-lg"></i></button>
+        </div>
+        <div class="modal-body">
+          @if (errorMessage) {
+            <div class="alert alert-danger mb-3 p-3 rounded">{{ errorMessage }}</div>
+          }
+          <form [formGroup]="profileForm" (ngSubmit)="saveProfile()">
+            <div class="mb-3">
+              <label class="form-label">Preferred Name</label>
+              <input type="text" class="form-control" formControlName="preferredName">
+            </div>
+            <div class="mb-3">
+              <label class="form-label">Marital Status</label>
+              <select class="form-select w-100" formControlName="maritalStatus">
+                <option value="Single">Single</option>
+                <option value="Married">Married</option>
+                <option value="Divorced">Divorced</option>
+                <option value="Widowed">Widowed</option>
+              </select>
+            </div>
+            <div class="d-flex justify-content-end gap-2 mt-4">
+              <button type="button" class="btn btn-outline" (click)="showProfileEditModal = false">Cancel</button>
+              <button type="submit" class="btn btn-primary" [disabled]="saving">Save Settings</button>
+            </div>
+          </form>
+        </div>
+      </div>
+    </div>
+  }
+
+  <!-- Edit Contacts -->
+  @if (showContactEditModal) {
+    <div class="modal-backdrop">
+      <div class="modal-container">
+        <div class="modal-header">
+          <h4 class="card-title text-main">Edit Contact Channels</h4>
+          <button class="btn-close" (click)="showContactEditModal = false"><i class="bi bi-x-lg"></i></button>
+        </div>
+        <div class="modal-body">
+          @if (errorMessage) {
+            <div class="alert alert-danger mb-3 p-3 rounded">{{ errorMessage }}</div>
+          }
+          <form [formGroup]="contactForm" (ngSubmit)="saveContacts()">
+            <div class="mb-3">
+              <label class="form-label">Personal Email*</label>
+              <input type="email" class="form-control" formControlName="personalEmail">
+            </div>
+            <div class="mb-3">
+              <label class="form-label">Mobile Number*</label>
+              <input type="text" class="form-control" formControlName="mobileNumber">
+            </div>
+            <div class="d-flex justify-content-end gap-2 mt-4">
+              <button type="button" class="btn btn-outline" (click)="showContactEditModal = false">Cancel</button>
+              <button type="submit" class="btn btn-primary" [disabled]="saving">Save Contacts</button>
+            </div>
+          </form>
+        </div>
+      </div>
+    </div>
+  }
+
+  <!-- Upload Document -->
+  @if (showDocUploadModal) {
+    <div class="modal-backdrop">
+      <div class="modal-container">
+        <div class="modal-header">
+          <h4 class="card-title text-main">Upload Personal Document</h4>
+          <button class="btn-close" (click)="showDocUploadModal = false"><i class="bi bi-x-lg"></i></button>
+        </div>
+        <div class="modal-body">
+          @if (errorMessage) {
+            <div class="alert alert-danger mb-3 p-3 rounded">{{ errorMessage }}</div>
+          }
+          <form [formGroup]="docForm" (ngSubmit)="uploadDoc()">
+            <div class="mb-3">
+              <label class="form-label">Document Category*</label>
+              <select class="form-select w-100" formControlName="documentType">
+                <option value="Passport">Passport</option>
+                <option value="Visa">Visa</option>
+                <option value="PAN Card">PAN Card</option>
+                <option value="Degree Certificate">Degree Certificate</option>
+                <option value="Driver License">Driver License</option>
+                <option value="Other Attachment">Other Attachment</option>
+              </select>
+            </div>
+            <div class="mb-3">
+              <label class="form-label">File Name (Friendly)*</label>
+              <input type="text" class="form-control" formControlName="fileName" placeholder="e.g. passport_self.pdf">
+            </div>
+            <div class="mb-3">
+              <label class="form-label">Physical Upload Location (Simulation)*</label>
+              <input type="text" class="form-control" formControlName="filePath" placeholder="e.g. /uploads/self/passport.pdf">
+            </div>
+            <div class="mb-3">
+              <label class="form-label">Mime Type</label>
+              <input type="text" class="form-control" formControlName="mimeType">
+            </div>
+            <div class="d-flex justify-content-end gap-2 mt-4">
+              <button type="button" class="btn btn-outline" (click)="showDocUploadModal = false">Cancel</button>
+              <button type="submit" class="btn btn-primary" [disabled]="saving">Upload File</button>
+            </div>
+          </form>
+        </div>
+      </div>
+    </div>
+  }
+}
+
+<!-- Notification Toast -->
+@if (toastMessage) {
+  <div class="toast-custom bg-dark text-white p-3 rounded">
+    <i class="bi bi-info-circle-fill me-2 text-primary"></i> {{ toastMessage }}
+  </div>
+}

@@ -1,0 +1,13 @@
+<Solution>
+  <Project Path="HRMS.API/HRMS.API.csproj" />
+  <Project Path="HRMS.Application/HRMS.Application.csproj" />
+  <Project Path="HRMS.DatabaseCore/HRMS.DatabaseCore.sqlproj" Id="ecc3b920-7f0b-4fff-ab59-86f0a07f9f6d">
+    <Build />
+    <Deploy />
+  </Project>
+  <Project Path="HRMS.Domain/HRMS.Domain.csproj" />
+  <Project Path="HRMS.Infrastructure/HRMS.Infrastructure.csproj" />
+  <Project Path="HRMS.IntegrationTests/HRMS.IntegrationTests.csproj" />
+  <Project Path="HRMS.Persistence/HRMS.Persistence.csproj" />
+  <Project Path="HRMS.UnitTests/HRMS.UnitTests.csproj" />
+</Solution>

@@ -1,0 +1,254 @@
+<div class="page-toolbar">
+  <div>
+    <h1 class="page-title text-main">My Time & Attendance</h1>
+    <div class="text-secondary mt-1">Clock in/out, view attendance history, request leaves, and regularize attendance</div>
+  </div>
+  <div class="d-flex gap-2">
+    <button class="btn btn-outline btn-sm" (click)="openRegModal()">
+      <i class="bi bi-check2-circle me-1"></i> Regularize
+    </button>
+    <button class="btn btn-primary btn-sm" (click)="openLeaveModal()">
+      <i class="bi bi-plus-lg me-1"></i> Request Leave
+    </button>
+  </div>
+</div>
+
+<div class="row g-3 mt-1">
+  <!-- Left Column: Clock Controls & Leave Balances -->
+  <div class="col-12 col-md-4">
+    <!-- Clock Controls Card -->
+    <div class="card p-4 mb-3" style="background: var(--primary-color); border-color: var(--primary-color);">
+      <h4 class="text-white fw-bold mb-3" style="font-size: 15px;">
+        <i class="bi bi-clock me-2"></i>Mark Attendance
+      </h4>
+      <div class="d-flex gap-2">
+        <button class="btn btn-sm w-50" style="background: white; color: var(--primary-color); font-weight: 600;" (click)="markClockIn()">
+          <i class="bi bi-box-arrow-in-right me-1"></i> Clock In
+        </button>
+        <button class="btn btn-sm w-50" style="background: transparent; border: 1px solid white; color: white; font-weight: 600;" (click)="markClockOut()">
+          <i class="bi bi-box-arrow-left me-1"></i> Clock Out
+        </button>
+      </div>
+    </div>
+
+    <!-- Leave Balances Card -->
+    <div class="card p-4">
+      <h4 class="card-title mb-3">
+        <i class="bi bi-calendar-check me-2 text-primary"></i>My Leave Balances
+      </h4>
+      @if (leaveBalances.length === 0) {
+        <div class="text-center text-muted py-3 fs-8">No balances found.</div>
+      }
+      @for (lb of leaveBalances; track lb.leaveTypeId) {
+        <div class="d-flex justify-content-between align-items-center py-2" style="border-bottom: 1px solid var(--border-color);">
+          <div>
+            <div class="fw-bold text-main fs-8">{{ lb.leaveName }}</div>
+            <div class="text-muted fs-9">Consumed: {{ lb.consumedBalance }} / Accrued: {{ lb.accruedBalance }}</div>
+          </div>
+          <span class="badge badge-info fw-bold">{{ lb.availableBalance }} Days</span>
+        </div>
+      }
+    </div>
+  </div>
+
+  <!-- Right Column: History Tables -->
+  <div class="col-12 col-md-8">
+    <!-- Attendance History -->
+    <div class="card mb-3">
+      <div class="card-header">
+        <h4 class="card-title">
+          <i class="bi bi-journal-text me-2 text-primary"></i>My Attendance History
+        </h4>
+      </div>
+      <div class="table-responsive">
+        <table class="table-enterprise">
+          <thead>
+            <tr>
+              <th>Date</th>
+              <th>Clock In</th>
+              <th>Clock Out</th>
+              <th>Working Hours</th>
+              <th>Status</th>
+            </tr>
+          </thead>
+          <tbody>
+            @if (attendanceRecords.length === 0) {
+              <tr>
+                <td colspan="5" class="text-center py-4 text-secondary fs-8">
+                  <i class="bi bi-folder-x fs-2 d-block mb-2 text-muted"></i>
+                  No attendance history found.
+                </td>
+              </tr>
+            }
+            @for (a of attendanceRecords; track a.attendanceId) {
+              <tr>
+                <td>{{ a.attendanceDate | date:'dd-MMM-yyyy' }}</td>
+                <td>{{ a.clockInTime | date:'HH:mm:ss' }}</td>
+                <td>{{ a.clockOutTime | date:'HH:mm:ss' }}</td>
+                <td>
+                  @if (a.workingMinutes) {
+                    {{ (a.workingMinutes / 60) | number:'1.1-1' }} hrs
+                  } @else {
+                    -
+                  }
+                </td>
+                <td>
+                  <span class="badge" [ngClass]="{
+                    'badge-success': a.attendanceStatus === 'Present',
+                    'badge-danger': a.attendanceStatus === 'Absent'
+                  }">
+                    {{ a.attendanceStatus }}
+                  </span>
+                </td>
+              </tr>
+            }
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- Leave Requests -->
+    <div class="card">
+      <div class="card-header">
+        <h4 class="card-title">
+          <i class="bi bi-calendar3 me-2 text-primary"></i>My Leave Requests
+        </h4>
+      </div>
+      <div class="table-responsive">
+        <table class="table-enterprise">
+          <thead>
+            <tr>
+              <th>Leave Type</th>
+              <th>From Date</th>
+              <th>To Date</th>
+              <th>Total Days</th>
+              <th>Status</th>
+            </tr>
+          </thead>
+          <tbody>
+            @if (leaveRequests.length === 0) {
+              <tr>
+                <td colspan="5" class="text-center py-4 text-secondary fs-8">
+                  <i class="bi bi-folder-x fs-2 d-block mb-2 text-muted"></i>
+                  No leave requests found.
+                </td>
+              </tr>
+            }
+            @for (lr of leaveRequests; track lr.leaveRequestId) {
+              <tr>
+                <td>{{ lr.leaveName }}</td>
+                <td>{{ lr.fromDate | date:'dd-MMM-yyyy' }}</td>
+                <td>{{ lr.toDate | date:'dd-MMM-yyyy' }}</td>
+                <td>{{ lr.totalDays }}</td>
+                <td>
+                  <span class="badge" [ngClass]="{
+                    'badge-success': lr.requestStatus === 'Approved',
+                    'badge-danger': lr.requestStatus === 'Rejected',
+                    'badge-warning': lr.requestStatus === 'Pending' || lr.requestStatus === 'Submitted'
+                  }">
+                    {{ lr.requestStatus }}
+                  </span>
+                </td>
+              </tr>
+            }
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Leave Request Modal -->
+@if (showLeaveModal) {
+  <div class="modal-backdrop-custom"></div>
+}
+@if (showLeaveModal) {
+  <div class="modal fade show d-block" tabindex="-1" role="dialog" aria-modal="true">
+    <div class="modal-dialog modal-dialog-centered">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title">Request Leave</h5>
+          <button type="button" class="btn-close" (click)="closeLeaveModal()" aria-label="Close"></button>
+        </div>
+        <form [formGroup]="leaveForm" (ngSubmit)="submitLeave()">
+          <div class="modal-body">
+            <div class="mb-3">
+              <label class="form-label">Leave Type <span class="text-danger">*</span></label>
+              <select class="form-select w-100" formControlName="leaveTypeId">
+                @for (t of leaveTypes; track t.leaveTypeId) {
+                  <option [value]="t.leaveTypeId">{{ t.leaveName }}</option>
+                }
+              </select>
+            </div>
+            <div class="row">
+              <div class="col-6 mb-3">
+                <label class="form-label">From Date <span class="text-danger">*</span></label>
+                <input type="date" class="form-control" formControlName="fromDate">
+              </div>
+              <div class="col-6 mb-3">
+                <label class="form-label">To Date <span class="text-danger">*</span></label>
+                <input type="date" class="form-control" formControlName="toDate">
+              </div>
+            </div>
+            <div class="mb-3">
+              <label class="form-label">Total Days <span class="text-danger">*</span></label>
+              <input type="number" class="form-control" formControlName="totalDays">
+            </div>
+            <div class="mb-3">
+              <label class="form-label">Reason <span class="text-danger">*</span></label>
+              <textarea class="form-control" rows="3" formControlName="reason" placeholder="Enter reason for leave..."></textarea>
+            </div>
+          </div>
+          <div class="modal-footer">
+            <button type="button" class="btn btn-outline" (click)="closeLeaveModal()">Cancel</button>
+            <button type="submit" class="btn btn-primary" [disabled]="saving || leaveForm.invalid">
+              {{ saving ? 'Submitting...' : 'Submit Request' }}
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+}
+
+<!-- Regularization Modal -->
+@if (showRegModal) {
+  <div class="modal-backdrop-custom"></div>
+}
+@if (showRegModal) {
+  <div class="modal fade show d-block" tabindex="-1" role="dialog" aria-modal="true">
+    <div class="modal-dialog modal-dialog-centered">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title">Regularize Attendance</h5>
+          <button type="button" class="btn-close" (click)="closeRegModal()" aria-label="Close"></button>
+        </div>
+        <form [formGroup]="regularizationForm" (ngSubmit)="submitRegularization()">
+          <div class="modal-body">
+            <div class="mb-3">
+              <label class="form-label">Requested Date <span class="text-danger">*</span></label>
+              <input type="date" class="form-control" formControlName="requestedDate">
+            </div>
+            <div class="mb-3">
+              <label class="form-label">Reason <span class="text-danger">*</span></label>
+              <textarea class="form-control" rows="3" formControlName="reason" placeholder="Enter reason for regularization..."></textarea>
+            </div>
+          </div>
+          <div class="modal-footer">
+            <button type="button" class="btn btn-outline" (click)="closeRegModal()">Cancel</button>
+            <button type="submit" class="btn btn-primary" [disabled]="saving || regularizationForm.invalid">
+              {{ saving ? 'Submitting...' : 'Submit Request' }}
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+}
+
+<!-- Notification Toast -->
+@if (toastMessage) {
+  <div class="toast-custom bg-dark text-white p-3 rounded">
+    <i class="bi bi-info-circle-fill me-2 text-primary"></i> {{ toastMessage }}
+  </div>
+}

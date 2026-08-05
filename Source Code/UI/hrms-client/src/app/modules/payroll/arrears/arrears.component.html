@@ -1,0 +1,79 @@
+<div class="page-toolbar">
+  <div>
+    <h1 class="page-title text-main">Arrears</h1>
+    <div class="text-secondary mt-1">Manage all aspects of payroll and compensation flows.</div>
+  </div>
+  <div>
+    <button class="btn btn-primary btn-sm  " (click)="openCreateModal()">
+      <i class="bi bi-plus-lg me-1"></i>New Setup
+    </button>
+  </div>
+</div>
+
+<div class="card">
+    
+    <div class="table-responsive">
+      <table class="table-enterprise">
+        <thead>
+          <tr>
+            <th>Code / Reference</th>
+            <th scope="col">Name / Detail</th>
+            <th scope="col">Status</th>
+            <th class="text-end">Actions</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr *ngFor="let item of items">
+            <td class="px-4 fw-bold text-primary">{{ item.code || 'REF-8293' }}</td>
+            <td>{{ item.name || 'Standard Setup Detail' }}</td>
+            <td><span class="badge badge-success">Active</span></td>
+            <td class="text-end px-4">
+              <button class="btn btn-outline btn-sm p-1 me-2"><i class="bi bi-eye text-primary"></i></button>
+              <button class="btn btn-outline btn-sm p-1"><i class="bi bi-trash text-danger"></i></button>
+            </td>
+          </tr>
+          <tr *ngIf="items.length === 0">
+            <td colspan="4" class="text-center py-5 text-muted">
+              <i class="bi bi-inbox fs-2 d-block mb-2"></i>
+              No active records found. Click "New Setup" to begin.
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- Modal Form -->
+  @if (showModal) {
+  <div class="modal-backdrop-custom"></div>
+}
+<div class="modal fade show d-block" tabindex="-1" role="dialog" aria-modal="true" *ngIf="showModal" >
+    <div class="modal-dialog modal-dialog-centered">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title fw-bold">Add New Setup</h5>
+          <button type="button" class="btn-close" (click)="closeModal()"></button>
+        </div>
+        <div class="modal-body">
+          <form [formGroup]="form" (ngSubmit)="onSubmit()">
+            <div class="mb-3">
+              <label class="form-label fw-semibold">Reference Code</label>
+              <input type="text" class="form-control" formControlName="code" placeholder="e.g. CAL-2026">
+            </div>
+            <div class="mb-3">
+              <label class="form-label fw-semibold">Name / Description</label>
+              <input type="text" class="form-control" formControlName="name" placeholder="e.g. Standard Calendar">
+            </div>
+            <div class="mb-4">
+              <label class="form-label fw-semibold">Target Amount / Value</label>
+              <input type="number" class="form-control" formControlName="amount" placeholder="0">
+            </div>
+            <div class="d-flex justify-content-end gap-2">
+              <button type="button" class="btn btn-outline" (click)="closeModal()">Cancel</button>
+              <button type="submit" class="btn btn-primary" [disabled]="form.invalid">Submit</button>
+            </div>
+          </form>
+        </div>
+      </div>
+    </div>
+  </div>

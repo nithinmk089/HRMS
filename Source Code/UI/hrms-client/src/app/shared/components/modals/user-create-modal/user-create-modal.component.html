@@ -1,0 +1,88 @@
+@if (isOpen) {
+  <div class="modal-backdrop-custom"></div>
+  <div class="modal fade show d-block" tabindex="-1" role="dialog" aria-modal="true">
+    <div class="modal-dialog modal-dialog-centered">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title">{{ user ? 'Edit User Details' : 'Register New User' }}</h5>
+          <button type="button" class="btn-close" (click)="onClose()" aria-label="Close"></button>
+        </div>
+        <form [formGroup]="userForm" (ngSubmit)="onSubmit()">
+          <div class="modal-body">
+            <div class="mb-3">
+              <label class="form-label">Tenant <span class="text-danger">*</span></label>
+              <select class="form-select w-100" formControlName="tenantId" [attr.disabled]="user !== null ? true : null">
+                <option value="">Select Tenant</option>
+                @for (t of tenants; track t.tenantId) {
+                  <option [value]="t.tenantId">{{ t.tenantName }}</option>
+                }
+              </select>
+              @if (submitted && f['tenantId'].errors) {
+                <div class="text-danger fs-8 mt-1">Tenant is required.</div>
+              }
+            </div>
+
+            <div class="mb-3">
+              <label class="form-label">Username <span class="text-danger">*</span></label>
+              <input type="text" class="form-control" formControlName="userName" placeholder="e.g., john.doe" maxlength="100">
+              @if (submitted && f['userName'].errors) {
+                <div class="text-danger fs-8 mt-1">
+                  @if (f['userName'].errors['required']) {
+                    <span>Username is required.</span>
+                  }
+                  @if (f['userName'].errors['minlength'] || f['userName'].errors['maxlength']) {
+                    <span>Username must be between 3 and 100 characters.</span>
+                  }
+                </div>
+              }
+            </div>
+
+            <div class="mb-3">
+              <label class="form-label">Email Address <span class="text-danger">*</span></label>
+              <input type="email" class="form-control" formControlName="email" placeholder="e.g., john.doe@company.com" maxlength="200">
+              @if (submitted && f['email'].errors) {
+                <div class="text-danger fs-8 mt-1">
+                  @if (f['email'].errors['required']) {
+                    <span>Email is required.</span>
+                  }
+                  @if (f['email'].errors['email']) {
+                    <span>Please enter a valid email address.</span>
+                  }
+                </div>
+              }
+            </div>
+
+            <div class="mb-3">
+              <label class="form-label">Employee ID</label>
+              <input type="text" class="form-control" formControlName="employeeId" placeholder="e.g., 10024" maxlength="20">
+            </div>
+
+            @if (!user) {
+              <div class="mb-3">
+                <label class="form-label">Password <span class="text-danger">*</span></label>
+                <input type="password" class="form-control" formControlName="password" placeholder="Min 12 chars, Upper, Lower, Num, Special" maxlength="100">
+                @if (submitted && f['password']?.errors) {
+                  <div class="text-danger fs-8 mt-1">
+                    Password must be at least 12 characters and contain uppercase, lowercase, number, and special character.
+                  </div>
+                }
+              </div>
+            }
+
+            @if (errorMessage) {
+              <div class="alert alert-danger fs-8 p-2 my-2">
+                {{ errorMessage }}
+              </div>
+            }
+          </div>
+          <div class="modal-footer">
+            <button type="button" class="btn btn-outline" (click)="onClose()">Cancel</button>
+            <button type="submit" class="btn btn-primary" [disabled]="saving">
+              {{ saving ? 'Saving...' : 'Save User' }}
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+}

@@ -1,0 +1,269 @@
+<div class="page-toolbar">
+  <div>
+    <h1 class="page-title text-main">Permissions Matrix</h1>
+    <div class="text-secondary mt-1">Configure system features, assign permission scopes, and design access security matrices</div>
+  </div>
+  <div>
+    <button class="btn btn-primary btn-sm" (click)="openCreateModal()" [disabled]="tenants.length === 0">
+      <i class="bi bi-plus-lg me-1"></i> New Permission Node
+    </button>
+  </div>
+</div>
+
+<!-- Search/Filter Panel -->
+<div class="card p-4 mb-4 mt-2">
+  <div class="row g-3">
+    <div class="col-12 col-md-4">
+      <label class="form-label fs-8 text-secondary">Tenant Group</label>
+      <select class="form-select w-100" [(ngModel)]="tenantIdFilter" (change)="onTenantChange()">
+        @for (tenant of tenants; track tenant.tenantId) {
+          <option [value]="tenant.tenantId">{{ tenant.tenantName }}</option>
+        }
+      </select>
+    </div>
+    <div class="col-12 col-md-4">
+      <label class="form-label fs-8 text-secondary">Search Filter</label>
+      <div class="search-input-group w-100">
+        <i class="bi bi-search"></i>
+        <input type="text" class="form-control" placeholder="Search by name or module..." [(ngModel)]="searchText" (keyup.enter)="loadPermissionsAndRoles()">
+      </div>
+    </div>
+    <div class="col-12 col-md-4 d-flex gap-2 align-items-end">
+      <button class="btn btn-outline w-50" (click)="resetFilters()">Reset</button>
+      <button class="btn btn-primary w-50" (click)="loadPermissionsAndRoles()">Search</button>
+    </div>
+  </div>
+</div>
+
+<!-- Master-Detail Split Screen -->
+<div class="row g-4">
+  
+  <!-- Left Column: Roles Master List (Width: 4/12) -->
+  <div class="col-12 col-lg-4">
+    <div class="card p-4 h-100">
+      <div class="fw-bold text-main fs-6 mb-3">
+        <i class="bi bi-people-fill me-2 text-primary"></i>Security Roles
+      </div>
+      
+      <!-- Role search -->
+      <div class="search-input-group w-100 mb-3">
+        <i class="bi bi-search"></i>
+        <input type="text" class="form-control" placeholder="Search roles..." [(ngModel)]="roleSearchText">
+      </div>
+      
+      <!-- Roles list container -->
+      <div class="list-group overflow-auto border rounded" style="max-height: 480px;">
+        @if (isLoading) {
+          @for (row of [1, 2, 3]; track $index) {
+            <div class="list-group-item py-3">
+              <div class="skeleton-shimmer" style="height: 16px; width: 60%; border-radius: 4px; background: #EAEFF4; margin-bottom: 8px;"></div>
+              <div class="skeleton-shimmer" style="height: 12px; width: 40%; border-radius: 4px; background: #EAEFF4;"></div>
+            </div>
+          }
+        } @else {
+          @for (role of getFilteredRoles(); track role.roleId) {
+            <button 
+              type="button" 
+              class="list-group-item list-group-item-action d-flex justify-content-between align-items-center py-3"
+              [class.active]="selectedRole?.roleId === role.roleId"
+              (click)="selectRole(role)">
+              <div>
+                <div class="fw-bold fs-7">{{ role.roleCode }}</div>
+                <div class="text-secondary fs-8 mt-1" [title]="role.roleName">{{ role.roleName | truncate:30 }}</div>
+              </div>
+              <span class="badge rounded-pill bg-light text-dark border fs-9">
+                {{ getAssignedPermissionsCount(role.roleId) }} perms
+              </span>
+            </button>
+          } @empty {
+            <div class="text-center py-5 text-secondary fs-8">No roles found.</div>
+          }
+        }
+      </div>
+    </div>
+  </div>
+
+  <!-- Right Column: Permissions Detail Board (Width: 8/12) -->
+  <div class="col-12 col-lg-8">
+    <div class="card p-4 h-100">
+      @if (selectedRole) {
+        <div class="d-flex justify-content-between align-items-center mb-3 flex-wrap gap-2">
+          <div>
+            <div class="fw-bold text-main fs-6">
+              <i class="bi bi-shield-lock-fill me-2 text-primary"></i>
+              Permissions Matrix: <span class="text-primary">{{ selectedRole.roleCode }}</span>
+            </div>
+            <div class="text-secondary fs-8 mt-1">
+              {{ selectedRole.roleName }} — Configure module capabilities below
+            </div>
+          </div>
+          
+          <!-- Permissions quick search -->
+          <div class="search-input-group w-30">
+            <i class="bi bi-funnel"></i>
+            <input type="text" class="form-control form-control-sm" placeholder="Filter permissions..." [(ngModel)]="permSearchText">
+          </div>
+        </div>
+
+        <div class="table-responsive border rounded" style="max-height: 480px; overflow-y: auto;">
+          <table class="table-enterprise mb-0">
+            <thead>
+              <tr>
+                <th>Permission Name</th>
+                <th>Module</th>
+                <th class="text-center" style="width: 120px;">Allowed</th>
+                <th style="width: 100px; text-align: center;">Actions</th>
+              </tr>
+            </thead>
+            <tbody>
+              @if (isLoading) {
+                @for (row of [1, 2, 3, 4]; track $index) {
+                  <tr>
+                    @for (col of [1, 2, 3, 4]; track $index) {
+                      <td>
+                        <div class="skeleton-shimmer" style="height: 16px; border-radius: 4px; background: #EAEFF4; width: 85%;"></div>
+                      </td>
+                    }
+                  </tr>
+                }
+              } @else {
+                @for (perm of getFilteredPermissions(); track perm.permissionId) {
+                  <tr>
+                    <td>
+                      <div class="fw-bold text-main" [title]="perm.permissionName">{{ perm.permissionName | truncate:30 }}</div>
+                      <div class="text-muted fs-8" [title]="perm.permissionCode">{{ perm.permissionCode | truncate:30 }}</div>
+                    </td>
+                    <td [title]="perm.moduleCode">
+                      <span class="badge badge-info">{{ perm.moduleCode | truncate:30 }}</span>
+                    </td>
+                    <td class="text-center">
+                      <div class="form-check form-switch d-inline-block">
+                        <input 
+                          class="form-check-input" 
+                          type="checkbox" 
+                          role="switch"
+                          [checked]="isRoleAssigned(selectedRole.roleId, perm.permissionId)"
+                          (change)="togglePermissionMapping(selectedRole.roleId, perm.permissionId, $event)">
+                      </div>
+                    </td>
+                    <td class="text-center">
+                      <div class="d-flex justify-content-center gap-2">
+                        <button class="btn btn-outline btn-sm p-1" title="Edit" (click)="openEditModal(perm)">
+                          <i class="bi bi-pencil-square text-primary"></i>
+                        </button>
+                        <button class="btn btn-outline btn-sm p-1" title="Delete" (click)="deletePermission(perm)">
+                          <i class="bi bi-trash text-danger"></i>
+                        </button>
+                      </div>
+                    </td>
+                  </tr>
+                } @empty {
+                  <tr>
+                    <td colspan="4" class="text-center py-5 text-secondary">No permission nodes found.</td>
+                  </tr>
+                }
+              }
+            </tbody>
+          </table>
+        </div>
+      } @else {
+        <!-- Empty State -->
+        <div class="d-flex flex-column align-items-center justify-content-center py-5 h-100 text-secondary" style="min-height: 350px;">
+          <i class="bi bi-shield-slash fs-1 text-muted mb-3"></i>
+          <h5>No Role Selected</h5>
+          <p class="fs-8">Please choose a security role from the left pane to configure its access matrix.</p>
+        </div>
+      }
+    </div>
+  </div>
+
+</div>
+
+<!-- Modal Backdrop -->
+@if (showModal) {
+  <div class="modal-backdrop-custom"></div>
+}
+
+<!-- Create/Edit Modal -->
+@if (showModal) {
+  <div class="modal fade show d-block" tabindex="-1" role="dialog" aria-modal="true">
+    <div class="modal-dialog modal-dialog-centered">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title">{{ editMode ? 'Edit Permission Node' : 'Add Permission Node' }}</h5>
+          <button type="button" class="btn-close" (click)="closeModal()" aria-label="Close"></button>
+        </div>
+        <form [formGroup]="permForm" (ngSubmit)="savePermission()">
+          <div class="modal-body">
+            <div class="mb-3">
+              <label class="form-label">Tenant association <span class="text-danger">*</span></label>
+              <select class="form-select w-100" formControlName="tenantId">
+                @for (t of tenants; track t.tenantId) {
+                  <option [value]="t.tenantId">{{ t.tenantName }}</option>
+                }
+              </select>
+            </div>
+
+            <div class="mb-3">
+              <label class="form-label">Permission Code <span class="text-danger">*</span></label>
+              <input type="text" class="form-control" formControlName="permissionCode" [readonly]="editMode" placeholder="e.g., USER_MANAGE" maxlength="50">
+              @if (submitted && f['permissionCode'].errors) {
+                <div class="text-danger fs-8 mt-1">
+                  Permission Code is required.
+                </div>
+              }
+            </div>
+
+            <div class="mb-3">
+              <label class="form-label">Permission Name <span class="text-danger">*</span></label>
+              <input type="text" class="form-control" formControlName="permissionName" placeholder="e.g., Create, Update, and Delete Users" maxlength="200">
+              @if (submitted && f['permissionName'].errors) {
+                <div class="text-danger fs-8 mt-1">
+                  Permission Name is required.
+                </div>
+              }
+            </div>
+
+            <div class="mb-3">
+              <label class="form-label">System Module <span class="text-danger">*</span></label>
+              <input type="text" class="form-control" formControlName="moduleCode" placeholder="e.g., Security, CoreHR, system" maxlength="50">
+              @if (submitted && f['moduleCode'].errors) {
+                <div class="text-danger fs-8 mt-1">
+                  Module Code is required.
+                </div>
+              }
+            </div>
+
+            @if (errorMessage) {
+              <div class="alert alert-danger fs-8 p-2 my-2">
+                {{ errorMessage }}
+              </div>
+            }
+          </div>
+          <div class="modal-footer">
+            <button type="button" class="btn btn-outline" (click)="closeModal()">Cancel</button>
+            <button type="submit" class="btn btn-primary" [disabled]="saving">
+              {{ saving ? 'Saving...' : 'Save Node' }}
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+}
+
+<!-- Notification Toast -->
+@if (toastMessage) {
+  <div class="toast-custom bg-dark text-white p-3 rounded">
+    <i class="bi bi-info-circle-fill me-2 text-primary"></i> {{ toastMessage }}
+  </div>
+}
+
+<app-permission-assignment-modal
+  [isOpen]="showAssignmentModal"
+  [role]="selectedRoleForPerms"
+  [permissions]="permissions"
+  [assignedMatrix]="assignedMatrix"
+  (close)="closeAssignmentModal()"
+  (toggle)="onTogglePermission($event)">
+</app-permission-assignment-modal>

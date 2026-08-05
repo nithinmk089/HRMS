@@ -1,0 +1,182 @@
+<div class="page-toolbar">
+  <div>
+    <h1 class="page-title text-main">Security Roles</h1>
+    <div class="text-secondary mt-1">Configure application permission groups, administrative roles, and user memberships</div>
+  </div>
+  <div>
+    <button class="btn btn-primary btn-sm" (click)="openCreateModal()" [disabled]="tenants.length === 0">
+      <i class="bi bi-plus-lg me-1"></i> New Role
+    </button>
+  </div>
+</div>
+
+<!-- Search/Filter Panel -->
+<div class="card p-4 mb-4 mt-2">
+  <div class="row g-3">
+    <div class="col-12 col-md-4">
+      <label class="form-label fs-8 text-secondary">Tenant Group</label>
+      <select class="form-select w-100" [(ngModel)]="tenantIdFilter" (change)="loadRoles()">
+        @for (tenant of tenants; track tenant.tenantId) {
+          <option [value]="tenant.tenantId">{{ tenant.tenantName }}</option>
+        }
+      </select>
+    </div>
+    <div class="col-12 col-md-4">
+      <label class="form-label fs-8 text-secondary">Search Filter</label>
+      <div class="search-input-group w-100">
+        <i class="bi bi-search"></i>
+        <input type="text" class="form-control" placeholder="Search roles by code/name..." [(ngModel)]="searchText" (keyup.enter)="loadRoles()">
+      </div>
+    </div>
+    <div class="col-12 col-md-4 d-flex gap-2 align-items-end">
+      <button class="btn btn-outline w-50" (click)="resetFilters()">Reset</button>
+      <button class="btn btn-primary w-50" (click)="loadRoles()">Search</button>
+    </div>
+  </div>
+</div>
+
+<!-- Data Grid -->
+<div class="card">
+  <div class="table-responsive">
+    <table class="table-enterprise">
+      <thead>
+        <tr>
+          <th>Role Code</th>
+          <th>Role Name</th>
+          <th>Description</th>
+          <th style="width: 200px; text-align: center;">Actions</th>
+        </tr>
+      </thead>
+      <tbody>
+        <!-- Loading Skeletons -->
+        @if (isLoading) {
+          @for (row of [1, 2, 3]; track $index) {
+            <tr>
+              @for (col of [1, 2, 3, 4]; track $index) {
+                <td>
+                  <div class="skeleton-shimmer" style="height: 16px; border-radius: 4px; background: #EAEFF4; width: 80%;"></div>
+                </td>
+              }
+            </tr>
+          }
+        }
+
+        <!-- Empty State -->
+        @if (!isLoading && roles.length === 0) {
+          <tr>
+            <td colspan="4" class="text-center py-5 text-secondary">
+              <i class="bi bi-folder-x fs-2 d-block mb-2 text-muted"></i>
+              No roles defined.
+            </td>
+          </tr>
+        }
+
+        <!-- Table Rows -->
+        @if (!isLoading) {
+          @for (role of roles; track role.roleId) {
+            <tr>
+              <td class="fw-bold">{{ role.roleCode }}</td>
+              <td [title]="role.roleName">{{ role.roleName | truncate:30 }}</td>
+              <td [title]="role.description || ''">{{ role.description ? (role.description | truncate:30) : '-' }}</td>
+              <td class="text-center">
+                <div class="d-flex justify-content-center gap-2">
+                  <button class="btn btn-outline btn-sm py-1 px-2" (click)="openMembersModal(role)">
+                    <i class="bi bi-people me-1"></i> Members
+                  </button>
+                  <button class="btn btn-outline btn-sm p-1" title="Edit Role" (click)="openEditModal(role)">
+                    <i class="bi bi-pencil-square text-primary"></i>
+                  </button>
+                  <button class="btn btn-outline btn-sm p-1" title="Delete Role" (click)="deleteRole(role)">
+                    <i class="bi bi-trash text-danger"></i>
+                  </button>
+                </div>
+              </td>
+            </tr>
+          }
+        }
+      </tbody>
+    </table>
+  </div>
+</div>
+
+<!-- Modal Backdrop -->
+@if (showModal || showMembersModal) {
+  <div class="modal-backdrop-custom"></div>
+}
+
+<!-- Create/Edit Modal -->
+@if (showModal) {
+  <div class="modal fade show d-block" tabindex="-1" role="dialog" aria-modal="true">
+    <div class="modal-dialog modal-dialog-centered">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title">{{ editMode ? 'Edit Role Details' : 'Add Security Role' }}</h5>
+          <button type="button" class="btn-close" (click)="closeModal()" aria-label="Close"></button>
+        </div>
+        <form [formGroup]="roleForm" (ngSubmit)="saveRole()">
+          <div class="modal-body">
+            <div class="mb-3">
+              <label class="form-label">Tenant association <span class="text-danger">*</span></label>
+              <select class="form-select w-100" formControlName="tenantId">
+                @for (t of tenants; track t.tenantId) {
+                  <option [value]="t.tenantId">{{ t.tenantName }}</option>
+                }
+              </select>
+            </div>
+
+            <div class="mb-3">
+              <label class="form-label">Role Code <span class="text-danger">*</span></label>
+              <input type="text" class="form-control" formControlName="roleCode" [readonly]="editMode" placeholder="e.g., HR_ADMIN" maxlength="50">
+              @if (submitted && f['roleCode'].errors) {
+                <div class="text-danger fs-8 mt-1">
+                  Role Code is required.
+                </div>
+              }
+            </div>
+
+            <div class="mb-3">
+              <label class="form-label">Role Name <span class="text-danger">*</span></label>
+              <input type="text" class="form-control" formControlName="roleName" placeholder="e.g., Human Resources Administrator" maxlength="100">
+              @if (submitted && f['roleName'].errors) {
+                <div class="text-danger fs-8 mt-1">
+                  Role Name is required.
+                </div>
+              }
+            </div>
+
+            <div class="mb-3">
+              <label class="form-label">Role Description</label>
+              <textarea class="form-control" formControlName="description" rows="3" placeholder="Explain the responsibilities or system access..." maxlength="250"></textarea>
+            </div>
+
+            @if (errorMessage) {
+              <div class="alert alert-danger fs-8 p-2 my-2">
+                {{ errorMessage }}
+              </div>
+            }
+          </div>
+          <div class="modal-footer">
+            <button type="button" class="btn btn-outline" (click)="closeModal()">Cancel</button>
+            <button type="submit" class="btn btn-primary" [disabled]="saving">
+              {{ saving ? 'Saving...' : 'Save Role' }}
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+}
+
+<app-role-assignment-modal
+  [isOpen]="showMembersModal"
+  [role]="selectedRole"
+  (close)="closeMembersModal()"
+  (notify)="showToast($event)">
+</app-role-assignment-modal>
+
+<!-- Notification Toast -->
+@if (toastMessage) {
+  <div class="toast-custom bg-dark text-white p-3 rounded">
+    <i class="bi bi-info-circle-fill me-2 text-primary"></i> {{ toastMessage }}
+  </div>
+}

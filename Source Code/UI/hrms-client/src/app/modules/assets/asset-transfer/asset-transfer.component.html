@@ -1,0 +1,103 @@
+<div class="page-toolbar">
+  <div>
+    <h1 class="page-title text-main">Asset Transfer</h1>
+    <div class="text-secondary mt-1">Inter-departmental movement, successor handovers, and location changes.</div>
+  </div>
+  <div>
+    <button class="btn btn-primary btn-sm" (click)="openModal()"><i class="bi bi-plus-lg me-1"></i> Request Transfer</button>
+  </div>
+</div>
+
+<div class="card">
+    <div class="card-body p-0">
+      <table class="table-enterprise">
+        <thead>
+          <tr>
+            <th>Asset</th>
+            <th>From Employee</th>
+            <th>To Employee</th>
+            <th>Transfer Date</th>
+            <th>Status</th>
+            <th>Action</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr *ngFor="let t of transfers">
+            <td>
+              <div class="fw-bold">{{ t.assetName }}</div>
+              <small class="text-muted font-monospace">{{ t.assetCode }}</small>
+            </td>
+            <td>{{ t.fromEmployeeName || 'Company Inventory' }}</td>
+            <td class="fw-bold">{{ t.toEmployeeName }}</td>
+            <td>{{ t.transferDate | date:'mediumDate' }}</td>
+            <td>
+              <span class="badge" [ngClass]="{
+                'badge-warning': t.transferStatus === 'Pending',
+                'badge-info': t.transferStatus === 'Approved',
+                'badge-success': t.transferStatus === 'Completed'
+              }">
+                {{ t.transferStatus }}
+              </span>
+            </td>
+            <td>
+              <button class="btn btn-sm btn-outline-success me-2" *ngIf="t.transferStatus === 'Pending'" (click)="approve(t)">
+                Approve
+              </button>
+              <button class="btn btn-sm btn-success" *ngIf="t.transferStatus === 'Approved'" (click)="complete(t)">
+                Complete
+              </button>
+            </td>
+          </tr>
+          <tr *ngIf="transfers.length === 0 && !loading">
+            <td colspan="6" class="text-center text-muted py-4">No transfers logged.</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- Create Modal -->
+  @if (showModal) {
+  <div class="modal-backdrop-custom"></div>
+}
+<div class="modal fade show d-block" tabindex="-1" role="dialog" aria-modal="true" *ngIf="showModal" >
+    <div class="modal-dialog">
+      <div class="modal-content" >
+        <div class="modal-header">
+          <h5 class="modal-title fw-bold">Request Asset Transfer</h5>
+          <button type="button" class="btn-close" (click)="closeModal()"></button>
+        </div>
+        <div class="modal-body">
+          <form [formGroup]="transferForm">
+            <div class="mb-3">
+              <label class="form-label">Asset (Currently Assigned)</label>
+              <select class="form-select" formControlName="assetID" (change)="onAssetChange($event)">
+                <option value="">Select Asset</option>
+                <option *ngFor="let ast of assets" [value]="ast.assetID">{{ ast.assetName }} ({{ ast.assetCode }})</option>
+              </select>
+            </div>
+            <div class="mb-3">
+              <label class="form-label">To Employee</label>
+              <select class="form-select" formControlName="toEmployeeID">
+                <option value="">Select Handover Employee</option>
+                <option *ngFor="let emp of employees" [value]="emp.employeeID">{{ emp.firstName }} {{ emp.lastName }}</option>
+              </select>
+            </div>
+            <div class="mb-3">
+              <label class="form-label">Transfer Date</label>
+              <input type="date" class="form-control" formControlName="transferDate">
+            </div>
+            <div class="mb-3">
+              <label class="form-label">Reason</label>
+              <textarea class="form-control" formControlName="transferReason" rows="2"></textarea>
+            </div>
+            <div class="alert alert-danger" *ngIf="errorMessage">{{ errorMessage }}</div>
+          </form>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-outline" (click)="closeModal()">Cancel</button>
+          <button type="button" class="btn btn-primary" [disabled]="transferForm.invalid || saving" (click)="saveTransfer()">Submit</button>
+        </div>
+      </div>
+    </div>
+  </div>

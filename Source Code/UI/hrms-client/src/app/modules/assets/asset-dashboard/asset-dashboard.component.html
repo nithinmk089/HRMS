@@ -1,0 +1,81 @@
+<div class="page-toolbar">
+  <div>
+    <h1 class="page-title text-main">Asset Dashboard</h1>
+    <div class="text-secondary mt-1">Real-time overview of IT equipment, allocations, and compliance.</div>
+  </div>
+  <div>
+    <button class="btn btn-primary btn-sm" (click)="loadMetrics()"><i class="bi bi-arrow-clockwise"></i> Refresh</button>
+  </div>
+</div>
+
+<div class="row g-3 mb-4">
+  <div class="col">
+    <div class="card p-3">
+      <div class="d-flex align-items-center justify-content-between mb-3">
+        <div class="fs-4 fw-bold">Total Assets</div>
+        <i class="bi bi-box-seam fs-2"></i>
+      </div>
+      <h1 class="display-5 fw-bold">{{ totalAssets }}</h1>
+      <small class="opacity-75">Registered in catalog</small>
+    </div>
+  </div>
+  <div class="col">
+    <div class="card p-3">
+      <div class="d-flex align-items-center justify-content-between mb-3">
+        <div class="fs-4 fw-bold">Allocated</div>
+        <i class="bi bi-person-check fs-2"></i>
+      </div>
+      <h1 class="display-5 fw-bold">{{ assignedAssets }}</h1>
+      <small class="opacity-75">Assigned to employees</small>
+    </div>
+  </div>
+    <div class="col">
+      <div class="card p-3">
+        <div class="d-flex align-items-center justify-content-between mb-3">
+          <div class="fs-4 fw-bold">Maintenance</div>
+          <i class="bi bi-tools fs-2"></i>
+        </div>
+        <h1 class="display-5 fw-bold">{{ maintenanceCount }}</h1>
+        <small class="opacity-75">Being repaired/serviced</small>
+      </div>
+    </div>
+    <div class="col">
+      <div class="card p-3">
+        <div class="d-flex align-items-center justify-content-between mb-3">
+          <div class="fs-4 fw-bold">Warranty Alert</div>
+          <i class="bi bi-shield-alert fs-2"></i>
+        </div>
+        <h1 class="display-5 fw-bold">{{ expiringWarrantiesCount }}</h1>
+        <small class="opacity-75">Expiring in 30 days</small>
+      </div>
+    </div>
+  </div>
+
+  <div class="row">
+    <div class="col-lg-8 mb-4">
+      <div class="card p-4">
+        <h4 class="fw-bold mb-3 text-dark">Asset Utilization</h4>
+        <div class="d-flex align-items-center justify-content-center flex-column py-5 bg-light rounded" style="min-height: 250px;">
+          <div class="spinner-border text-primary mb-3" *ngIf="loading"></div>
+          <div class="text-center" *ngIf="!loading">
+            <h2 class="fw-bold text-success">{{ totalAssets > 0 ? ((assignedAssets/totalAssets)*100).toFixed(1) : 0 }}%</h2>
+            <p class="text-muted mb-0">Total Active Allocation Rate</p>
+            <div class="progress mt-3" style="width: 300px; height: 10px;">
+              <div class="progress-bar bg-success" role="progressbar" [style.width.%]="totalAssets > 0 ? (assignedAssets/totalAssets)*100 : 0"></div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="col-lg-4 mb-4">
+      <div class="card p-4">
+        <h4 class="fw-bold mb-3 text-dark">Quick Operations</h4>
+        <div class="d-grid gap-3">
+          <a class="btn btn-outline-primary text-start p-3 rounded" href="/assets/register"><i class="bi bi-plus-circle me-2"></i> Register New Asset</a>
+          <a class="btn btn-outline-success text-start p-3 rounded" href="/assets/assignments"><i class="bi bi-person-plus me-2"></i> Assign Equipment</a>
+          <a class="btn btn-outline-warning text-start p-3 rounded" href="/assets/maintenance"><i class="bi bi-shield-check me-2"></i> Schedule Maintenance</a>
+          <a class="btn btn-outline-danger text-start p-3 rounded" href="/assets/disposals"><i class="bi bi-trash me-2"></i> Retiring/Disposals</a>
+        </div>
+      </div>
+    </div>
+  </div>

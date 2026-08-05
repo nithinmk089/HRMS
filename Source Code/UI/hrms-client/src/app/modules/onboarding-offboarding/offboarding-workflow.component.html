@@ -1,0 +1,319 @@
+<div class="page-toolbar">
+  <div>
+    <h1 class="page-title text-main">Employee Offboarding Dashboard</h1>
+    <div class="text-secondary mt-1">Manage exits, department clearances, KT handovers, and final settlements</div>
+  </div>
+  <div>
+    <button class="btn btn-primary btn-sm" (click)="showExitModal = true">
+      <i class="bi bi-box-arrow-right me-1"></i> Log Resignation
+    </button>
+  </div>
+</div>
+
+<!-- KPI Summary Cards -->
+<div class="row g-3 mt-1 mb-4">
+  <div class="col-12 col-sm-4">
+    <div class="card p-3">
+      <div class="d-flex justify-content-between align-items-center">
+        <div>
+          <span class="fs-8 text-secondary fw-bold">Total Exits</span>
+          <h2 class="text-main mt-1" style="font-size: 22px; font-weight: 600;">{{ exitRequests.length }}</h2>
+        </div>
+        <i class="bi bi-journal-x fs-1 text-muted"></i>
+      </div>
+    </div>
+  </div>
+  <div class="col-12 col-sm-4">
+    <div class="card p-3">
+      <div class="d-flex justify-content-between align-items-center">
+        <div>
+          <span class="fs-8 text-secondary fw-bold">Approved Exits</span>
+          <h2 class="text-main mt-1" style="font-size: 22px; font-weight: 600;">{{ getApprovedCount() }}</h2>
+        </div>
+        <i class="bi bi-shield-check fs-1" style="color: var(--success-color);"></i>
+      </div>
+    </div>
+  </div>
+  <div class="col-12 col-sm-4">
+    <div class="card p-3">
+      <div class="d-flex justify-content-between align-items-center">
+        <div>
+          <span class="fs-8 text-secondary fw-bold">FFS Summary</span>
+          <h2 class="text-main mt-1" style="font-size: 22px; font-weight: 600;">{{ settlements.length }}</h2>
+        </div>
+        <i class="bi bi-wallet2 fs-1" style="color: var(--warning-color);"></i>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Exit Requests Table -->
+<div class="card mb-4">
+  <div class="card-header">
+    <h4 class="card-title">
+      <i class="bi bi-door-open me-2 text-primary"></i>Exit & Resignation Requests
+    </h4>
+  </div>
+  <div class="table-responsive">
+    <table class="table-enterprise">
+      <thead>
+        <tr>
+          <th>Employee</th>
+          <th>Resignation Date</th>
+          <th>Last Working Date</th>
+          <th>Reason</th>
+          <th>Status</th>
+          <th style="width: 200px; text-align: center;">Actions</th>
+        </tr>
+      </thead>
+      <tbody>
+        <!-- Loading Skeletons -->
+        @if (isLoading) {
+          @for (row of [1, 2, 3]; track $index) {
+            <tr>
+              @for (col of [1, 2, 3, 4, 5, 6]; track $index) {
+                <td>
+                  <div class="skeleton-shimmer" style="height: 16px; border-radius: 4px; background: #EAEFF4; width: 80%;"></div>
+                </td>
+              }
+            </tr>
+          }
+        }
+
+        <!-- Empty State -->
+        @if (!isLoading && exitRequests.length === 0) {
+          <tr>
+            <td colspan="6" class="text-center py-5 text-secondary">
+              <i class="bi bi-folder-x fs-2 d-block mb-2 text-muted"></i>
+              No exit requests found.
+            </td>
+          </tr>
+        }
+
+        <!-- Table Rows -->
+        @if (!isLoading) {
+          @for (item of exitRequests; track item.exitRequestID) {
+            <tr>
+              <td>
+                <div class="fw-bold">{{ item.employeeName }}</div>
+                <div class="text-secondary fs-9">{{ item.employeeCode }}</div>
+              </td>
+              <td>{{ item.resignationDate | date:'dd-MMM-yyyy' }}</td>
+              <td>{{ item.lastWorkingDate | date:'dd-MMM-yyyy' }}</td>
+              <td>{{ item.exitReason }}</td>
+              <td>
+                <span class="badge" [ngClass]="{
+                  'badge-warning': item.status === 'Pending',
+                  'badge-success': item.status === 'Approved',
+                  'badge-danger': item.status === 'Rejected'
+                }">{{ item.status }}</span>
+              </td>
+              <td class="text-center">
+                <div class="d-flex justify-content-center gap-2">
+                  @if (item.status === 'Pending') {
+                    <button class="btn btn-outline btn-sm p-1" title="Approve" (click)="approveExit(item.exitRequestID)">
+                      <i class="bi bi-check-circle text-success"></i>
+                    </button>
+                    <button class="btn btn-outline btn-sm p-1" title="Reject" (click)="rejectExit(item.exitRequestID)">
+                      <i class="bi bi-x-circle text-danger"></i>
+                    </button>
+                  }
+                  @if (item.status === 'Approved') {
+                    @if (item.clearanceStatus === 'Pending') {
+                      <button class="btn btn-primary btn-sm" (click)="initiateClearance(item.employeeID)">
+                        Initiate Clearance
+                      </button>
+                    } @else {
+                      <span class="text-muted fs-8"><i class="bi bi-check-all text-success"></i> Clearance Started</span>
+                    }
+                  }
+                </div>
+              </td>
+            </tr>
+          }
+        }
+      </tbody>
+    </table>
+  </div>
+</div>
+
+<!-- Clearance Status Table -->
+<div class="card mb-4">
+  <div class="card-header">
+    <h4 class="card-title">
+      <i class="bi bi-clipboard-check me-2 text-primary"></i>Department Clearance Status
+    </h4>
+  </div>
+  <div class="table-responsive">
+    <table class="table-enterprise">
+      <thead>
+        <tr>
+          <th>Employee</th>
+          <th>Initiated Date</th>
+          <th>Completed Date</th>
+          <th>Tasks Progress</th>
+          <th>Clearance Status</th>
+          <th style="width: 150px; text-align: center;">Action</th>
+        </tr>
+      </thead>
+      <tbody>
+        @if (clearanceRequests.length === 0) {
+          <tr>
+            <td colspan="6" class="text-center py-5 text-secondary">
+              <i class="bi bi-folder-x fs-2 d-block mb-2 text-muted"></i>
+              No active clearance requests.
+            </td>
+          </tr>
+        }
+        @for (cl of clearanceRequests; track cl.employeeID) {
+          <tr>
+            <td class="fw-bold">{{ cl.employeeName }}</td>
+            <td>{{ cl.initiatedDate | date:'dd-MMM-yyyy' }}</td>
+            <td>{{ cl.completedDate ? (cl.completedDate | date:'dd-MMM-yyyy') : 'Ongoing' }}</td>
+            <td>
+              <div class="d-flex align-items-center gap-2">
+                <div style="flex-grow: 1; height: 6px; background: var(--border-color); border-radius: 3px; overflow: hidden;">
+                  <div style="height: 100%; background: var(--primary-color); border-radius: 3px; transition: width 0.3s ease;" [style.width.%]="cl.totalTasks > 0 ? (cl.approvedTasks / cl.totalTasks * 100) : 0"></div>
+                </div>
+                <span class="fw-bold fs-8 text-main" style="min-width: 40px;">{{ cl.approvedTasks }}/{{ cl.totalTasks }}</span>
+              </div>
+            </td>
+            <td>
+              <span class="badge" [ngClass]="cl.clearanceStatus === 'Approved' ? 'badge-success' : 'badge-warning'">
+                {{ cl.clearanceStatus }}
+              </span>
+            </td>
+            <td class="text-center">
+              @if (cl.clearanceStatus !== 'Approved') {
+                <button class="btn btn-outline btn-sm p-1" title="Calculate FFS" (click)="openSettlementModal(cl.employeeID)">
+                  <i class="bi bi-calculator text-primary"></i>
+                </button>
+              } @else {
+                <span class="text-muted fs-8"><i class="bi bi-shield-check text-success"></i> Approved</span>
+              }
+            </td>
+          </tr>
+        }
+      </tbody>
+    </table>
+  </div>
+</div>
+
+<!-- Full & Final Settlements Table -->
+<div class="card">
+  <div class="card-header">
+    <h4 class="card-title">
+      <i class="bi bi-cash-stack me-2 text-primary"></i>Full & Final Settlements (FFS)
+    </h4>
+  </div>
+  <div class="table-responsive">
+    <table class="table-enterprise">
+      <thead>
+        <tr>
+          <th>Employee</th>
+          <th>Settlement Amount</th>
+          <th>Settlement Date</th>
+          <th>Status</th>
+        </tr>
+      </thead>
+      <tbody>
+        @if (settlements.length === 0) {
+          <tr>
+            <td colspan="4" class="text-center py-5 text-secondary">
+              <i class="bi bi-folder-x fs-2 d-block mb-2 text-muted"></i>
+              No settlements logged.
+            </td>
+          </tr>
+        }
+        @for (s of settlements; track s.employeeID) {
+          <tr>
+            <td>
+              <div class="fw-bold">{{ s.employeeName }}</div>
+              <div class="text-secondary fs-9">{{ s.employeeCode }}</div>
+            </td>
+            <td class="fw-bold">{{ s.settlementAmount | currency }}</td>
+            <td>{{ s.settlementDate ? (s.settlementDate | date:'dd-MMM-yyyy') : 'Processing' }}</td>
+            <td>
+              <span class="badge" [ngClass]="{
+                'badge-warning': s.settlementStatus === 'Pending',
+                'badge-success': s.settlementStatus === 'Approved' || s.settlementStatus === 'Closed'
+              }">{{ s.settlementStatus }}</span>
+            </td>
+          </tr>
+        }
+      </tbody>
+    </table>
+  </div>
+</div>
+
+<!-- Exit Request Modal -->
+@if (showExitModal) {
+  <div class="modal-backdrop-custom"></div>
+}
+@if (showExitModal) {
+  <div class="modal fade show d-block" tabindex="-1" role="dialog" aria-modal="true">
+    <div class="modal-dialog modal-dialog-centered">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title">Submit Resignation</h5>
+          <button type="button" class="btn-close" (click)="showExitModal = false" aria-label="Close"></button>
+        </div>
+        <form [formGroup]="exitForm" (ngSubmit)="onSubmitExit()">
+          <div class="modal-body">
+            <div class="mb-3">
+              <label class="form-label">Employee ID <span class="text-danger">*</span></label>
+              <input type="number" class="form-control" formControlName="employeeID" placeholder="Enter Employee ID">
+            </div>
+            <div class="row">
+              <div class="col-6 mb-3">
+                <label class="form-label">Resignation Date <span class="text-danger">*</span></label>
+                <input type="date" class="form-control" formControlName="resignationDate">
+              </div>
+              <div class="col-6 mb-3">
+                <label class="form-label">Last Working Date <span class="text-danger">*</span></label>
+                <input type="date" class="form-control" formControlName="lastWorkingDate">
+              </div>
+            </div>
+            <div class="mb-3">
+              <label class="form-label">Exit Reason <span class="text-danger">*</span></label>
+              <textarea class="form-control" formControlName="exitReason" rows="3" placeholder="Provide reason for leaving..."></textarea>
+            </div>
+          </div>
+          <div class="modal-footer">
+            <button type="button" class="btn btn-outline" (click)="showExitModal = false">Cancel</button>
+            <button type="submit" class="btn btn-primary" [disabled]="exitForm.invalid">Submit</button>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+}
+
+<!-- FFS Settlement Modal -->
+@if (showSettlementModal) {
+  <div class="modal-backdrop-custom"></div>
+}
+@if (showSettlementModal) {
+  <div class="modal fade show d-block" tabindex="-1" role="dialog" aria-modal="true">
+    <div class="modal-dialog modal-dialog-centered">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title">Calculate Full & Final Settlement</h5>
+          <button type="button" class="btn-close" (click)="showSettlementModal = false" aria-label="Close"></button>
+        </div>
+        <form [formGroup]="settlementForm" (ngSubmit)="onCalculateSettlement()">
+          <div class="modal-body">
+            <div class="mb-3">
+              <label class="form-label">Settlement Amount ($) <span class="text-danger">*</span></label>
+              <input type="number" class="form-control" formControlName="settlementAmount" placeholder="e.g. 5200.00">
+            </div>
+          </div>
+          <div class="modal-footer">
+            <button type="button" class="btn btn-outline" (click)="showSettlementModal = false">Cancel</button>
+            <button type="submit" class="btn btn-primary" [disabled]="settlementForm.invalid">Submit</button>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+}

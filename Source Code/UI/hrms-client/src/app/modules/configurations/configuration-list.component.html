@@ -1,0 +1,178 @@
+<div class="page-toolbar">
+  <div>
+    <h1 class="page-title text-main">Platform Administration & Configurations</h1>
+    <div class="text-secondary mt-1">Manage system variables, Email delivery environments, SMTP routing, and notification policies</div>
+  </div>
+  <div *ngIf="activeTab === 'system'">
+    <button class="btn btn-primary btn-sm" (click)="openCreateModal()" [disabled]="tenants.length === 0">
+      <i class="bi bi-plus-lg me-1"></i> New Config Variable
+    </button>
+  </div>
+</div>
+
+<!-- Nav Tabs -->
+<ul class="nav nav-tabs mb-4">
+  <li class="nav-item">
+    <button class="nav-link fw-semibold" [class.active]="activeTab === 'system'" (click)="setTab('system')">
+      <i class="bi bi-sliders me-2"></i> System Configuration Variables
+    </button>
+  </li>
+  <li class="nav-item">
+    <button class="nav-link fw-semibold" [class.active]="activeTab === 'email'" (click)="setTab('email')">
+      <i class="bi bi-envelope-paper-gear-fill me-2 text-warning"></i> Administration Email Settings
+    </button>
+  </li>
+</ul>
+
+<!-- TAB 1: SYSTEM CONFIGURATIONS -->
+<div *ngIf="activeTab === 'system'">
+  <!-- Search/Filter Panel -->
+  <div class="card p-4 mb-4 mt-2">
+    <div class="row g-3">
+      <div class="col-12 col-md-4">
+        <label class="form-label fs-8 text-secondary">Tenant Group</label>
+        <select class="form-select w-100" [(ngModel)]="tenantIdFilter" (change)="loadConfigurations()">
+          <option *ngFor="let tenant of tenants" [value]="tenant.tenantId">{{ tenant.tenantName }}</option>
+        </select>
+      </div>
+      <div class="col-12 col-md-4">
+        <label class="form-label fs-8 text-secondary">Search Filter</label>
+        <div class="search-input-group w-100">
+          <i class="bi bi-search"></i>
+          <input type="text" class="form-control" placeholder="Search by configuration key..." [(ngModel)]="searchText" (keyup.enter)="loadConfigurations()">
+        </div>
+      </div>
+      <div class="col-12 col-md-4 d-flex gap-2 align-items-end">
+        <button class="btn btn-outline w-50" (click)="resetFilters()">Reset</button>
+        <button class="btn btn-primary w-50" (click)="loadConfigurations()">Search</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Data Grid -->
+  <div class="card">
+    <div class="table-responsive">
+      <table class="table-enterprise">
+        <thead>
+          <tr>
+            <th>Configuration Key</th>
+            <th>Configuration Value</th>
+            <th>Data Type</th>
+            <th style="width: 120px; text-align: center;">Actions</th>
+          </tr>
+        </thead>
+        <tbody>
+          <!-- Loading Skeletons -->
+          <ng-container *ngIf="isLoading">
+            <tr *ngFor="let row of [1, 2, 3]">
+              <td *ngFor="let col of [1, 2, 3, 4]">
+                <div class="skeleton-shimmer" style="height: 16px; border-radius: 4px; background: #EAEFF4; width: 80%;"></div>
+              </td>
+            </tr>
+          </ng-container>
+
+          <!-- Empty State -->
+          <tr *ngIf="!isLoading && configurations.length === 0">
+            <td colspan="4" class="text-center py-5 text-secondary">
+              <i class="bi bi-folder-x fs-2 d-block mb-2 text-muted"></i>
+              No configurations found.
+            </td>
+          </tr>
+
+          <!-- Table Rows -->
+          <ng-container *ngIf="!isLoading">
+            <tr *ngFor="let config of configurations">
+              <td class="fw-bold text-primary" [title]="config.configurationKey">{{ config.configurationKey | truncate:30 }}</td>
+              <td [title]="config.configurationValue || ''">
+                <code class="px-2 py-1 bg-light rounded text-dark fs-8">{{ (config.configurationValue | truncate:30) || 'NULL' }}</code>
+              </td>
+              <td>
+                <span class="badge badge-success">{{ config.dataType }}</span>
+              </td>
+              <td class="text-center">
+                <div class="d-flex justify-content-center gap-2">
+                  <button class="btn btn-outline btn-sm p-1" title="Edit Value" (click)="openEditModal(config)">
+                    <i class="bi bi-pencil-square text-primary"></i>
+                  </button>
+                  <button class="btn btn-outline btn-sm p-1" title="Delete Configuration" (click)="deleteConfiguration(config)">
+                    <i class="bi bi-trash text-danger"></i>
+                  </button>
+                </div>
+              </td>
+            </tr>
+          </ng-container>
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>
+
+<!-- TAB 2: EMAIL SETTINGS -->
+<div *ngIf="activeTab === 'email'">
+  <app-email-settings></app-email-settings>
+</div>
+
+<!-- Modal Backdrop -->
+<div *ngIf="showModal" class="modal-backdrop-custom"></div>
+
+<!-- Create/Edit Modal -->
+<div *ngIf="showModal" class="modal fade show d-block" tabindex="-1" role="dialog" aria-modal="true">
+  <div class="modal-dialog modal-dialog-centered">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title">{{ editMode ? 'Edit Configuration Value' : 'Add System Configuration' }}</h5>
+        <button type="button" class="btn-close" (click)="closeModal()" aria-label="Close"></button>
+      </div>
+      <form [formGroup]="configForm" (ngSubmit)="saveConfiguration()">
+        <div class="modal-body">
+          <div class="mb-3">
+            <label class="form-label">Tenant association <span class="text-danger">*</span></label>
+            <select class="form-select w-100" formControlName="tenantId">
+              <option *ngFor="let t of tenants" [value]="t.tenantId">{{ t.tenantName }}</option>
+            </select>
+          </div>
+
+          <div class="mb-3">
+            <label class="form-label">Configuration Key <span class="text-danger">*</span></label>
+            <input type="text" class="form-control" formControlName="configurationKey" [readonly]="editMode" placeholder="e.g., SMTP_HOST, MAX_LOGIN_ATTEMPTS" maxlength="100">
+            <div *ngIf="submitted && f['configurationKey'].errors" class="text-danger fs-8 mt-1">
+              Key is required.
+            </div>
+          </div>
+
+          <div class="mb-3">
+            <label class="form-label">Value</label>
+            <input type="text" class="form-control" formControlName="configurationValue" placeholder="e.g., mail.company.com, 5" maxlength="500">
+          </div>
+
+          <div class="mb-3">
+            <label class="form-label">Data Type <span class="text-danger">*</span></label>
+            <select class="form-select w-100" formControlName="dataType">
+              <option value="String">String</option>
+              <option value="Integer">Integer</option>
+              <option value="Decimal">Decimal</option>
+              <option value="Boolean">Boolean</option>
+              <option value="DateTime">DateTime</option>
+              <option value="JSON">JSON</option>
+            </select>
+          </div>
+
+          <div *ngIf="errorMessage" class="alert alert-danger fs-8 p-2 my-2">
+            {{ errorMessage }}
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-outline" (click)="closeModal()">Cancel</button>
+          <button type="submit" class="btn btn-primary" [disabled]="saving">
+            {{ saving ? 'Saving...' : 'Save Configuration' }}
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+
+<!-- Notification Toast -->
+<div *ngIf="toastMessage" class="toast-custom bg-dark text-white p-3 rounded">
+  <i class="bi bi-info-circle-fill me-2 text-primary"></i> {{ toastMessage }}
+</div>

@@ -1,0 +1,223 @@
+<div class="page-toolbar">
+  <div>
+    <h1 class="page-title text-main">Shift Management</h1>
+    <div class="text-secondary mt-1">Configure work shifts, assign schedules, and manage grace periods</div>
+  </div>
+  <div>
+    <button class="btn btn-primary btn-sm" (click)="openShiftModal()">
+      <i class="bi bi-plus-lg me-1"></i> Add Shift
+    </button>
+  </div>
+</div>
+
+<!-- Search/Filter Panel -->
+<div class="card p-4 mb-4 mt-2">
+  <div class="row g-3">
+    <div class="col-12 col-md-5">
+      <label class="form-label fs-8 text-secondary">Tenant Group <span class="text-danger">*</span></label>
+      <select class="form-select w-100" [(ngModel)]="selectedTenantId" (change)="onTenantChange()">
+        @for (t of tenants; track t.tenantId) {
+          <option [value]="t.tenantId">{{ t.tenantName }}</option>
+        }
+      </select>
+    </div>
+    <div class="col-12 col-md-4">
+    </div>
+    <div class="col-12 col-md-3 d-flex gap-2 align-items-end">
+      <button class="btn btn-primary w-100" (click)="loadShifts()">Refresh</button>
+    </div>
+  </div>
+</div>
+
+<!-- Data Grid -->
+<div class="card">
+  <div class="table-responsive">
+    <table class="table-enterprise">
+      <thead>
+        <tr>
+          <th>Code</th>
+          <th>Name</th>
+          <th>Type</th>
+          <th>Start Time</th>
+          <th>End Time</th>
+          <th>Grace In/Out</th>
+          <th>Flexible</th>
+          <th style="width: 150px; text-align: center;">Actions</th>
+        </tr>
+      </thead>
+      <tbody>
+        <!-- Loading Skeletons -->
+        @if (loading) {
+          @for (row of [1, 2, 3, 4, 5]; track $index) {
+            <tr>
+              @for (col of [1, 2, 3, 4, 5, 6, 7, 8]; track $index) {
+                <td>
+                  <div class="skeleton-shimmer" style="height: 16px; border-radius: 4px; background: #EAEFF4; width: 80%;"></div>
+                </td>
+              }
+            </tr>
+          }
+        }
+
+        <!-- Empty State -->
+        @if (!loading && shifts.length === 0) {
+          <tr>
+            <td colspan="8" class="text-center py-5 text-secondary">
+              <i class="bi bi-folder-x fs-2 d-block mb-2 text-muted"></i>
+              No shifts found. Click "Add Shift" to get started.
+            </td>
+          </tr>
+        }
+
+        <!-- Table Rows -->
+        @if (!loading) {
+          @for (s of shifts; track s.shiftId) {
+            <tr>
+              <td><span class="badge badge-info">{{ s.shiftCode }}</span></td>
+              <td class="fw-bold">{{ s.shiftName }}</td>
+              <td>{{ s.shiftType }}</td>
+              <td>{{ s.startTime }}</td>
+              <td>{{ s.endTime }}</td>
+              <td>{{ s.graceInMinutes }}m / {{ s.graceOutMinutes }}m</td>
+              <td>
+                <span class="badge" [ngClass]="s.isFlexible ? 'badge-success' : 'badge-danger'">
+                  {{ s.isFlexible ? 'Yes' : 'No' }}
+                </span>
+              </td>
+              <td class="text-center">
+                <div class="d-flex justify-content-center gap-2">
+                  <button class="btn btn-outline btn-sm p-1" title="Assign to Employee" (click)="openAssignModal(s)">
+                    <i class="bi bi-person-plus text-primary"></i>
+                  </button>
+                  <button class="btn btn-outline btn-sm p-1" title="Edit" (click)="openShiftModal(s)">
+                    <i class="bi bi-pencil-square text-primary"></i>
+                  </button>
+                  <button class="btn btn-outline btn-sm p-1" title="Delete" (click)="deleteShift(s)">
+                    <i class="bi bi-trash text-danger"></i>
+                  </button>
+                </div>
+              </td>
+            </tr>
+          }
+        }
+      </tbody>
+    </table>
+  </div>
+</div>
+
+<!-- Shift Create/Edit Modal -->
+@if (showShiftModal) {
+  <div class="modal-backdrop-custom"></div>
+}
+@if (showShiftModal) {
+  <div class="modal fade show d-block" tabindex="-1" role="dialog" aria-modal="true">
+    <div class="modal-dialog modal-dialog-centered">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title">{{ editingShift ? 'Edit Shift' : 'Create Shift' }}</h5>
+          <button type="button" class="btn-close" (click)="closeShiftModal()" aria-label="Close"></button>
+        </div>
+        <form [formGroup]="shiftForm" (ngSubmit)="saveShift()">
+          <div class="modal-body">
+            @if (errorMessage) {
+              <div class="alert alert-danger fs-8 p-2 my-2">
+                {{ errorMessage }}
+              </div>
+            }
+            <div class="mb-3">
+              <label class="form-label">Shift Code <span class="text-danger">*</span></label>
+              <input type="text" class="form-control" formControlName="shiftCode" placeholder="e.g., GEN, NIGHT">
+            </div>
+            <div class="mb-3">
+              <label class="form-label">Shift Name <span class="text-danger">*</span></label>
+              <input type="text" class="form-control" formControlName="shiftName" placeholder="e.g., General Shift">
+            </div>
+            <div class="row">
+              <div class="col-6 mb-3">
+                <label class="form-label">Start Time <span class="text-danger">*</span></label>
+                <input type="text" class="form-control" placeholder="09:00:00" formControlName="startTime">
+              </div>
+              <div class="col-6 mb-3">
+                <label class="form-label">End Time <span class="text-danger">*</span></label>
+                <input type="text" class="form-control" placeholder="17:00:00" formControlName="endTime">
+              </div>
+            </div>
+            <div class="row">
+              <div class="col-6 mb-3">
+                <label class="form-label">Grace In (Minutes) <span class="text-danger">*</span></label>
+                <input type="number" class="form-control" formControlName="graceInMinutes">
+              </div>
+              <div class="col-6 mb-3">
+                <label class="form-label">Grace Out (Minutes) <span class="text-danger">*</span></label>
+                <input type="number" class="form-control" formControlName="graceOutMinutes">
+              </div>
+            </div>
+            <div class="mb-3">
+              <label class="form-label">Flexible Schedule</label>
+              <div class="d-flex align-items-center gap-2 mt-1">
+                <input type="checkbox" formControlName="isFlexible" id="flexibleSwitch" style="width: 16px; height: 16px;">
+                <label for="flexibleSwitch" class="fs-8 text-secondary">Allow flexible working hours</label>
+              </div>
+            </div>
+          </div>
+          <div class="modal-footer">
+            <button type="button" class="btn btn-outline" (click)="closeShiftModal()">Cancel</button>
+            <button type="submit" class="btn btn-primary" [disabled]="saving || shiftForm.invalid">
+              {{ saving ? 'Saving...' : 'Save Shift' }}
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+}
+
+<!-- Shift Assignment Modal -->
+@if (showAssignModal) {
+  <div class="modal-backdrop-custom"></div>
+}
+@if (showAssignModal) {
+  <div class="modal fade show d-block" tabindex="-1" role="dialog" aria-modal="true">
+    <div class="modal-dialog modal-dialog-centered">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title">Assign Shift to Employee</h5>
+          <button type="button" class="btn-close" (click)="closeAssignModal()" aria-label="Close"></button>
+        </div>
+        <form [formGroup]="assignmentForm" (ngSubmit)="saveAssignment()">
+          <div class="modal-body">
+            <div class="mb-3">
+              <label class="form-label">Employee <span class="text-danger">*</span></label>
+              <select class="form-select w-100" formControlName="employeeId">
+                @for (emp of employees; track emp.employeeID) {
+                  <option [value]="emp.employeeID">{{ emp.firstName }} {{ emp.lastName }} ({{ emp.employeeCode }})</option>
+                }
+              </select>
+            </div>
+            <div class="mb-3">
+              <label class="form-label">Effective From <span class="text-danger">*</span></label>
+              <input type="date" class="form-control" formControlName="effectiveFrom">
+            </div>
+            <div class="mb-3">
+              <label class="form-label">Effective To</label>
+              <input type="date" class="form-control" formControlName="effectiveTo">
+            </div>
+          </div>
+          <div class="modal-footer">
+            <button type="button" class="btn btn-outline" (click)="closeAssignModal()">Cancel</button>
+            <button type="submit" class="btn btn-primary" [disabled]="saving || assignmentForm.invalid">
+              {{ saving ? 'Assigning...' : 'Assign Shift' }}
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+}
+
+<!-- Notification Toast -->
+@if (toastMessage) {
+  <div class="toast-custom bg-dark text-white p-3 rounded">
+    <i class="bi bi-info-circle-fill me-2 text-primary"></i> {{ toastMessage }}
+  </div>
+}

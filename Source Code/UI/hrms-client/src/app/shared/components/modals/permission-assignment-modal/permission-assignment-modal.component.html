@@ -1,0 +1,54 @@
+@if (isOpen && role) {
+  <div class="modal-backdrop-custom"></div>
+  <div class="modal fade show d-block" tabindex="-1" role="dialog" aria-modal="true">
+    <div class="modal-dialog modal-dialog-centered modal-lg">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title">Permissions Assignment: {{ role.roleName }} ({{ role.roleCode }})</h5>
+          <button type="button" class="btn-close" (click)="onClose()" aria-label="Close"></button>
+        </div>
+        <div class="modal-body">
+          <div class="table-responsive" style="max-height: 400px; overflow-y: auto;">
+            <table class="table align-middle table-row-dashed fs-6 gy-5">
+              <thead>
+                <tr class="text-start text-gray-400 fw-bold fs-7 text-uppercase gs-0">
+                  <th>Module</th>
+                  <th>Permission Name</th>
+                  <th>Permission Code</th>
+                  <th class="text-center">Allowed</th>
+                </tr>
+              </thead>
+              <tbody class="fw-semibold text-gray-600">
+                @for (perm of permissions; track perm.permissionId) {
+                  <tr>
+                    <td>
+                      <span class="badge badge-light-primary">{{ perm.moduleCode }}</span>
+                    </td>
+                    <td>{{ perm.permissionName }}</td>
+                    <td><code>{{ perm.permissionCode }}</code></td>
+                    <td class="text-center">
+                      <div class="form-check form-switch d-inline-block">
+                        <input 
+                          class="form-check-input" 
+                          type="checkbox" 
+                          [checked]="isPermissionAssigned(perm.permissionId)"
+                          (change)="onToggle(perm.permissionId, $event)">
+                      </div>
+                    </td>
+                  </tr>
+                } @empty {
+                  <tr>
+                    <td colspan="4" class="text-center py-5">No permissions defined.</td>
+                  </tr>
+                }
+              </tbody>
+            </table>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-primary btn-sm" (click)="onClose()">Done</button>
+        </div>
+      </div>
+    </div>
+  </div>
+}

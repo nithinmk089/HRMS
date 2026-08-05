@@ -1,0 +1,39 @@
+<div class="d-flex flex-stack flex-wrap pt-10">
+  <div class="fs-6 fw-semibold text-gray-700">
+    Showing {{ (page - 1) * pageSize + 1 }} to {{ Math.min(page * pageSize, totalItems) }} of {{ totalItems }} entries
+  </div>
+  
+  <div class="d-flex align-items-center gap-5">
+    <div class="d-flex align-items-center gap-2">
+      <span class="fs-7 text-gray-700">Page size:</span>
+      <select 
+        class="form-select form-select-sm form-select-solid w-75px" 
+        [value]="pageSize"
+        (change)="onPageSizeSelect($event)">
+        @for (size of pageSizes; track size) {
+          <option [value]="size">{{ size }}</option>
+        }
+      </select>
+    </div>
+    
+    <ul class="pagination pagination-outline">
+      <li class="page-item previous" [class.disabled]="page === 1">
+        <a class="page-link cursor-pointer" (click)="onPageSelect(page - 1)">
+          <i class="bi bi-chevron-left"></i>
+        </a>
+      </li>
+      
+      @for (p of pages; track p) {
+        <li class="page-item" [class.active]="p === page">
+          <a class="page-link cursor-pointer" (click)="onPageSelect(p)">{{ p }}</a>
+        </li>
+      }
+      
+      <li class="page-item next" [class.disabled]="page === totalPages">
+        <a class="page-link cursor-pointer" (click)="onPageSelect(page + 1)">
+          <i class="bi bi-chevron-right"></i>
+        </a>
+      </li>
+    </ul>
+  </div>
+</div>

@@ -1,0 +1,96 @@
+<div class="page-toolbar">
+  <div>
+    <h1 class="page-title text-main">Asset Maintenance</h1>
+    <div class="text-secondary mt-1">Track device servicing, preventative checks, diagnostics, and repairs.</div>
+  </div>
+  <div>
+    <button class="btn btn-primary btn-sm" (click)="openModal()"><i class="bi bi-plus-lg me-1"></i> Schedule Maintenance</button>
+  </div>
+</div>
+
+<div class="card">
+    <div class="card-body p-0">
+      <table class="table-enterprise">
+        <thead>
+          <tr>
+            <th>Asset</th>
+            <th>Scheduled Date</th>
+            <th>Type</th>
+            <th>Vendor</th>
+            <th>Cost</th>
+            <th>Status</th>
+            <th>Action</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr *ngFor="let m of maintenances">
+            <td class="fw-bold">{{ m.assetName || 'N/A' }}</td>
+            <td>{{ m.maintenanceDate | date:'mediumDate' }}</td>
+            <td>{{ m.maintenanceType }}</td>
+            <td>{{ m.vendorName || 'Internal' }}</td>
+            <td>{{ m.cost | currency }}</td>
+            <td>
+              <span class="badge" [ngClass]="m.maintenanceStatus === 'Scheduled' ? 'badge-warning' : 'badge-success'">
+                {{ m.maintenanceStatus }}
+              </span>
+            </td>
+            <td>
+              <button class="btn btn-sm btn-outline-success" *ngIf="m.maintenanceStatus === 'Scheduled'" (click)="closeMaint(m)">
+                Mark Complete
+              </button>
+            </td>
+          </tr>
+          <tr *ngIf="maintenances.length === 0 && !loading">
+            <td colspan="7" class="text-center text-muted py-4">No maintenance scheduled.</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- Create Modal -->
+  @if (showModal) {
+  <div class="modal-backdrop-custom"></div>
+}
+<div class="modal fade show d-block" tabindex="-1" role="dialog" aria-modal="true" *ngIf="showModal" >
+    <div class="modal-dialog">
+      <div class="modal-content" >
+        <div class="modal-header">
+          <h5 class="modal-title fw-bold">Schedule Maintenance</h5>
+          <button type="button" class="btn-close" (click)="closeModal()"></button>
+        </div>
+        <div class="modal-body">
+          <form [formGroup]="maintForm">
+            <div class="mb-3">
+              <label class="form-label">Asset</label>
+              <select class="form-select" formControlName="assetID">
+                <option value="">Select Asset</option>
+                <option *ngFor="let ast of assets" [value]="ast.assetID">{{ ast.assetName }} ({{ ast.assetCode }})</option>
+              </select>
+            </div>
+            <div class="mb-3">
+              <label class="form-label">Date</label>
+              <input type="date" class="form-control" formControlName="maintenanceDate">
+            </div>
+            <div class="mb-3">
+              <label class="form-label">Type</label>
+              <input type="text" class="form-control" formControlName="maintenanceType" placeholder="e.g. Annual Cleaning">
+            </div>
+            <div class="mb-3">
+              <label class="form-label">Vendor</label>
+              <input type="text" class="form-control" formControlName="vendorName">
+            </div>
+            <div class="mb-3">
+              <label class="form-label">Cost</label>
+              <input type="number" class="form-control" formControlName="cost">
+            </div>
+            <div class="alert alert-danger" *ngIf="errorMessage">{{ errorMessage }}</div>
+          </form>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-outline" (click)="closeModal()">Cancel</button>
+          <button type="button" class="btn btn-primary" [disabled]="maintForm.invalid || saving" (click)="saveMaintenance()">Schedule</button>
+        </div>
+      </div>
+    </div>
+  </div>

@@ -1,0 +1,211 @@
+<div class="page-toolbar">
+  <div>
+    <h1 class="page-title text-main">Notification Registry & Queue</h1>
+    <div class="text-secondary mt-1">Audit log and delivery queue tracking across all integrated communication channels</div>
+  </div>
+  <div class="d-flex gap-2">
+    <button (click)="resetFilters()" class="btn btn-outline btn-sm">
+      <i class="bi bi-x-circle me-1"></i> Clear Filters
+    </button>
+    <button (click)="loadHistory()" class="btn btn-primary btn-sm">
+      <i class="bi bi-arrow-clockwise me-1"></i> Refresh Queue
+    </button>
+  </div>
+</div>
+
+<!-- Filters Panel -->
+<div class="card p-5 mb-5 mt-4 filter-card">
+  <div class="row g-4">
+    <!-- Channel Filter -->
+    <div class="col-12 col-md-4">
+      <label class="form-label fw-semibold text-secondary mb-2">Channel</label>
+      <select class="form-select" [(ngModel)]="selectedChannel" (change)="loadHistory()">
+        <option value="">All Channels</option>
+        <option *ngFor="let ch of channels" [value]="ch">{{ ch }}</option>
+      </select>
+    </div>
+
+    <!-- Status Filter -->
+    <div class="col-12 col-md-4">
+      <label class="form-label fw-semibold text-secondary mb-2">Status</label>
+      <select class="form-select" [(ngModel)]="selectedStatus" (change)="loadHistory()">
+        <option value="">All Statuses</option>
+        <option *ngFor="let st of statuses" [value]="st">{{ st }}</option>
+      </select>
+    </div>
+
+    <!-- Business Event Filter -->
+    <div class="col-12 col-md-4">
+      <label class="form-label fw-semibold text-secondary mb-2">Business Event</label>
+      <select class="form-select" [(ngModel)]="selectedEvent" (change)="loadHistory()">
+        <option value="">All Business Events</option>
+        <option *ngFor="let ev of events" [value]="ev">{{ ev }}</option>
+      </select>
+    </div>
+  </div>
+</div>
+
+<!-- Grid Table -->
+<div class="card">
+  <div class="card-body p-0">
+    <div class="table-responsive">
+      <table class="table table-hover align-middle mb-0">
+        <thead>
+          <tr class="text-muted fw-bold fs-7 text-uppercase bg-light">
+            <th class="ps-4 py-3" style="width: 80px;">ID</th>
+            <th class="py-3">Recipient & Event</th>
+            <th class="py-3" style="width: 120px;">Channel</th>
+            <th class="py-3">Subject & Content</th>
+            <th class="py-3" style="width: 140px;">Status</th>
+            <th class="py-3" style="width: 120px;">Retries</th>
+            <th class="py-3 text-end pe-4" style="width: 200px;">Actions</th>
+          </tr>
+        </thead>
+        <tbody>
+          <!-- Loading State -->
+          <tr *ngIf="isLoading">
+            <td colspan="7" class="text-center p-5">
+              <div class="spinner-border text-primary spinner-border-sm" role="status">
+                <span class="visually-hidden">Loading...</span>
+              </div>
+              <div class="text-muted fs-7 mt-2">Fetching notification records...</div>
+            </td>
+          </tr>
+
+          <!-- Empty State -->
+          <tr *ngIf="!isLoading && history.length === 0">
+            <td colspan="7" class="text-center p-5">
+              <i class="bi bi-inbox fs-1 text-muted"></i>
+              <div class="fw-semibold text-secondary mt-3">No notifications found</div>
+              <div class="text-muted fs-8 mt-1">Try adjusting your filter parameters or refresh the feed.</div>
+            </td>
+          </tr>
+
+          <!-- Data Rows -->
+          <ng-container *ngIf="!isLoading">
+            <tr *ngFor="let item of history">
+              <!-- ID -->
+              <td class="ps-4 font-monospace text-muted fs-7">#{{ item.notificationQueueId }}</td>
+              
+              <!-- Recipient & Event -->
+              <td>
+                <div class="d-flex flex-column">
+                  <span class="fw-bold text-main">{{ item.recipient }}</span>
+                  <span class="text-secondary fs-8 mt-0.5">{{ item.businessEvent }}</span>
+                </div>
+              </td>
+              
+              <!-- Channel -->
+              <td>
+                <div class="d-flex align-items-center">
+                  <span [ngSwitch]="item.channel" class="d-flex align-items-center">
+                    <span *ngSwitchCase="'Email'"><i class="bi bi-envelope-fill text-primary me-2"></i>Email</span>
+                    <span *ngSwitchCase="'SMS'"><i class="bi bi-chat-left-dots-fill text-success me-2"></i>SMS</span>
+                    <span *ngSwitchCase="'Push'"><i class="bi bi-app-indicator text-warning me-2"></i>Push</span>
+                    <span *ngSwitchCase="'Teams'"><i class="bi bi-microsoft text-info me-2"></i>Teams</span>
+                    <span *ngSwitchCase="'In-App'"><i class="bi bi-bell-fill text-secondary me-2"></i>In-App</span>
+                    <span *ngSwitchDefault><i class="bi bi-broadcast me-2"></i>{{ item.channel }}</span>
+                  </span>
+                </div>
+              </td>
+
+              <!-- Subject & Content Preview -->
+              <td>
+                <div class="d-flex flex-column max-w-300">
+                  <span class="fw-semibold text-truncate text-main" [title]="item.subject || 'No Subject'">
+                    {{ item.subject || 'No Subject' }}
+                  </span>
+                  <span class="text-secondary text-truncate fs-8 mt-0.5" [title]="item.body">
+                    {{ item.body }}
+                  </span>
+                </div>
+              </td>
+
+              <!-- Status Badge -->
+              <td>
+                <span class="badge" [ngClass]="{
+                  'badge-light-warning': item.status === 'Queued',
+                  'badge-light-primary': item.status === 'Sent',
+                  'badge-light-success': item.status === 'Delivered',
+                  'badge-light-danger': item.status === 'Failed',
+                  'badge-light-dark': item.status === 'Cancelled',
+                  'badge-light-info': item.status === 'Read'
+                }">
+                  {{ item.status }}
+                </span>
+                <div *ngIf="item.status === 'Failed' && item.errorMessage" class="text-danger fs-9 mt-1 text-truncate" [title]="item.errorMessage" style="max-width: 130px;">
+                  {{ item.errorMessage }}
+                </div>
+              </td>
+
+              <!-- Retries -->
+              <td>
+                <div class="d-flex flex-column">
+                  <span class="fs-7 text-main fw-medium">{{ item.retryCount }} / {{ item.maxRetries }}</span>
+                  <span class="fs-9 text-muted mt-0.5" *ngIf="item.status === 'Queued'">
+                    Next: {{ item.nextRunDate | date:'shortTime' }}
+                  </span>
+                </div>
+              </td>
+
+              <!-- Actions -->
+              <td class="text-end pe-4">
+                <div class="d-flex justify-content-end gap-1">
+                  <!-- Mark Read -->
+                  <button *ngIf="item.status === 'Delivered' || item.status === 'Sent'"
+                          (click)="markAsRead(item.notificationQueueId)" 
+                          class="btn btn-icon btn-light-info btn-xs" 
+                          title="Mark as Read">
+                    <i class="bi bi-check-all"></i>
+                  </button>
+
+                  <!-- Cancel -->
+                  <button *ngIf="item.status === 'Queued'" 
+                          (click)="cancel(item.notificationQueueId)" 
+                          class="btn btn-icon btn-light-danger btn-xs" 
+                          title="Cancel Sending">
+                    <i class="bi bi-x-circle-fill"></i>
+                  </button>
+
+                  <!-- Retry -->
+                  <button *ngIf="item.status === 'Failed' || item.status === 'Cancelled'" 
+                          (click)="retry(item.notificationQueueId)" 
+                          class="btn btn-icon btn-light-success btn-xs" 
+                          title="Retry Sending">
+                    <i class="bi bi-arrow-clockwise"></i>
+                  </button>
+                </div>
+              </td>
+            </tr>
+          </ng-container>
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>
+
+<!-- Pagination Footer -->
+<div class="d-flex justify-content-between align-items-center mt-4 px-1" *ngIf="!isLoading && history.length > 0">
+  <div class="text-secondary fs-8">
+    Showing page <span class="fw-semibold text-main">{{ page }}</span>
+  </div>
+  <div class="d-flex gap-2">
+    <button (click)="prevPage()" [disabled]="page === 1" class="btn btn-outline btn-xs px-3">
+      <i class="bi bi-chevron-left me-1"></i> Previous
+    </button>
+    <button (click)="nextPage()" [disabled]="history.length < pageSize" class="btn btn-outline btn-xs px-3">
+      Next <i class="bi bi-chevron-right ms-1"></i>
+    </button>
+  </div>
+</div>
+
+<!-- Toast Alerts -->
+<div class="toast-container position-fixed bottom-0 end-0 p-3" style="z-index: 1055;">
+  <div class="toast show align-items-center text-white bg-dark border-0 shadow" role="alert" aria-live="assertive" aria-atomic="true" *ngIf="toastMessage">
+    <div class="d-flex">
+      <div class="toast-body">
+        <i class="bi bi-info-circle-fill me-2"></i> {{ toastMessage }}
+      </div>
+    </div>
+  </div>
+</div>

@@ -1,0 +1,927 @@
+<div class="page-toolbar">
+  <div>
+    <h1 class="page-title text-main">Employee Profile Detail</h1>
+    <div class="text-secondary mt-1">Manage employment lifecycle records, credentials, contacts, and historical workflows</div>
+  </div>
+  <div>
+    <a class="btn btn-outline btn-sm me-2" [routerLink]="['/hr/employees']" [queryParams]="{ tenantId: tenantId }">
+      <i class="bi bi-arrow-left me-1"></i> Back to Directory
+    </a>
+  </div>
+</div>
+
+@if (isLoading) {
+  <div class="card p-5 text-center">
+    <span class="spinner-border spinner-border-lg text-primary d-block mx-auto mb-3"></span>
+    <span class="text-secondary">Loading employee files...</span>
+  </div>
+}
+
+@if (!isLoading && employee) {
+  <!-- Profile Header Card -->
+  <div class="card mb-4 mt-2">
+    <div class="card-body p-4 d-flex flex-wrap gap-4 align-items-center justify-content-between">
+      <div class="d-flex align-items-center gap-3">
+        <div class="profile-avatar-large">
+          {{ employee.firstName.charAt(0) }}{{ employee.lastName.charAt(0) }}
+        </div>
+        <div>
+          <h2 class="text-main mb-1">{{ employee.firstName }} {{ employee.lastName }}</h2>
+          <div class="d-flex flex-wrap gap-2 text-secondary align-items-center fs-8">
+            <span class="fw-bold text-primary">{{ employee.employeeCode }}</span>
+            <span>&bull;</span>
+            <span>ID: {{ employee.employeeNumber }}</span>
+            <span>&bull;</span>
+            @if (employee.departmentName) {
+              <span>{{ employee.departmentName }}</span>
+              <span>&bull;</span>
+            }
+            @if (employee.designationName) {
+              <span>{{ employee.designationName }}</span>
+            }
+          </div>
+        </div>
+      </div>
+
+      <!-- Action Panel -->
+      <div class="d-flex gap-2">
+        <span class="badge align-self-center me-2 p-2" [ngClass]="{
+          'badge-success': employee.employeeStatus.toLowerCase() === 'active',
+          'badge-warning': employee.employeeStatus.toLowerCase() === 'suspended',
+          'badge-danger': employee.employeeStatus.toLowerCase() === 'terminated'
+        }">{{ employee.employeeStatus }}</span>
+
+        <!-- Lifecycle Dropdown -->
+        <div class="dropdown-container">
+          <button class="btn btn-outline btn-sm" (click)="loadAllData()">
+            <i class="bi bi-arrow-clockwise me-1"></i> Refresh
+          </button>
+        </div>
+
+        <button class="btn btn-primary btn-sm" (click)="openAssignManager()">
+          <i class="bi bi-diagram-3 me-1"></i> Assign Manager
+        </button>
+
+        @if (employee.employeeStatus.toLowerCase() === 'active') {
+          <button class="btn btn-outline btn-sm text-warning border-warning" (click)="openSuspend()">
+            <i class="bi bi-pause-circle me-1"></i> Suspend
+          </button>
+          <button class="btn btn-outline btn-sm text-danger border-danger" (click)="openTerminate()">
+            <i class="bi bi-x-circle me-1"></i> Terminate
+          </button>
+        }
+        @if (employee.employeeStatus.toLowerCase() === 'suspended') {
+          <button class="btn btn-outline btn-sm text-success border-success" (click)="activate()">
+            <i class="bi bi-play-circle me-1"></i> Activate
+          </button>
+        }
+        @if (employee.employeeStatus.toLowerCase() === 'terminated') {
+          <button class="btn btn-outline btn-sm text-info border-info" (click)="openRehire()">
+            <i class="bi bi-arrow-repeat me-1"></i> Rehire
+          </button>
+        }
+      </div>
+    </div>
+  </div>
+
+  <!-- Tabbed Interface -->
+  <div class="row">
+    <!-- Navigation Tabs -->
+    <div class="col-12 col-md-3">
+      <div class="card p-2 sticky-top" style="top: 80px; z-index: 10;">
+        <ul class="nav-tab-list">
+          <li>
+            <button class="nav-tab-link" [ngClass]="{active: activeTab === 'personal'}" (click)="setTab('personal')">
+              <i class="bi bi-person me-2"></i> Personal Information
+            </button>
+          </li>
+          <li>
+            <button class="nav-tab-link" [ngClass]="{active: activeTab === 'employment'}" (click)="setTab('employment')">
+              <i class="bi bi-briefcase me-2"></i> Employment Mappings
+            </button>
+          </li>
+          <li>
+            <button class="nav-tab-link" [ngClass]="{active: activeTab === 'contacts'}" (click)="setTab('contacts')">
+              <i class="bi bi-telephone me-2"></i> Contacts & Addresses
+            </button>
+          </li>
+          <li>
+            <button class="nav-tab-link" [ngClass]="{active: activeTab === 'emergency'}" (click)="setTab('emergency')">
+              <i class="bi bi-shield-plus me-2"></i> Emergency Contacts
+            </button>
+          </li>
+          <li>
+            <button class="nav-tab-link" [ngClass]="{active: activeTab === 'education'}" (click)="setTab('education')">
+              <i class="bi bi-journal-bookmark me-2"></i> Education & Certs
+            </button>
+          </li>
+          <li>
+            <button class="nav-tab-link" [ngClass]="{active: activeTab === 'documents'}" (click)="setTab('documents')">
+              <i class="bi bi-file-earmark-pdf me-2"></i> Documents Vault
+            </button>
+          </li>
+          <li>
+            <button class="nav-tab-link" [ngClass]="{active: activeTab === 'org'}" (click)="setTab('org')">
+              <i class="bi bi-diagram-3 me-2"></i> Hierarchy & Reports
+            </button>
+          </li>
+          <li>
+            <button class="nav-tab-link" [ngClass]="{active: activeTab === 'history'}" (click)="setTab('history')">
+              <i class="bi bi-clock-history me-2"></i> Service History
+            </button>
+          </li>
+        </ul>
+      </div>
+    </div>
+
+    <!-- Tab View Panel -->
+    <div class="col-12 col-md-9">
+      <div class="card p-4">
+        <!-- 1. Personal Info -->
+        @if (activeTab === 'personal') {
+          <div>
+            <h3 class="section-title mb-3">Personal Details</h3>
+            <div class="row g-3">
+              <div class="col-12 col-sm-6">
+                <span class="text-secondary d-block fs-8 uppercase">Preferred Name</span>
+                <span class="text-main fw-bold">{{ employee.preferredName || '-' }}</span>
+              </div>
+              <div class="col-12 col-sm-6">
+                <span class="text-secondary d-block fs-8 uppercase">Gender</span>
+                <span class="text-main fw-bold">{{ employee.gender || '-' }}</span>
+              </div>
+              <div class="col-12 col-sm-6">
+                <span class="text-secondary d-block fs-8 uppercase">Date of Birth</span>
+                <span class="text-main fw-bold">{{ employee.dateOfBirth ? (employee.dateOfBirth | date:'longDate') : '-' }}</span>
+              </div>
+              <div class="col-12 col-sm-6">
+                <span class="text-secondary d-block fs-8 uppercase">Marital Status</span>
+                <span class="text-main fw-bold">{{ employee.maritalStatus || '-' }}</span>
+              </div>
+              <div class="col-12 col-sm-6">
+                <span class="text-secondary d-block fs-8 uppercase">Nationality</span>
+                <span class="text-main fw-bold">{{ employee.nationality || '-' }}</span>
+              </div>
+              <div class="col-12 col-sm-6">
+                <span class="text-secondary d-block fs-8 uppercase">Personal Email</span>
+                <span class="text-main fw-bold">{{ employee.personalEmail || '-' }}</span>
+              </div>
+              <div class="col-12 col-sm-6">
+                <span class="text-secondary d-block fs-8 uppercase">Mobile Number</span>
+                <span class="text-main fw-bold">{{ employee.mobileNumber || '-' }}</span>
+              </div>
+            </div>
+          </div>
+        }
+
+        <!-- 2. Employment -->
+        @if (activeTab === 'employment') {
+          <div>
+            <h3 class="section-title mb-3">Employment Details</h3>
+            @if (employment) {
+              <div class="row g-3">
+                <div class="col-12 col-sm-6">
+                  <span class="text-secondary d-block fs-8 uppercase">Company</span>
+                  <span class="text-main fw-bold">{{ employee.companyName || '-' }}</span>
+                </div>
+                <div class="col-12 col-sm-6">
+                  <span class="text-secondary d-block fs-8 uppercase">Business Unit</span>
+                  <span class="text-main fw-bold">{{ employee.businessUnitName || '-' }}</span>
+                </div>
+                <div class="col-12 col-sm-6">
+                  <span class="text-secondary d-block fs-8 uppercase">Department</span>
+                  <span class="text-main fw-bold">{{ employee.departmentName || '-' }}</span>
+                </div>
+                <div class="col-12 col-sm-6">
+                  <span class="text-secondary d-block fs-8 uppercase">Designation</span>
+                  <span class="text-main fw-bold">{{ employee.designationName || '-' }}</span>
+                </div>
+                <div class="col-12 col-sm-6">
+                  <span class="text-secondary d-block fs-8 uppercase">Location</span>
+                  <span class="text-main fw-bold">{{ employee.locationName || '-' }}</span>
+                </div>
+                <div class="col-12 col-sm-6">
+                  <span class="text-secondary d-block fs-8 uppercase">Cost Center</span>
+                  <span class="text-main fw-bold">{{ employee.costCenterName || '-' }}</span>
+                </div>
+                <div class="col-12 col-sm-6">
+                  <span class="text-secondary d-block fs-8 uppercase">Employment Type</span>
+                  <span class="text-main fw-bold">{{ employment.employmentType }}</span>
+                </div>
+                <div class="col-12 col-sm-6">
+                  <span class="text-secondary d-block fs-8 uppercase">Employment Status</span>
+                  <span class="text-main fw-bold">{{ employment.employmentStatus }}</span>
+                </div>
+                <div class="col-12 col-sm-6">
+                  <span class="text-secondary d-block fs-8 uppercase">Date of Joining</span>
+                  <span class="text-main fw-bold">{{ employment.joiningDate | date:'longDate' }}</span>
+                </div>
+                <div class="col-12 col-sm-6">
+                  <span class="text-secondary d-block fs-8 uppercase">Confirmation Date</span>
+                  <span class="text-main fw-bold">{{ employment.confirmationDate ? (employment.confirmationDate | date:'longDate') : 'Probationary' }}</span>
+                </div>
+                <div class="col-12 col-sm-6">
+                  <span class="text-secondary d-block fs-8 uppercase">Probation End Date</span>
+                  <span class="text-main fw-bold">{{ employment.probationEndDate ? (employment.probationEndDate | date:'longDate') : '-' }}</span>
+                </div>
+                <div class="col-12 col-sm-6">
+                  <span class="text-secondary d-block fs-8 uppercase">Notice Period Days</span>
+                  <span class="text-main fw-bold">{{ employment.noticePeriodDays }} Days</span>
+                </div>
+              </div>
+            } @else {
+              <div class="text-center py-4 text-secondary">
+                <i class="bi bi-briefcase fs-3 d-block mb-2"></i> No employment records mapped. Mapped details are managed by Admin/HR.
+              </div>
+            }
+          </div>
+        }
+
+        <!-- 3. Contact & Addresses -->
+        @if (activeTab === 'contacts') {
+          <div>
+            <div class="d-flex justify-content-between align-items-center mb-3">
+              <h3 class="section-title">Addresses</h3>
+              <button class="btn btn-outline btn-sm" (click)="openAddAddress()">
+                <i class="bi bi-plus-lg me-1"></i> Add Address
+              </button>
+            </div>
+            <div class="row g-3 mb-4">
+              @for (a of addresses; track a.employeeAddressID) {
+                <div class="col-12 col-md-6">
+                  <div class="card p-3 bg-light border-light relative">
+                    <div class="absolute" style="top: 10px; right: 10px;">
+                      <button class="btn-icon p-1 text-primary" (click)="openEditAddress(a)"><i class="bi bi-pencil"></i></button>
+                      <button class="btn-icon p-1 text-danger ms-1" (click)="deleteAddress(a.employeeAddressID)"><i class="bi bi-trash"></i></button>
+                    </div>
+                    <span class="badge badge-info mb-2 align-self-start">{{ a.addressType }}</span>
+                    <div class="text-main fw-bold mt-1">{{ a.addressLine1 }}</div>
+                    @if (a.addressLine2) {
+                      <div class="text-secondary fs-8">{{ a.addressLine2 }}</div>
+                    }
+                    <div class="text-secondary fs-8">{{ a.city }}, {{ a.state || '' }}</div>
+                    <div class="text-secondary fs-8 fw-bold mt-1">{{ a.country }} - {{ a.zipCode }}</div>
+                  </div>
+                </div>
+              }
+              @if (addresses.length === 0) {
+                <div class="col-12 text-center text-secondary py-3">No addresses recorded.</div>
+              }
+            </div>
+
+            <hr class="my-4 border-light">
+
+            <div class="d-flex justify-content-between align-items-center mb-3">
+              <h3 class="section-title">Contact Channels</h3>
+              <button class="btn btn-outline btn-sm" (click)="openAddContact()">
+                <i class="bi bi-plus-lg me-1"></i> Add Channel
+              </button>
+            </div>
+            <div class="row g-3">
+              @for (c of contacts; track c.employeeContactID) {
+                <div class="col-12 col-md-6">
+                  <div class="card p-3 bg-light border-light d-flex justify-content-between align-items-center flex-row">
+                    <div>
+                      <span class="badge badge-success fs-9">{{ c.contactType }}</span>
+                      <div class="text-main fw-bold mt-1 fs-6">{{ c.contactValue }}</div>
+                    </div>
+                    <div>
+                      <button class="btn-icon p-1 text-primary" (click)="openEditContact(c)"><i class="bi bi-pencil"></i></button>
+                      <button class="btn-icon p-1 text-danger ms-1" (click)="deleteContact(c.employeeContactID)"><i class="bi bi-trash"></i></button>
+                    </div>
+                  </div>
+                </div>
+              }
+              @if (contacts.length === 0) {
+                <div class="col-12 text-center text-secondary py-3">No contact channels recorded.</div>
+              }
+            </div>
+          </div>
+        }
+
+        <!-- 4. Emergency Contacts -->
+        @if (activeTab === 'emergency') {
+          <div>
+            <div class="d-flex justify-content-between align-items-center mb-3">
+              <h3 class="section-title">Emergency Contacts</h3>
+              <button class="btn btn-outline btn-sm" (click)="openAddEmergency()">
+                <i class="bi bi-plus-lg me-1"></i> Add Contact
+              </button>
+            </div>
+            <div class="row g-3">
+              @for (e of emergencies; track e.employeeEmergencyContactID) {
+                <div class="col-12 col-md-6">
+                  <div class="card p-3 bg-light border-light relative">
+                    <div class="absolute" style="top: 10px; right: 10px;">
+                      <button class="btn-icon p-1 text-primary" (click)="openEditEmergency(e)"><i class="bi bi-pencil"></i></button>
+                      <button class="btn-icon p-1 text-danger ms-1" (click)="deleteEmergency(e.employeeEmergencyContactID)"><i class="bi bi-trash"></i></button>
+                    </div>
+                    <div class="text-main fw-bold">{{ e.contactName }}</div>
+                    <span class="badge badge-info mt-1 mb-2 align-self-start">{{ e.relationship }}</span>
+                    <div class="text-secondary fs-8 mt-1"><i class="bi bi-telephone me-1"></i> {{ e.mobileNumber }}</div>
+                    @if (e.email) {
+                      <div class="text-secondary fs-8"><i class="bi bi-envelope me-1"></i> {{ e.email }}</div>
+                    }
+                  </div>
+                </div>
+              }
+              @if (emergencies.length === 0) {
+                <div class="col-12 text-center text-secondary py-3">No emergency contacts recorded.</div>
+              }
+            </div>
+          </div>
+        }
+
+        <!-- 5. Education & Certs -->
+        @if (activeTab === 'education') {
+          <div>
+            <div class="d-flex justify-content-between align-items-center mb-3">
+              <h3 class="section-title">Academic Qualifications</h3>
+              <button class="btn btn-outline btn-sm" (click)="openAddQual()">
+                <i class="bi bi-plus-lg me-1"></i> Add Academic Record
+              </button>
+            </div>
+            <div class="table-responsive mb-4">
+              <table class="table-enterprise">
+                <thead>
+                  <tr>
+                    <th>Type</th>
+                    <th>Institution</th>
+                    <th>Board/University</th>
+                    <th>Year of Passing</th>
+                    <th>Score / %</th>
+                    <th style="width: 100px; text-align: center;">Actions</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  @for (q of qualifications; track q.employeeQualificationID) {
+                    <tr>
+                      <td class="fw-bold">{{ q.qualificationType }}</td>
+                      <td>{{ q.institution }}</td>
+                      <td>{{ q.university || '-' }}</td>
+                      <td>{{ q.yearOfPassing }}</td>
+                      <td>{{ q.percentage ? q.percentage + '%' : '-' }}</td>
+                      <td class="text-center">
+                        <button class="btn-icon p-1 text-primary" (click)="openEditQual(q)"><i class="bi bi-pencil"></i></button>
+                        <button class="btn-icon p-1 text-danger ms-2" (click)="deleteQual(q.employeeQualificationID)"><i class="bi bi-trash"></i></button>
+                      </td>
+                    </tr>
+                  }
+                  @if (qualifications.length === 0) {
+                    <tr><td colspan="6" class="text-center py-4 text-secondary">No academic qualifications recorded.</td></tr>
+                  }
+                </tbody>
+              </table>
+            </div>
+
+            <hr class="my-4 border-light">
+
+            <div class="d-flex justify-content-between align-items-center mb-3">
+              <h3 class="section-title">Professional Certifications</h3>
+              <button class="btn btn-outline btn-sm" (click)="openAddCert()">
+                <i class="bi bi-plus-lg me-1"></i> Add Certificate
+              </button>
+            </div>
+            <div class="table-responsive">
+              <table class="table-enterprise">
+                <thead>
+                  <tr>
+                    <th>Cert Name</th>
+                    <th>Authority</th>
+                    <th>Issue Date</th>
+                    <th>Expiry Date</th>
+                    <th>Cert Number</th>
+                    <th style="width: 100px; text-align: center;">Actions</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  @for (c of certifications; track c.employeeCertificationID) {
+                    <tr>
+                      <td class="fw-bold text-primary">{{ c.certificationName }}</td>
+                      <td>{{ c.certificationAuthority }}</td>
+                      <td>{{ c.issueDate | date:'mediumDate' }}</td>
+                      <td>{{ c.expiryDate ? (c.expiryDate | date:'mediumDate') : 'No Expiry' }}</td>
+                      <td>{{ c.certificateNumber || '-' }}</td>
+                      <td class="text-center">
+                        <button class="btn-icon p-1 text-primary" (click)="openEditCert(c)"><i class="bi bi-pencil"></i></button>
+                        <button class="btn-icon p-1 text-danger ms-2" (click)="deleteCert(c.employeeCertificationID)"><i class="bi bi-trash"></i></button>
+                      </td>
+                    </tr>
+                  }
+                  @if (certifications.length === 0) {
+                    <tr><td colspan="6" class="text-center py-4 text-secondary">No professional certifications recorded.</td></tr>
+                  }
+                </tbody>
+              </table>
+            </div>
+          </div>
+        }
+
+        <!-- 6. Documents -->
+        @if (activeTab === 'documents') {
+          <div>
+            <div class="d-flex justify-content-between align-items-center mb-3">
+              <h3 class="section-title">Documents Vault</h3>
+              <button class="btn btn-outline btn-sm" (click)="openAddDoc()">
+                <i class="bi bi-upload me-1"></i> Upload Document
+              </button>
+            </div>
+            <div class="table-responsive">
+              <table class="table-enterprise">
+                <thead>
+                  <tr>
+                    <th>Doc Category</th>
+                    <th>File Name</th>
+                    <th>Mime Type</th>
+                    <th>Version</th>
+                    <th>Actions</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  @for (d of documents; track d.employeeDocumentID) {
+                    <tr>
+                      <td class="fw-bold">{{ d.documentType }}</td>
+                      <td><a [href]="d.filePath" target="_blank" class="fw-bold"><i class="bi bi-file-earmark-text me-1"></i> {{ d.fileName }}</a></td>
+                      <td>{{ d.mimeType }}</td>
+                      <td><span class="badge badge-info">v{{ d.versionNumber }}</span></td>
+                      <td>
+                        <div class="d-flex gap-2">
+                          <button class="btn-icon text-primary p-1" title="Upload New Version" (click)="openEditDoc(d)"><i class="bi bi-arrow-up-circle"></i></button>
+                          @if (d.versionNumber > 1) {
+                            <button class="btn-icon text-warning p-1" title="Restore Previous Version" (click)="restoreVersion(d.employeeDocumentID, d.versionNumber - 1)"><i class="bi bi-reply"></i></button>
+                          }
+                          <button class="btn-icon text-danger p-1" title="Delete" (click)="deleteDoc(d.employeeDocumentID)"><i class="bi bi-trash"></i></button>
+                        </div>
+                      </td>
+                    </tr>
+                  }
+                  @if (documents.length === 0) {
+                    <tr><td colspan="5" class="text-center py-4 text-secondary">No documents uploaded.</td></tr>
+                  }
+                </tbody>
+              </table>
+            </div>
+          </div>
+        }
+
+        <!-- 7. Org Hierarchy -->
+        @if (activeTab === 'org') {
+          <div>
+            <h3 class="section-title mb-3">Manager Hierarchy</h3>
+            <div class="row g-3 mb-4">
+              @for (m of managers; track m.employeeManagerID) {
+                <div class="col-12 col-md-6">
+                  <div class="card p-3 bg-light border-light d-flex justify-content-between align-items-center flex-row">
+                    <div>
+                      <span class="badge badge-info">Reports To</span>
+                      <div class="text-main fw-bold mt-1 fs-6">{{ m.managerFullName }}</div>
+                      <div class="text-secondary fs-8 mt-1">Effective: {{ m.effectiveFrom | date:'mediumDate' }}</div>
+                    </div>
+                    <div>
+                      <button class="btn btn-outline btn-sm text-danger border-danger" (click)="removeManager(m.managerID)"><i class="bi bi-trash me-1"></i> Remove</button>
+                    </div>
+                  </div>
+                </div>
+              }
+              @if (managers.length === 0) {
+                <div class="col-12 text-center py-3 text-secondary">No reporting managers mapped. Use "Assign Manager" to set one.</div>
+              }
+            </div>
+
+            <hr class="my-4 border-light">
+
+            <h3 class="section-title mb-3">Direct Reports</h3>
+            <div class="row g-3">
+              @for (r of directReports; track r.employeeID) {
+                <div class="col-12 col-md-6">
+                  <div class="card p-3 bg-light border-light clickable-row" [routerLink]="['/hr/employees', r.employeeID]" [queryParams]="{ tenantId: tenantId }">
+                    <div class="text-main fw-bold">{{ r.firstName }} {{ r.lastName }}</div>
+                    <div class="text-secondary fs-8 mt-1">{{ r.employeeCode }} &bull; {{ r.designationName || 'Staff' }}</div>
+                  </div>
+                </div>
+              }
+              @if (directReports.length === 0) {
+                <div class="col-12 text-center py-3 text-secondary">No direct reports. This employee is not marked as a manager.</div>
+              }
+            </div>
+          </div>
+        }
+
+        <!-- 8. Service History -->
+        @if (activeTab === 'history') {
+          <div>
+            <h3 class="section-title mb-3">Service Lifecycle Timeline</h3>
+            <div class="timeline mt-4">
+              @for (h of serviceHistory; track h.recordID) {
+                <div class="timeline-item">
+                  <div class="timeline-badge" [ngClass]="{
+                    'bg-success': h.recordType.toLowerCase() === 'statuschange',
+                    'bg-primary': h.recordType.toLowerCase() === 'transfer',
+                    'bg-info': h.recordType.toLowerCase() === 'promotion'
+                  }"></div>
+                  <div class="timeline-card p-3 card bg-light border-light mb-3">
+                    <div class="d-flex justify-content-between align-items-center">
+                      <span class="badge badge-info">{{ h.recordType }}</span>
+                      <span class="text-secondary fs-8">{{ h.effectiveDate | date:'mediumDate' }}</span>
+                    </div>
+                    <div class="text-main fw-bold mt-2">{{ h.detailText }}</div>
+                    @if (h.reason) {
+                      <div class="text-secondary fs-8 mt-1 italic">Reason: {{ h.reason }}</div>
+                    }
+                  </div>
+                </div>
+              }
+              @if (serviceHistory.length === 0) {
+                <div class="text-center py-4 text-secondary">No historical changes recorded.</div>
+              }
+            </div>
+          </div>
+        }
+      </div>
+    </div>
+  </div>
+
+  <!-- CRUD MODALS -->
+
+  <!-- Add/Edit Address -->
+  @if (showAddressModal) {
+    <div class="modal-backdrop">
+      <div class="modal-container">
+        <div class="modal-header">
+          <h4 class="card-title text-main">{{ editMode ? 'Edit Address' : 'Add Address' }}</h4>
+          <button class="btn-close" (click)="showAddressModal = false"><i class="bi bi-x-lg"></i></button>
+        </div>
+        <div class="modal-body">
+          <form [formGroup]="addressForm" (ngSubmit)="saveAddress()">
+            <div class="mb-3">
+              <label class="form-label">Address Type</label>
+              <select class="form-select w-100" formControlName="addressType">
+                <option value="Permanent">Permanent</option>
+                <option value="Current">Current</option>
+                <option value="Emergency">Emergency</option>
+              </select>
+            </div>
+            <div class="mb-3">
+              <label class="form-label">Address Line 1*</label>
+              <input type="text" class="form-control" formControlName="addressLine1">
+            </div>
+            <div class="mb-3">
+              <label class="form-label">Address Line 2</label>
+              <input type="text" class="form-control" formControlName="addressLine2">
+            </div>
+            <div class="row g-2 mb-3">
+              <div class="col-6">
+                <label class="form-label">City*</label>
+                <input type="text" class="form-control" formControlName="city">
+              </div>
+              <div class="col-6">
+                <label class="form-label">State</label>
+                <input type="text" class="form-control" formControlName="state">
+              </div>
+            </div>
+            <div class="row g-2 mb-3">
+              <div class="col-6">
+                <label class="form-label">Country*</label>
+                <input type="text" class="form-control" formControlName="country">
+              </div>
+              <div class="col-6">
+                <label class="form-label">Zip Code</label>
+                <input type="text" class="form-control" formControlName="zipCode">
+              </div>
+            </div>
+            <div class="d-flex justify-content-end gap-2 mt-4">
+              <button type="button" class="btn btn-outline" (click)="showAddressModal = false">Cancel</button>
+              <button type="submit" class="btn btn-primary">Save Address</button>
+            </div>
+          </form>
+        </div>
+      </div>
+    </div>
+  }
+
+  <!-- Add/Edit Contact -->
+  @if (showContactModal) {
+    <div class="modal-backdrop">
+      <div class="modal-container">
+        <div class="modal-header">
+          <h4 class="card-title text-main">{{ editMode ? 'Edit Contact Channel' : 'Add Contact Channel' }}</h4>
+          <button class="btn-close" (click)="showContactModal = false"><i class="bi bi-x-lg"></i></button>
+        </div>
+        <div class="modal-body">
+          <form [formGroup]="contactForm" (ngSubmit)="saveContact()">
+            <div class="mb-3">
+              <label class="form-label">Contact Type</label>
+              <select class="form-select w-100" formControlName="contactType">
+                <option value="Mobile">Mobile</option>
+                <option value="Alternate Mobile">Alternate Mobile</option>
+                <option value="Work Phone">Work Phone</option>
+                <option value="Personal Email">Personal Email</option>
+                <option value="Work Email">Work Email</option>
+              </select>
+            </div>
+            <div class="mb-3">
+              <label class="form-label">Contact Value / Number / Email*</label>
+              <input type="text" class="form-control" formControlName="contactValue">
+            </div>
+            <div class="d-flex justify-content-end gap-2 mt-4">
+              <button type="button" class="btn btn-outline" (click)="showContactModal = false">Cancel</button>
+              <button type="submit" class="btn btn-primary">Save Channel</button>
+            </div>
+          </form>
+        </div>
+      </div>
+    </div>
+  }
+
+  <!-- Add/Edit Emergency Contact -->
+  @if (showEmergencyModal) {
+    <div class="modal-backdrop">
+      <div class="modal-container">
+        <div class="modal-header">
+          <h4 class="card-title text-main">{{ editMode ? 'Edit Emergency Contact' : 'Add Emergency Contact' }}</h4>
+          <button class="btn-close" (click)="showEmergencyModal = false"><i class="bi bi-x-lg"></i></button>
+        </div>
+        <div class="modal-body">
+          <form [formGroup]="emergencyForm" (ngSubmit)="saveEmergency()">
+            <div class="mb-3">
+              <label class="form-label">Contact Name*</label>
+              <input type="text" class="form-control" formControlName="contactName">
+            </div>
+            <div class="mb-3">
+              <label class="form-label">Relationship*</label>
+              <select class="form-select w-100" formControlName="relationship">
+                <option value="Spouse">Spouse</option>
+                <option value="Parent">Parent</option>
+                <option value="Child">Child</option>
+                <option value="Sibling">Sibling</option>
+                <option value="Relative">Relative</option>
+                <option value="Friend">Friend</option>
+              </select>
+            </div>
+            <div class="mb-3">
+              <label class="form-label">Mobile Number*</label>
+              <input type="text" class="form-control" formControlName="mobileNumber">
+            </div>
+            <div class="mb-3">
+              <label class="form-label">Email Address</label>
+              <input type="email" class="form-control" formControlName="email">
+            </div>
+            <div class="d-flex justify-content-end gap-2 mt-4">
+              <button type="button" class="btn btn-outline" (click)="showEmergencyModal = false">Cancel</button>
+              <button type="submit" class="btn btn-primary">Save Contact</button>
+            </div>
+          </form>
+        </div>
+      </div>
+    </div>
+  }
+
+  <!-- Add/Edit Qualification -->
+  @if (showQualModal) {
+    <div class="modal-backdrop">
+      <div class="modal-container">
+        <div class="modal-header">
+          <h4 class="card-title text-main">{{ editMode ? 'Edit Qualification' : 'Add Academic Qualification' }}</h4>
+          <button class="btn-close" (click)="showQualModal = false"><i class="bi bi-x-lg"></i></button>
+        </div>
+        <div class="modal-body">
+          <form [formGroup]="qualForm" (ngSubmit)="saveQual()">
+            <div class="mb-3">
+              <label class="form-label">Qualification Type*</label>
+              <select class="form-select w-100" formControlName="qualificationType">
+                <option value="Secondary">Secondary School</option>
+                <option value="Higher Secondary">Higher Secondary</option>
+                <option value="Diploma">Diploma</option>
+                <option value="Bachelor">Bachelor Degree</option>
+                <option value="Master">Master Degree</option>
+                <option value="Doctorate">Doctorate / PhD</option>
+              </select>
+            </div>
+            <div class="mb-3">
+              <label class="form-label">Institution / School / College*</label>
+              <input type="text" class="form-control" formControlName="institution">
+            </div>
+            <div class="mb-3">
+              <label class="form-label">University / Board</label>
+              <input type="text" class="form-control" formControlName="university">
+            </div>
+            <div class="row g-2 mb-3">
+              <div class="col-6">
+                <label class="form-label">Year of Passing*</label>
+                <input type="number" class="form-control" formControlName="yearOfPassing">
+              </div>
+              <div class="col-6">
+                <label class="form-label">Percentage / GPA</label>
+                <input type="text" class="form-control" formControlName="percentage" placeholder="e.g. 85.5">
+              </div>
+            </div>
+            <div class="d-flex justify-content-end gap-2 mt-4">
+              <button type="button" class="btn btn-outline" (click)="showQualModal = false">Cancel</button>
+              <button type="submit" class="btn btn-primary">Save Academic Record</button>
+            </div>
+          </form>
+        </div>
+      </div>
+    </div>
+  }
+
+  <!-- Add/Edit Certification -->
+  @if (showCertModal) {
+    <div class="modal-backdrop">
+      <div class="modal-container">
+        <div class="modal-header">
+          <h4 class="card-title text-main">{{ editMode ? 'Edit Certification' : 'Add Professional Certification' }}</h4>
+          <button class="btn-close" (click)="showCertModal = false"><i class="bi bi-x-lg"></i></button>
+        </div>
+        <div class="modal-body">
+          <form [formGroup]="certForm" (ngSubmit)="saveCert()">
+            <div class="mb-3">
+              <label class="form-label">Certification Name*</label>
+              <input type="text" class="form-control" formControlName="certificationName">
+            </div>
+            <div class="mb-3">
+              <label class="form-label">Certification Authority / Organization*</label>
+              <input type="text" class="form-control" formControlName="certificationAuthority">
+            </div>
+            <div class="row g-2 mb-3">
+              <div class="col-6">
+                <label class="form-label">Issue Date*</label>
+                <input type="date" class="form-control" formControlName="issueDate">
+              </div>
+              <div class="col-6">
+                <label class="form-label">Expiry Date</label>
+                <input type="date" class="form-control" formControlName="expiryDate">
+              </div>
+            </div>
+            <div class="mb-3">
+              <label class="form-label">Certificate License Number</label>
+              <input type="text" class="form-control" formControlName="certificateNumber">
+            </div>
+            <div class="d-flex justify-content-end gap-2 mt-4">
+              <button type="button" class="btn btn-outline" (click)="showCertModal = false">Cancel</button>
+              <button type="submit" class="btn btn-primary">Save Certificate</button>
+            </div>
+          </form>
+        </div>
+      </div>
+    </div>
+  }
+
+  <!-- Add/Edit Document -->
+  @if (showDocModal) {
+    <div class="modal-backdrop">
+      <div class="modal-container">
+        <div class="modal-header">
+          <h4 class="card-title text-main">{{ editMode ? 'Upload Document Version' : 'Upload Document' }}</h4>
+          <button class="btn-close" (click)="showDocModal = false"><i class="bi bi-x-lg"></i></button>
+        </div>
+        <div class="modal-body">
+          <form [formGroup]="docForm" (ngSubmit)="saveDoc()">
+            <div class="mb-3">
+              <label class="form-label">Document Category / Type*</label>
+              <select class="form-select w-100" formControlName="documentType" [disabled]="editMode">
+                <option value="Aadhar Card">Aadhar Card</option>
+                <option value="PAN Card">PAN Card</option>
+                <option value="Passport">Passport</option>
+                <option value="Visa">Visa</option>
+                <option value="Degree Certificate">Degree Certificate</option>
+                <option value="Experience Letter">Experience Letter</option>
+                <option value="Other">Other / Attachment</option>
+              </select>
+            </div>
+            <div class="mb-3">
+              <label class="form-label">File Name (Friendly)*</label>
+              <input type="text" class="form-control" formControlName="fileName" placeholder="e.g. pan_card_john.pdf">
+            </div>
+            <div class="mb-3">
+              <label class="form-label">Physical File Path (Simulation)*</label>
+              <input type="text" class="form-control" formControlName="filePath" placeholder="e.g. /uploads/docs/pan_card.pdf">
+            </div>
+            <div class="mb-3">
+              <label class="form-label">Mime Type</label>
+              <input type="text" class="form-control" formControlName="mimeType">
+            </div>
+            <div class="d-flex justify-content-end gap-2 mt-4">
+              <button type="button" class="btn btn-outline" (click)="showDocModal = false">Cancel</button>
+              <button type="submit" class="btn btn-primary">{{ editMode ? 'Upload New Version' : 'Upload Document' }}</button>
+            </div>
+          </form>
+        </div>
+      </div>
+    </div>
+  }
+
+  <!-- Assign Manager -->
+  @if (showManagerModal) {
+    <div class="modal-backdrop">
+      <div class="modal-container">
+        <div class="modal-header">
+          <h4 class="card-title text-main">Assign Reporting Manager</h4>
+          <button class="btn-close" (click)="showManagerModal = false"><i class="bi bi-x-lg"></i></button>
+        </div>
+        <div class="modal-body">
+          <form [formGroup]="managerForm" (ngSubmit)="saveManager()">
+            <div class="mb-3">
+              <label class="form-label">Reporting Manager*</label>
+              <select class="form-select w-100" formControlName="managerId">
+                <option value="">Choose Manager...</option>
+                <!-- Usually filled with a search or list. We will provide some mock IDs or all employee directories -->
+                <!-- For simplicity, let's load all direct report options that are not this employee -->
+                <option value="1">SYSADMIN (Nithin)</option>
+                <option value="2">HR Manager (Preethi)</option>
+                <option value="3">Operations Head (Rahul)</option>
+              </select>
+            </div>
+            <div class="mb-3">
+              <label class="form-label">Effective From Date*</label>
+              <input type="date" class="form-control" formControlName="effectiveFrom">
+            </div>
+            <div class="d-flex justify-content-end gap-2 mt-4">
+              <button type="button" class="btn btn-outline" (click)="showManagerModal = false">Cancel</button>
+              <button type="submit" class="btn btn-primary">Assign Manager</button>
+            </div>
+          </form>
+        </div>
+      </div>
+    </div>
+  }
+
+  <!-- Lifecycle Modal: Suspend -->
+  @if (showSuspendModal) {
+    <div class="modal-backdrop">
+      <div class="modal-container">
+        <div class="modal-header">
+          <h4 class="card-title text-main">Suspend Employee Profile</h4>
+          <button class="btn-close" (click)="showSuspendModal = false"><i class="bi bi-x-lg"></i></button>
+        </div>
+        <div class="modal-body">
+          <div class="mb-3">
+            <label class="form-label">Suspension Reason / Comments</label>
+            <textarea class="form-control" rows="3" [(ngModel)]="lifecycleReason" placeholder="Enter suspension reason..."></textarea>
+          </div>
+          <div class="d-flex justify-content-end gap-2 mt-4">
+            <button type="button" class="btn btn-outline" (click)="showSuspendModal = false">Cancel</button>
+            <button type="button" class="btn btn-primary bg-warning border-warning" (click)="confirmSuspend()">Suspend Profile</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  }
+
+  <!-- Lifecycle Modal: Terminate -->
+  @if (showTerminateModal) {
+    <div class="modal-backdrop">
+      <div class="modal-container">
+        <div class="modal-header">
+          <h4 class="card-title text-main text-danger">Terminate Employment</h4>
+          <button class="btn-close" (click)="showTerminateModal = false"><i class="bi bi-x-lg"></i></button>
+        </div>
+        <div class="modal-body">
+          <div class="mb-3 text-secondary alert alert-danger">
+            <strong>Warning:</strong> This will terminate employee's contract and deactivate system user profiles immediately.
+          </div>
+          <div class="mb-3">
+            <label class="form-label">Termination Details / Final Remarks</label>
+            <textarea class="form-control" rows="3" [(ngModel)]="lifecycleReason" placeholder="Enter exit details..."></textarea>
+          </div>
+          <div class="d-flex justify-content-end gap-2 mt-4">
+            <button type="button" class="btn btn-outline" (click)="showTerminateModal = false">Cancel</button>
+            <button type="button" class="btn btn-primary bg-danger border-danger" (click)="confirmTerminate()">Confirm Termination</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  }
+
+  <!-- Lifecycle Modal: Rehire -->
+  @if (showRehireModal) {
+    <div class="modal-backdrop">
+      <div class="modal-container">
+        <div class="modal-header">
+          <h4 class="card-title text-main">Rehire Employee</h4>
+          <button class="btn-close" (click)="showRehireModal = false"><i class="bi bi-x-lg"></i></button>
+        </div>
+        <div class="modal-body">
+          <div class="mb-3 text-secondary alert alert-info">
+            This will restore the employee status to Active, reset joining date to today, and log rehiring status.
+          </div>
+          <div class="mb-3">
+            <label class="form-label">Rehiring Remarks</label>
+            <textarea class="form-control" rows="3" [(ngModel)]="lifecycleReason" placeholder="Enter rehiring comments..."></textarea>
+          </div>
+          <div class="d-flex justify-content-end gap-2 mt-4">
+            <button type="button" class="btn btn-outline" (click)="showRehireModal = false">Cancel</button>
+            <button type="button" class="btn btn-primary" (click)="confirmRehire()">Confirm Rehire</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  }
+}
+
+<!-- Notification Toast -->
+@if (toastMessage) {
+  <div class="toast-custom bg-dark text-white p-3 rounded">
+    <i class="bi bi-info-circle-fill me-2 text-primary"></i> {{ toastMessage }}
+  </div>
+}

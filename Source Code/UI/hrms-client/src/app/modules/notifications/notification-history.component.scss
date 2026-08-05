@@ -1,0 +1,110 @@
+.filter-card {
+  background: var(--card-bg);
+  border: 1px solid var(--border-color);
+}
+
+.max-w-300 {
+  max-width: 300px;
+}
+
+.text-main {
+  color: var(--text-main);
+}
+
+.text-secondary {
+  color: var(--text-muted);
+}
+
+// Badge customizations matching Metronic styles
+.badge {
+  display: inline-flex;
+  align-items: center;
+  padding: 0.4em 0.75em;
+  font-size: 0.75rem;
+  font-weight: 600;
+  border-radius: 0.35rem;
+}
+
+.badge-light-warning {
+  color: #ffc700;
+  background-color: rgba(255, 199, 0, 0.1);
+}
+
+.badge-light-primary {
+  color: #009ef7;
+  background-color: rgba(0, 158, 247, 0.1);
+}
+
+.badge-light-success {
+  color: #50cd89;
+  background-color: rgba(80, 205, 137, 0.1);
+}
+
+.badge-light-danger {
+  color: #f1416c;
+  background-color: rgba(241, 65, 108, 0.1);
+}
+
+.badge-light-dark {
+  color: #181c32;
+  background-color: rgba(24, 28, 50, 0.1);
+}
+
+.badge-light-info {
+  color: #7239ea;
+  background-color: rgba(114, 57, 234, 0.1);
+}
+
+// Button customizations for grid icons
+.btn-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0;
+  height: 28px;
+  width: 28px;
+  border-radius: 0.35rem;
+}
+
+.btn-xs {
+  font-size: 0.75rem;
+  padding: 0.25rem 0.5rem;
+  border-radius: 0.25rem;
+}
+
+.btn-light-info {
+  color: #7239ea;
+  background-color: rgba(114, 57, 234, 0.1);
+  border: none;
+  &:hover {
+    color: #ffffff;
+    background-color: #7239ea;
+  }
+}
+
+.btn-light-danger {
+  color: #f1416c;
+  background-color: rgba(241, 65, 108, 0.1);
+  border: none;
+  &:hover {
+    color: #ffffff;
+    background-color: #f1416c;
+  }
+}
+
+.btn-light-success {
+  color: #50cd89;
+  background-color: rgba(80, 205, 137, 0.1);
+  border: none;
+  &:hover {
+    color: #ffffff;
+    background-color: #50cd89;
+  }
+}
+
+.toast {
+  border-radius: 0.475rem;
+  background-color: #1e1e2d !important;
+  font-size: 0.85rem;
+  opacity: 0.95;
+}

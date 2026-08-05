@@ -1,0 +1,163 @@
+<div class="page-toolbar">
+  <div>
+    <h1 class="page-title text-main">Channel Templates</h1>
+    <div class="text-secondary mt-1">Configure layout markup and standard placeholders for cross-channel transactional messaging</div>
+  </div>
+  <div class="d-flex gap-2">
+    <button (click)="addNewTemplate()" class="btn btn-primary btn-sm">
+      <i class="bi bi-plus-lg me-1"></i> New Template
+    </button>
+  </div>
+</div>
+
+<!-- Search Panel -->
+<div class="card p-5 mb-5 mt-4" *ngIf="!isEditing">
+  <div class="row g-4">
+    <div class="col-12 col-md-8 col-lg-9">
+      <div class="input-group">
+        <span class="input-group-text bg-transparent border-end-0">
+          <i class="bi bi-search text-muted"></i>
+        </span>
+        <input type="text" class="form-control border-start-0 ps-0" placeholder="Search templates by name..." [(ngModel)]="searchText" (keyup.enter)="search()" />
+      </div>
+    </div>
+    <div class="col-12 col-md-4 col-lg-3 d-flex gap-2">
+      <button (click)="search()" class="btn btn-primary w-100 btn-sm">Filter</button>
+      <button (click)="resetSearch()" class="btn btn-outline w-100 btn-sm">Reset</button>
+    </div>
+  </div>
+</div>
+
+<!-- Template List Grid -->
+<div class="row g-5" *ngIf="!isEditing && !isLoading">
+  <!-- Empty State -->
+  <div class="col-12 text-center p-5 mt-4" *ngIf="templates.length === 0">
+    <i class="bi bi-file-earmark-text fs-1 text-muted"></i>
+    <div class="fw-semibold text-secondary mt-3">No templates configured</div>
+    <div class="text-muted fs-8 mt-1">Create templates to handle automatic business notifications.</div>
+  </div>
+
+  <div class="col-12 col-md-6 col-lg-4" *ngFor="let t of templates">
+    <div class="card h-100 template-card">
+      <div class="card-header pb-2 d-flex justify-content-between align-items-center">
+        <div>
+          <span class="badge badge-light-primary text-uppercase me-2">{{ t.channel }}</span>
+          <span class="badge badge-light-info text-uppercase">v{{ t.versionNo }}</span>
+        </div>
+        <div class="form-check form-switch p-0">
+          <span class="badge" [ngClass]="t.isActive ? 'badge-light-success' : 'badge-light-danger'">
+            {{ t.isActive ? 'Active' : 'Inactive' }}
+          </span>
+        </div>
+      </div>
+      <div class="card-body py-4">
+        <h4 class="fw-bolder text-main mb-1">{{ t.templateName }}</h4>
+        <div class="text-muted fs-8 mb-4">Event: <span class="fw-semibold">{{ t.businessEvent }}</span></div>
+        
+        <div *ngIf="t.subjectTemplate" class="mb-3">
+          <div class="text-muted fs-9 text-uppercase fw-bold mb-1">Subject Template</div>
+          <div class="font-monospace fs-8 p-2 border rounded bg-light text-main text-truncate">
+            {{ t.subjectTemplate }}
+          </div>
+        </div>
+
+        <div>
+          <div class="text-muted fs-9 text-uppercase fw-bold mb-1">Body Markup</div>
+          <div class="font-monospace fs-8 p-2 border rounded bg-light text-main text-truncate-3" [title]="t.bodyTemplate">
+            {{ t.bodyTemplate }}
+          </div>
+        </div>
+      </div>
+      <div class="card-footer d-flex justify-content-end gap-2 pt-2 border-top">
+        <button (click)="editTemplate(t)" class="btn btn-outline btn-xs px-3">
+          <i class="bi bi-pencil-fill me-1"></i> Edit
+        </button>
+        <button (click)="deleteTemplate(t.templateId)" class="btn btn-outline-danger btn-xs px-3">
+          <i class="bi bi-trash-fill me-1"></i> Delete
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Editing / Creation Panel -->
+<div class="card p-6" *ngIf="isEditing">
+  <div class="card-header pb-4 mb-4 border-bottom d-flex justify-content-between align-items-center">
+    <h3 class="card-title text-main">
+      {{ selectedTemplate.templateId ? 'Modify Template Configuration' : 'Create New Notification Template' }}
+    </h3>
+    <button (click)="cancelEdit()" class="btn btn-close"></button>
+  </div>
+
+  <div class="card-body p-0">
+    <div class="row g-5">
+      <!-- Template Name -->
+      <div class="col-12 col-md-6">
+        <label class="form-label fw-bold text-main mb-2">Template Name <span class="text-danger">*</span></label>
+        <input type="text" class="form-control" [(ngModel)]="selectedTemplate.templateName" placeholder="e.g., Tenant Welcome Email" />
+      </div>
+
+      <!-- Business Event -->
+      <div class="col-12 col-md-3">
+        <label class="form-label fw-bold text-main mb-2">Business Event <span class="text-danger">*</span></label>
+        <select class="form-select" [(ngModel)]="selectedTemplate.businessEvent">
+          <option *ngFor="let ev of businessEvents" [value]="ev">{{ ev }}</option>
+        </select>
+      </div>
+
+      <!-- Channel -->
+      <div class="col-12 col-md-3">
+        <label class="form-label fw-bold text-main mb-2">Channel <span class="text-danger">*</span></label>
+        <select class="form-select" [(ngModel)]="selectedTemplate.channel">
+          <option *ngFor="let ch of channels" [value]="ch">{{ ch }}</option>
+        </select>
+      </div>
+
+      <!-- Subject (Only if Email, Teams or Push) -->
+      <div class="col-12" *ngIf="selectedTemplate.channel === 'Email' || selectedTemplate.channel === 'Teams' || selectedTemplate.channel === 'Push'">
+        <label class="form-label fw-bold text-main mb-2">Subject Template</label>
+        <input type="text" class="form-control" [(ngModel)]="selectedTemplate.subjectTemplate" [placeholder]="'e.g., Welcome to HRMS, {TenantName}!'" />
+        <div class="text-muted fs-8 mt-1">Supports brackets syntax parameter replacement (e.g. <code>{{ '{' }}TenantName{{ '}' }}</code>, <code>{{ '{' }}AdminName{{ '}' }}</code>).</div>
+      </div>
+
+      <!-- Body -->
+      <div class="col-12">
+        <label class="form-label fw-bold text-main mb-2">Body Template Markup <span class="text-danger">*</span></label>
+        <textarea class="form-control font-monospace" rows="6" [(ngModel)]="selectedTemplate.bodyTemplate" [placeholder]="'Hello {AdminName},\n\nYour tenant portal {TenantName} has been setup successfully.\n\nRegards,\nSystem Administrator'"></textarea>
+        <div class="text-muted fs-8 mt-1">Supports bracket placeholders for event payload bindings.</div>
+      </div>
+
+      <!-- Toggle Status & Version -->
+      <div class="col-12 col-md-6">
+        <div class="form-check form-switch mt-2">
+          <input class="form-check-input" type="checkbox" id="isActiveSwitch" [(ngModel)]="selectedTemplate.isActive" />
+          <label class="form-check-label fw-bold text-main ms-2" for="isActiveSwitch">Active Template</label>
+        </div>
+      </div>
+
+      <div class="col-12 col-md-6 d-flex align-items-center justify-content-end gap-3 mt-4 border-top pt-4">
+        <button (click)="cancelEdit()" class="btn btn-outline btn-sm px-4">Cancel</button>
+        <button (click)="saveTemplate()" class="btn btn-primary btn-sm px-4">Save Template</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Loading State -->
+<div class="text-center p-5 mt-5" *ngIf="isLoading && !isEditing">
+  <div class="spinner-border text-primary" role="status">
+    <span class="visually-hidden">Loading templates...</span>
+  </div>
+  <div class="text-secondary mt-2">Fetching template collection...</div>
+</div>
+
+<!-- Toast Alerts -->
+<div class="toast-container position-fixed bottom-0 end-0 p-3" style="z-index: 1055;">
+  <div class="toast show align-items-center text-white bg-dark border-0 shadow" role="alert" aria-live="assertive" aria-atomic="true" *ngIf="toastMessage">
+    <div class="d-flex">
+      <div class="toast-body">
+        <i class="bi bi-info-circle-fill me-2"></i> {{ toastMessage }}
+      </div>
+    </div>
+  </div>
+</div>

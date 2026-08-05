@@ -1,0 +1,86 @@
+<div class="page-toolbar">
+  <div>
+    <h1 class="page-title text-main">Asset Warranty</h1>
+    <div class="text-secondary mt-1">Register and review device manufacturers' guarantees, vendor support contracts and terms.</div>
+  </div>
+  <div>
+    <button class="btn btn-primary btn-sm" (click)="openModal()"><i class="bi bi-plus-lg me-1"></i> Register Warranty</button>
+  </div>
+</div>
+
+<div class="card">
+    <div class="card-body p-0">
+      <table class="table-enterprise">
+        <thead>
+          <tr>
+            <th>Warranty ID</th>
+            <th>Asset Name</th>
+            <th>Start Date</th>
+            <th>End Date</th>
+            <th>Provider</th>
+            <th>Status</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr *ngFor="let w of warranties">
+            <td>{{ w.assetWarrantyID }}</td>
+            <td class="fw-bold">{{ w.assetName || 'N/A' }}</td>
+            <td>{{ w.warrantyStartDate | date:'mediumDate' }}</td>
+            <td>{{ w.warrantyEndDate | date:'mediumDate' }}</td>
+            <td>{{ w.warrantyProvider }}</td>
+            <td>
+              <span class="badge shadow-sm" [ngClass]="w.warrantyStatus === 'Active' ? 'badge-success' : 'badge-danger'">
+                {{ w.warrantyStatus || 'Active' }}
+              </span>
+            </td>
+          </tr>
+          <tr *ngIf="warranties.length === 0 && !loading">
+            <td colspan="6" class="text-center text-muted py-4">No warranties registered yet.</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- Create Modal -->
+  @if (showModal) {
+  <div class="modal-backdrop-custom"></div>
+}
+<div class="modal fade show d-block" tabindex="-1" role="dialog" aria-modal="true" *ngIf="showModal" >
+    <div class="modal-dialog">
+      <div class="modal-content" >
+        <div class="modal-header">
+          <h5 class="modal-title fw-bold">Register Asset Warranty</h5>
+          <button type="button" class="btn-close" (click)="closeModal()"></button>
+        </div>
+        <div class="modal-body">
+          <form [formGroup]="warrantyForm">
+            <div class="mb-3">
+              <label class="form-label">Asset</label>
+              <select class="form-select" formControlName="assetID">
+                <option value="">Select Asset</option>
+                <option *ngFor="let ast of assets" [value]="ast.assetID">{{ ast.assetName }} ({{ ast.assetCode }})</option>
+              </select>
+            </div>
+            <div class="mb-3">
+              <label class="form-label">Warranty Start Date</label>
+              <input type="date" class="form-control" formControlName="warrantyStartDate">
+            </div>
+            <div class="mb-3">
+              <label class="form-label">Warranty End Date</label>
+              <input type="date" class="form-control" formControlName="warrantyEndDate">
+            </div>
+            <div class="mb-3">
+              <label class="form-label">Warranty Provider / Manufacturer</label>
+              <input type="text" class="form-control" formControlName="warrantyProvider" placeholder="e.g. Apple Inc.">
+            </div>
+            <div class="alert alert-danger" *ngIf="errorMessage">{{ errorMessage }}</div>
+          </form>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-outline" (click)="closeModal()">Cancel</button>
+          <button type="button" class="btn btn-primary" [disabled]="warrantyForm.invalid || saving" (click)="saveWarranty()">Save</button>
+        </div>
+      </div>
+    </div>
+  </div>

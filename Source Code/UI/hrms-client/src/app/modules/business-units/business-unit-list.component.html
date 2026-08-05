@@ -1,0 +1,190 @@
+<div class="page-toolbar">
+  <div>
+    <h1 class="page-title text-main">Business Units</h1>
+    <div class="text-secondary mt-1">Operational divisions, strategic business units, and branch structures</div>
+  </div>
+  <div>
+    <button class="btn btn-primary btn-sm" (click)="openCreateModal()" [disabled]="companies.length === 0">
+      <i class="bi bi-plus-lg me-1"></i> New Business Unit
+    </button>
+  </div>
+</div>
+
+<!-- Search/Filter Panel -->
+<div class="card p-4 mb-4 mt-2">
+  <div class="row g-3">
+    <div class="col-12 col-md-3">
+      <label class="form-label fs-8 text-secondary">Tenant Group</label>
+      <select class="form-select w-100" [(ngModel)]="tenantIdFilter" (change)="onTenantChange()">
+        @for (tenant of tenants; track tenant.tenantId) {
+          <option [value]="tenant.tenantId">{{ tenant.tenantName }}</option>
+        }
+      </select>
+    </div>
+    <div class="col-12 col-md-3">
+      <label class="form-label fs-8 text-secondary">Corporate Company</label>
+      <select class="form-select w-100" [(ngModel)]="companyIdFilter" (change)="loadBusinessUnits()">
+        <option value="0">All Companies</option>
+        @for (comp of companies; track comp.companyId) {
+          <option [value]="comp.companyId">{{ comp.companyName }}</option>
+        }
+      </select>
+    </div>
+    <div class="col-12 col-md-3">
+      <label class="form-label fs-8 text-secondary">Search Filter</label>
+      <div class="search-input-group w-100">
+        <i class="bi bi-search"></i>
+        <input type="text" class="form-control" placeholder="Search by name..." [(ngModel)]="searchText" (keyup.enter)="loadBusinessUnits()">
+      </div>
+    </div>
+    <div class="col-12 col-md-3 d-flex gap-2 align-items-end">
+      <button class="btn btn-outline w-50" (click)="resetFilters()">Reset</button>
+      <button class="btn btn-primary w-50" (click)="loadBusinessUnits()">Search</button>
+    </div>
+  </div>
+</div>
+
+<!-- Data Grid -->
+<div class="card">
+  <div class="table-responsive">
+    <table class="table-enterprise">
+      <thead>
+        <tr>
+          <th>Business Unit Code</th>
+          <th>Business Unit Name</th>
+          <th>Associated Company</th>
+          <th style="width: 120px; text-align: center;">Actions</th>
+        </tr>
+      </thead>
+      <tbody>
+        <!-- Loading Skeletons -->
+        @if (isLoading) {
+          @for (row of [1, 2, 3, 4]; track $index) {
+            <tr>
+              @for (col of [1, 2, 3, 4]; track $index) {
+                <td>
+                  <div class="skeleton-shimmer" style="height: 16px; border-radius: 4px; background: #EAEFF4; width: 80%;"></div>
+                </td>
+              }
+            </tr>
+          }
+        }
+
+        <!-- Empty State -->
+        @if (!isLoading && businessUnits.length === 0) {
+          <tr>
+            <td colspan="4" class="text-center py-5 text-secondary">
+              <i class="bi bi-folder-x fs-2 d-block mb-2 text-muted"></i>
+              No business units defined.
+            </td>
+          </tr>
+        }
+
+        <!-- Table Rows -->
+        @if (!isLoading) {
+          @for (bu of businessUnits; track bu.businessUnitId) {
+            <tr>
+              <td class="fw-bold">{{ bu.businessUnitCode }}</td>
+              <td [title]="bu.businessUnitName">{{ bu.businessUnitName | truncate:30 }}</td>
+              <td [title]="getCompanyName(bu.companyId)">{{ getCompanyName(bu.companyId) | truncate:30 }}</td>
+              <td class="text-center">
+                <div class="d-flex justify-content-center gap-2">
+                  <button class="btn btn-outline btn-sm p-1" title="Edit" (click)="openEditModal(bu)">
+                    <i class="bi bi-pencil-square text-primary"></i>
+                  </button>
+                  <button class="btn btn-outline btn-sm p-1" title="Delete" (click)="deleteBusinessUnit(bu)">
+                    <i class="bi bi-trash text-danger"></i>
+                  </button>
+                </div>
+              </td>
+            </tr>
+          }
+        }
+      </tbody>
+    </table>
+  </div>
+</div>
+
+<!-- Modal Backdrop -->
+@if (showModal) {
+  <div class="modal-backdrop-custom"></div>
+}
+
+<!-- Create/Edit Modal -->
+@if (showModal) {
+  <div class="modal fade show d-block" tabindex="-1" role="dialog" aria-modal="true">
+    <div class="modal-dialog modal-dialog-centered">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title">{{ editMode ? 'Edit Business Unit' : 'Create Business Unit' }}</h5>
+          <button type="button" class="btn-close" (click)="closeModal()" aria-label="Close"></button>
+        </div>
+        <form [formGroup]="buForm" (ngSubmit)="saveBusinessUnit()">
+          <div class="modal-body">
+            <div class="mb-3">
+              <label class="form-label">Tenant <span class="text-danger">*</span></label>
+              <select class="form-select w-100" formControlName="tenantId" (change)="onFormTenantChange()">
+                @for (t of tenants; track t.tenantId) {
+                  <option [value]="t.tenantId">{{ t.tenantName }}</option>
+                }
+              </select>
+            </div>
+
+            <div class="mb-3">
+              <label class="form-label">Company association <span class="text-danger">*</span></label>
+              <select class="form-select w-100" formControlName="companyId">
+                @for (c of formCompanies; track c.companyId) {
+                  <option [value]="c.companyId">{{ c.companyName }}</option>
+                }
+              </select>
+              @if (submitted && f['companyId'].errors) {
+                <div class="text-danger fs-8 mt-1">
+                  Company association is required.
+                </div>
+              }
+            </div>
+
+            <div class="mb-3">
+              <label class="form-label">Business Unit Code <span class="text-danger">*</span></label>
+              <input type="text" class="form-control" formControlName="businessUnitCode" [readonly]="editMode" placeholder="e.g., SBU-01" maxlength="50">
+              @if (submitted && f['businessUnitCode'].errors) {
+                <div class="text-danger fs-8 mt-1">
+                  Business Unit Code is required.
+                </div>
+              }
+            </div>
+
+            <div class="mb-3">
+              <label class="form-label">Business Unit Name <span class="text-danger">*</span></label>
+              <input type="text" class="form-control" formControlName="businessUnitName" placeholder="e.g., Operations Division" maxlength="200">
+              @if (submitted && f['businessUnitName'].errors) {
+                <div class="text-danger fs-8 mt-1">
+                  Business Unit Name is required.
+                </div>
+              }
+            </div>
+
+            @if (errorMessage) {
+              <div class="alert alert-danger fs-8 p-2 my-2">
+                {{ errorMessage }}
+              </div>
+            }
+          </div>
+          <div class="modal-footer">
+            <button type="button" class="btn btn-outline" (click)="closeModal()">Cancel</button>
+            <button type="submit" class="btn btn-primary" [disabled]="saving">
+              {{ saving ? 'Saving...' : 'Save Unit' }}
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+}
+
+<!-- Notification Toast -->
+@if (toastMessage) {
+  <div class="toast-custom bg-dark text-white p-3 rounded">
+    <i class="bi bi-info-circle-fill me-2 text-primary"></i> {{ toastMessage }}
+  </div>
+}

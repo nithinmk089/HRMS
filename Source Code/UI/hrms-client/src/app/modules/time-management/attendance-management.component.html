@@ -1,0 +1,126 @@
+<div class="page-toolbar">
+  <div>
+    <h1 class="page-title text-main">Daily Attendance Log</h1>
+    <div class="text-secondary mt-1">Monitor employee clock-in/out records, working hours, and attendance statuses</div>
+  </div>
+</div>
+
+<!-- Search/Filter Panel -->
+<div class="card p-4 mb-4 mt-2">
+  <div class="row g-3">
+    <div class="col-12 col-md-3">
+      <label class="form-label fs-8 text-secondary">Tenant Group <span class="text-danger">*</span></label>
+      <select class="form-select w-100" [(ngModel)]="selectedTenantId" (change)="onTenantChange()">
+        @for (t of tenants; track t.tenantId) {
+          <option [value]="t.tenantId">{{ t.tenantName }}</option>
+        }
+      </select>
+    </div>
+    <div class="col-12 col-md-3">
+      <label class="form-label fs-8 text-secondary">Employee</label>
+      <select class="form-select w-100" [(ngModel)]="employeeFilter" (change)="loadAttendance()">
+        <option [value]="null">All Employees</option>
+        @for (emp of employees; track emp.employeeID) {
+          <option [value]="emp.employeeID">{{ emp.firstName }} {{ emp.lastName }}</option>
+        }
+      </select>
+    </div>
+    <div class="col-12 col-md-2">
+      <label class="form-label fs-8 text-secondary">Start Date</label>
+      <input type="date" class="form-control" [(ngModel)]="startDateFilter" (change)="loadAttendance()">
+    </div>
+    <div class="col-12 col-md-2">
+      <label class="form-label fs-8 text-secondary">End Date</label>
+      <input type="date" class="form-control" [(ngModel)]="endDateFilter" (change)="loadAttendance()">
+    </div>
+    <div class="col-12 col-md-2 d-flex gap-2 align-items-end">
+      <button class="btn btn-primary w-100" (click)="loadAttendance()">Search</button>
+    </div>
+  </div>
+</div>
+
+<!-- Data Grid -->
+<div class="card">
+  <div class="table-responsive">
+    <table class="table-enterprise">
+      <thead>
+        <tr>
+          <th>Employee</th>
+          <th>Shift</th>
+          <th>Date</th>
+          <th>Clock In</th>
+          <th>Clock Out</th>
+          <th>Working Hours</th>
+          <th>Status</th>
+          <th style="width: 100px; text-align: center;">Actions</th>
+        </tr>
+      </thead>
+      <tbody>
+        <!-- Loading Skeletons -->
+        @if (loading) {
+          @for (row of [1, 2, 3, 4, 5]; track $index) {
+            <tr>
+              @for (col of [1, 2, 3, 4, 5, 6, 7, 8]; track $index) {
+                <td>
+                  <div class="skeleton-shimmer" style="height: 16px; border-radius: 4px; background: #EAEFF4; width: 80%;"></div>
+                </td>
+              }
+            </tr>
+          }
+        }
+
+        <!-- Empty State -->
+        @if (!loading && attendanceRecords.length === 0) {
+          <tr>
+            <td colspan="8" class="text-center py-5 text-secondary">
+              <i class="bi bi-folder-x fs-2 d-block mb-2 text-muted"></i>
+              No attendance logs found for this period.
+            </td>
+          </tr>
+        }
+
+        <!-- Table Rows -->
+        @if (!loading) {
+          @for (a of attendanceRecords; track a.attendanceId) {
+            <tr>
+              <td class="fw-bold">{{ a.employeeName }} <span class="text-secondary fs-9 d-block">{{ a.employeeCode }}</span></td>
+              <td><span class="badge badge-info">{{ a.shiftCode }}</span></td>
+              <td>{{ a.attendanceDate | date:'dd-MMM-yyyy' }}</td>
+              <td>{{ a.clockInTime | date:'HH:mm:ss' }}</td>
+              <td>{{ a.clockOutTime | date:'HH:mm:ss' }}</td>
+              <td>
+                @if (a.workingMinutes) {
+                  {{ (a.workingMinutes / 60) | number:'1.1-1' }} hrs
+                } @else {
+                  -
+                }
+              </td>
+              <td>
+                <span class="badge" [ngClass]="{
+                  'badge-success': a.attendanceStatus === 'Present',
+                  'badge-danger': a.attendanceStatus === 'Absent',
+                  'badge-warning': a.attendanceStatus === 'OnLeave',
+                  'badge-info': a.attendanceStatus !== 'Present' && a.attendanceStatus !== 'Absent' && a.attendanceStatus !== 'OnLeave'
+                }">
+                  {{ a.attendanceStatus }}
+                </span>
+              </td>
+              <td class="text-center">
+                <button class="btn btn-outline btn-sm p-1" title="Recalculate Status & Overtime" (click)="recalculate(a)">
+                  <i class="bi bi-arrow-repeat text-primary"></i>
+                </button>
+              </td>
+            </tr>
+          }
+        }
+      </tbody>
+    </table>
+  </div>
+</div>
+
+<!-- Notification Toast -->
+@if (toastMessage) {
+  <div class="toast-custom bg-dark text-white p-3 rounded">
+    <i class="bi bi-info-circle-fill me-2 text-primary"></i> {{ toastMessage }}
+  </div>
+}

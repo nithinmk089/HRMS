@@ -1,0 +1,27 @@
+<div class="card card-flush mb-5">
+  <div class="card-header align-items-center py-5 gap-2 gap-md-5 cursor-pointer" (click)="onToggle()">
+    <div class="card-title">
+      <h3 class="card-label fs-6 fw-bold">
+        <i class="bi bi-funnel-fill me-2 text-primary"></i>{{ title }}
+      </h3>
+    </div>
+    <div class="card-toolbar gap-3">
+      @if (isOpen) {
+        <button type="button" class="btn btn-sm btn-light-danger fs-8" (click)="$event.stopPropagation(); onReset()">
+          <i class="bi bi-arrow-counterclockwise fs-8"></i> Reset
+        </button>
+      }
+      <button type="button" class="btn btn-sm btn-icon btn-light btn-active-color-primary">
+        <i class="bi" [class.bi-chevron-down]="!isOpen" [class.bi-chevron-up]="isOpen"></i>
+      </button>
+    </div>
+  </div>
+  
+  @if (isOpen) {
+    <div class="card-body border-top pt-5">
+      <div class="row g-5">
+        <ng-content></ng-content>
+      </div>
+    </div>
+  }
+</div>

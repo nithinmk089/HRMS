@@ -1,0 +1,141 @@
+<div class="page-toolbar">
+  <div>
+    <h1 class="page-title text-main">Loans Advances</h1>
+    <div class="text-secondary mt-1">Manage all aspects of payroll and compensation flows.</div>
+  </div>
+  <div>
+    <button class="btn btn-primary btn-sm  " (click)="openCreateModal()">
+      <i class="bi bi-plus-lg me-1"></i>New Setup
+    </button>
+  </div>
+</div>
+
+<div class="card">
+    
+    <div class="table-responsive">
+      <table class="table-enterprise">
+        <thead>
+          <tr>
+            <th>Loan ID</th>
+            <th scope="col">Employee Name</th>
+            <th scope="col">Loan Type</th>
+            <th scope="col">Principal Amount</th>
+            <th scope="col">Tenure</th>
+            <th scope="col">Monthly EMI</th>
+            <th scope="col">Status</th>
+            <th class="text-end">Actions</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr *ngFor="let item of items">
+            <td class="px-4 fw-bold text-primary">LN-#{{ item.loanAdvanceID }}</td>
+            <td>{{ item.employeeName }}</td>
+            <td>{{ item.loanType }}</td>
+            <td>{{ item.principalAmount | currency:'USD':'symbol':'1.2-2' }}</td>
+            <td>{{ item.tenureMonths }} Months</td>
+            <td>{{ item.monthlyInstallment | currency:'USD':'symbol':'1.2-2' }}</td>
+            <td>
+              <span class="badge" [ngClass]="item.status === 'Approved' ? 'badge-success' : 'badge-warning'">
+                {{ item.status }}
+              </span>
+            </td>
+            <td class="text-end px-4">
+              <button class="btn btn-outline btn-sm p-1 me-2" title="View Details" (click)="viewItem(item)"><i class="bi bi-eye text-primary"></i></button>
+              <button class="btn btn-outline btn-sm p-1"><i class="bi bi-trash text-danger"></i></button>
+            </td>
+          </tr>
+          <tr *ngIf="items.length === 0">
+            <td colspan="8" class="text-center py-5 text-muted">
+              <i class="bi bi-inbox fs-2 d-block mb-2"></i>
+              No active records found. Click "New Setup" to begin.
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- Modal Form -->
+  @if (showModal) {
+  <div class="modal-backdrop-custom"></div>
+}
+<div class="modal fade show d-block" tabindex="-1" role="dialog" aria-modal="true" *ngIf="showModal" >
+    <div class="modal-dialog modal-dialog-centered">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title fw-bold">Add New Setup</h5>
+          <button type="button" class="btn-close" (click)="closeModal()"></button>
+        </div>
+        <div class="modal-body">
+          <form [formGroup]="form" (ngSubmit)="onSubmit()">
+            <div class="mb-3">
+              <label class="form-label fw-semibold">Reference Code</label>
+              <input type="text" class="form-control" formControlName="code" placeholder="e.g. CAL-2026">
+            </div>
+            <div class="mb-3">
+              <label class="form-label fw-semibold">Name / Description</label>
+              <input type="text" class="form-control" formControlName="name" placeholder="e.g. Standard Calendar">
+            </div>
+            <div class="mb-4">
+              <label class="form-label fw-semibold">Target Amount / Value</label>
+              <input type="number" class="form-control" formControlName="amount" placeholder="0">
+            </div>
+            <div class="d-flex justify-content-end gap-2">
+              <button type="button" class="btn btn-outline" (click)="closeModal()">Cancel</button>
+              <button type="submit" class="btn btn-primary" [disabled]="form.invalid">Submit</button>
+            </div>
+          </form>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- View Details Modal -->
+  @if (showViewModal) {
+    <div class="modal-backdrop-custom"></div>
+    <div class="modal fade show d-block" tabindex="-1" role="dialog" aria-modal="true">
+      <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+          <div class="modal-header">
+            <h5 class="modal-title fw-bold text-main">Loan & Advance Detail</h5>
+            <button type="button" class="btn-close" (click)="closeViewModal()"></button>
+          </div>
+          <div class="modal-body p-4">
+            <div class="row g-3">
+              <div class="col-6">
+                <label class="text-secondary small d-block">Loan ID</label>
+                <span class="fw-semibold text-main">LN-#{{ selectedItem?.loanAdvanceID }}</span>
+              </div>
+              <div class="col-6">
+                <label class="text-secondary small d-block">Employee Name</label>
+                <span class="fw-semibold text-main">{{ selectedItem?.employeeName }}</span>
+              </div>
+              <div class="col-6">
+                <label class="text-secondary small d-block">Loan Type</label>
+                <span class="fw-semibold text-main">{{ selectedItem?.loanType }}</span>
+              </div>
+              <div class="col-6">
+                <label class="text-secondary small d-block">Principal Amount</label>
+                <span class="fw-semibold text-main">{{ selectedItem?.principalAmount | currency }}</span>
+              </div>
+              <div class="col-6">
+                <label class="text-secondary small d-block">Tenure</label>
+                <span class="fw-semibold text-main">{{ selectedItem?.tenureMonths }} Months</span>
+              </div>
+              <div class="col-6">
+                <label class="text-secondary small d-block">Monthly Installment</label>
+                <span class="fw-semibold text-main">{{ selectedItem?.monthlyInstallment | currency }}</span>
+              </div>
+              <div class="col-6">
+                <label class="text-secondary small d-block">Status</label>
+                <span class="fw-semibold text-main">{{ selectedItem?.status }}</span>
+              </div>
+            </div>
+            <div class="d-flex justify-content-end mt-4">
+              <button type="button" class="btn btn-outline" (click)="closeViewModal()">Close</button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  }

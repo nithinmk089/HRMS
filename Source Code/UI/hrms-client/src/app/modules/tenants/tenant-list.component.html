@@ -1,0 +1,148 @@
+<div class="page-toolbar">
+  <div>
+    <h1 class="page-title text-main">Tenants Registry</h1>
+    <div class="text-secondary mt-1">Configure subscription plans, manage tenant status, and set effective dates</div>
+  </div>
+  <div>
+    <button class="btn btn-primary btn-sm" (click)="openCreateModal()">
+      <i class="bi bi-plus-lg me-1"></i> New Tenant
+    </button>
+  </div>
+</div>
+
+<!-- Search/Filter Panel -->
+<div class="card p-4 mb-4 mt-2">
+  <div class="row g-3">
+    <div class="col-12 col-md-5">
+      <div class="search-input-group w-100">
+        <i class="bi bi-search"></i>
+        <input type="text" class="form-control" placeholder="Search by code or name..." [(ngModel)]="searchText" (keyup.enter)="loadTenants()">
+      </div>
+    </div>
+    <div class="col-12 col-md-3">
+      <select class="form-select w-100" [(ngModel)]="statusFilter" (change)="loadTenants()">
+        <option value="">All Statuses</option>
+        <option value="Active">Active</option>
+        <option value="Inactive">Inactive</option>
+        <option value="Suspended">Suspended</option>
+      </select>
+    </div>
+    <div class="col-12 col-md-4 d-flex gap-2">
+      <button class="btn btn-outline w-50" (click)="resetFilters()">Reset</button>
+      <button class="btn btn-primary w-50" (click)="loadTenants()">Search</button>
+    </div>
+  </div>
+</div>
+
+<!-- Data Grid -->
+<div class="card">
+  <div class="table-responsive">
+    <table class="table-enterprise">
+      <thead>
+        <tr>
+          <th>Tenant Code</th>
+          <th>Tenant Name</th>
+          <th>Effective From</th>
+          <th>Effective To</th>
+          <th>Status</th>
+          <th>Version</th>
+          <th style="width: 150px; text-align: center;">Actions</th>
+        </tr>
+      </thead>
+      <tbody>
+        <!-- Loading Skeletons -->
+        @if (isLoading) {
+          @for (row of [1, 2, 3, 4, 5]; track $index) {
+            <tr>
+              @for (col of [1, 2, 3, 4, 5, 6, 7]; track $index) {
+                <td>
+                  <div class="skeleton-shimmer" style="height: 16px; border-radius: 4px; background: #EAEFF4; width: 80%;"></div>
+                </td>
+              }
+            </tr>
+          }
+        }
+
+        <!-- Empty State -->
+        @if (!isLoading && tenants.length === 0) {
+          <tr>
+            <td colspan="7" class="text-center py-5 text-secondary">
+              <i class="bi bi-folder-x fs-2 d-block mb-2 text-muted"></i>
+              No tenants found matching search parameters.
+            </td>
+          </tr>
+        }
+
+        <!-- Table Rows -->
+        @if (!isLoading) {
+          @for (tenant of tenants; track tenant.tenantId) {
+            <tr>
+              <td class="fw-bold">{{ tenant.tenantCode }}</td>
+              <td [title]="tenant.tenantName">{{ tenant.tenantName | truncate:30 }}</td>
+              <td>{{ tenant.effectiveFrom | date:'dd-MMM-yyyy' }}</td>
+              <td>{{ tenant.effectiveTo ? (tenant.effectiveTo | date:'dd-MMM-yyyy') : 'Indefinite' }}</td>
+              <td>
+                <span class="badge" [ngClass]="{
+                  'badge-success': tenant.status === 'Active',
+                  'badge-danger': tenant.status === 'Inactive' || tenant.status === 'Suspended'
+                }">
+                  {{ tenant.status }}
+                </span>
+              </td>
+              <td>v{{ tenant.versionNo }}</td>
+              <td class="text-center">
+                <div class="d-flex justify-content-center gap-2">
+                  <button class="btn btn-outline btn-sm p-1" title="Edit Tenant" (click)="openEditModal(tenant)">
+                    <i class="bi bi-pencil-square text-primary"></i>
+                  </button>
+                  @if (tenant.status !== 'Active') {
+                    <button class="btn btn-outline btn-sm p-1" title="Activate" (click)="toggleActivation(tenant, true)">
+                      <i class="bi bi-check-circle text-success"></i>
+                    </button>
+                  }
+                  @if (tenant.status === 'Active') {
+                    <button class="btn btn-outline btn-sm p-1" title="Deactivate" (click)="toggleActivation(tenant, false)">
+                      <i class="bi bi-x-circle text-danger"></i>
+                    </button>
+                  }
+                  <button class="btn btn-outline btn-sm p-1" title="Soft Delete" (click)="deleteTenant(tenant.tenantId)">
+                    <i class="bi bi-trash text-danger"></i>
+                  </button>
+                </div>
+              </td>
+            </tr>
+          }
+        }
+      </tbody>
+    </table>
+  </div>
+
+  <!-- Pagination -->
+  @if (tenants.length > 0) {
+    <div class="pagination-container px-4">
+      <div class="text-secondary fs-8">
+        Showing Page {{ page }} (Page size: {{ pageSize }})
+      </div>
+      <div class="d-flex gap-2">
+        <button class="btn btn-outline btn-sm" [disabled]="page === 1" (click)="prevPage()">Previous</button>
+        <button class="btn btn-outline btn-sm" [disabled]="tenants.length < pageSize" (click)="nextPage()">Next</button>
+      </div>
+    </div>
+  }
+</div>
+
+<app-tenant-create-modal
+  [isOpen]="showModal"
+  [tenant]="selectedTenant"
+  [saving]="saving"
+  [errorMessage]="errorMessage"
+  (close)="closeModal()"
+  (save)="onSaveTenant($event)">
+</app-tenant-create-modal>
+
+<!-- Notification Toast -->
+@if (toastMessage) {
+  <div class="toast-custom bg-dark text-white p-3 rounded">
+    <i class="bi bi-info-circle-fill me-2 text-primary"></i> {{ toastMessage }}
+  </div>
+}

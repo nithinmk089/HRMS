@@ -1,0 +1,31 @@
+﻿CREATE TABLE [asset].[AssetCategory] (
+    [AssetCategoryID]  BIGINT         IDENTITY (1, 1) NOT NULL,
+    [TenantID]         BIGINT         NOT NULL,
+    [CategoryCode]     NVARCHAR (50)  NOT NULL,
+    [CategoryName]     NVARCHAR (100) NOT NULL,
+    [ParentCategoryID] BIGINT         NULL,
+    [Description]      NVARCHAR (500) NULL,
+    [IsDepreciable]    BIT            DEFAULT ((1)) NOT NULL,
+    [CreatedBy]        BIGINT         NOT NULL,
+    [CreatedDate]      DATETIME2 (7)  DEFAULT (getutcdate()) NOT NULL,
+    [ModifiedBy]       BIGINT         NULL,
+    [ModifiedDate]     DATETIME2 (7)  NULL,
+    [DeletedBy]        BIGINT         NULL,
+    [DeletedDate]      DATETIME2 (7)  NULL,
+    [IsDeleted]        BIT            DEFAULT ((0)) NOT NULL,
+    [RowVersion]       ROWVERSION     NOT NULL,
+    CONSTRAINT [PK_AssetCategory] PRIMARY KEY CLUSTERED ([AssetCategoryID] ASC),
+    CONSTRAINT [FK_AssetCategory_Parent] FOREIGN KEY ([ParentCategoryID]) REFERENCES [asset].[AssetCategory] ([AssetCategoryID]),
+    CONSTRAINT [FK_AssetCategory_Tenant] FOREIGN KEY ([TenantID]) REFERENCES [security].[Tenant] ([TenantID])
+);
+
+
+GO
+CREATE NONCLUSTERED INDEX [IX_AssetCategory_Name]
+    ON [asset].[AssetCategory]([TenantID] ASC, [CategoryName] ASC) WHERE ([IsDeleted]=(0));
+
+
+GO
+CREATE UNIQUE NONCLUSTERED INDEX [UQ_AssetCategory_Code]
+    ON [asset].[AssetCategory]([TenantID] ASC, [CategoryCode] ASC) WHERE ([IsDeleted]=(0));
+

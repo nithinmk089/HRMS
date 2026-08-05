@@ -1,0 +1,126 @@
+<div class="page-toolbar">
+  <div>
+    <h1 class="page-title text-main">Asset Assignment</h1>
+    <div class="text-secondary mt-1">Track device custody, assignment history, expectations of return, and allocation logs.</div>
+  </div>
+  <div>
+    <button class="btn btn-primary btn-sm" (click)="openModal()"><i class="bi bi-plus-lg me-1"></i> New Assignment</button>
+  </div>
+</div>
+
+<!-- Search/Filter Panel -->
+<div class="card p-3 mb-4 mt-2">
+  <div class="row g-3">
+    <div class="col-12 col-md-5">
+      <label class="form-label fs-8 text-secondary">Filter by Employee</label>
+      <select class="form-select w-100" [(ngModel)]="employeeIdFilter" (change)="loadAssignments()">
+        <option [value]="null">All Employees</option>
+        @for (emp of employees; track emp.employeeID) {
+          <option [value]="emp.employeeID">{{ emp.firstName }} {{ emp.lastName }} ({{ emp.employeeCode }})</option>
+        }
+      </select>
+    </div>
+    <div class="col-12 col-md-3">
+      <label class="form-label fs-8 text-secondary">Status Filter</label>
+      <select class="form-select w-100" [(ngModel)]="statusFilter" (change)="loadAssignments()">
+        <option value="">All Statuses</option>
+        <option value="Assigned">Assigned</option>
+        <option value="Returned">Returned</option>
+      </select>
+    </div>
+    <div class="col-12 col-md-4 d-flex gap-2 align-items-end">
+      <button class="btn btn-outline w-50" (click)="resetFilters()">Reset</button>
+      <button class="btn btn-primary w-50" (click)="loadAssignments()">Search</button>
+    </div>
+  </div>
+</div>
+
+<div class="card">
+    <div class="card-body p-0">
+      <table class="table-enterprise">
+        <thead>
+          <tr>
+            <th>Employee</th>
+            <th>Asset Code</th>
+            <th>Assigned Date</th>
+            <th>Expected Return</th>
+            <th>Status</th>
+            <th>Action</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr *ngFor="let assign of assignments">
+            <td>
+              <div class="fw-bold">{{ assign.employeeName || 'N/A' }}</div>
+              <small class="text-muted">{{ assign.employeeCode }}</small>
+            </td>
+            <td>
+              <div>{{ assign.assetName || 'N/A' }}</div>
+              <small class="text-muted font-monospace">{{ assign.assetCode }}</small>
+            </td>
+            <td>{{ assign.assignedDate | date:'mediumDate' }}</td>
+            <td>{{ assign.expectedReturnDate ? (assign.expectedReturnDate | date:'mediumDate') : 'No date' }}</td>
+            <td>
+              <span class="badge" [ngClass]="assign.assignmentStatus === 'Active' ? 'badge-success' : 'badge-secondary'">
+                {{ assign.assignmentStatus }}
+              </span>
+            </td>
+            <td>
+              <button class="btn btn-outline btn-sm p-1 text-danger" *ngIf="assign.assignmentStatus === 'Active'" (click)="returnAsset(assign)">
+                Return Asset
+              </button>
+            </td>
+          </tr>
+          <tr *ngIf="assignments.length === 0 && !loading">
+            <td colspan="6" class="text-center text-muted py-4">No assignments tracked yet.</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- Create Modal -->
+  @if (showModal) {
+  <div class="modal-backdrop-custom"></div>
+}
+<div class="modal fade show d-block" tabindex="-1" role="dialog" aria-modal="true" *ngIf="showModal" >
+    <div class="modal-dialog">
+      <div class="modal-content" >
+        <div class="modal-header">
+          <h5 class="modal-title fw-bold">New Asset Assignment</h5>
+          <button type="button" class="btn-close" (click)="closeModal()"></button>
+        </div>
+        <div class="modal-body">
+          <form [formGroup]="assignmentForm">
+            <div class="mb-3">
+              <label class="form-label">Employee</label>
+              <select class="form-select" formControlName="employeeID">
+                <option value="">Select Employee</option>
+                <option *ngFor="let emp of employees" [value]="emp.employeeID">{{ emp.firstName }} {{ emp.lastName }} ({{ emp.employeeCode }})</option>
+              </select>
+            </div>
+            <div class="mb-3">
+              <label class="form-label">Available Asset</label>
+              <select class="form-select" formControlName="assetID">
+                <option value="">Select Asset</option>
+                <option *ngFor="let ast of assets" [value]="ast.assetID">{{ ast.assetName }} ({{ ast.assetCode }})</option>
+              </select>
+            </div>
+            <div class="mb-3">
+              <label class="form-label">Assigned Date</label>
+              <input type="date" class="form-control" formControlName="assignedDate">
+            </div>
+            <div class="mb-3">
+              <label class="form-label">Expected Return Date</label>
+              <input type="date" class="form-control" formControlName="expectedReturnDate">
+            </div>
+            <div class="alert alert-danger" *ngIf="errorMessage">{{ errorMessage }}</div>
+          </form>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-outline" (click)="closeModal()">Cancel</button>
+          <button type="button" class="btn btn-primary" [disabled]="assignmentForm.invalid || saving" (click)="saveAssignment()">Assign</button>
+        </div>
+      </div>
+    </div>
+  </div>

@@ -1,0 +1,47 @@
+<div class="page-toolbar">
+  <div>
+    <h1 class="page-title text-main">Asset Return</h1>
+    <div class="text-secondary mt-1">Verify return of equipment, check wear and tear, and process clearance checklists.</div>
+  </div>
+  <div>
+    <button class="btn btn-primary btn-sm" (click)="loadReturns()">Refresh</button>
+  </div>
+</div>
+
+<div class="card">
+    <div class="card-body p-0">
+      <table class="table-enterprise">
+        <thead>
+          <tr>
+            <th>Return ID</th>
+            <th>Assignment ID</th>
+            <th>Returned Date</th>
+            <th>Logged Condition</th>
+            <th>Verification Status</th>
+            <th>Action</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr *ngFor="let ret of returns">
+            <td>{{ ret.assetReturnID }}</td>
+            <td>{{ ret.assetAssignmentID }}</td>
+            <td>{{ ret.returnDate | date:'mediumDate' }}</td>
+            <td>{{ ret.returnCondition || 'Good' }}</td>
+            <td>
+              <span class="badge" [ngClass]="ret.returnStatus === 'Verified' ? 'badge-success' : 'badge-warning'">
+                {{ ret.returnStatus }}
+              </span>
+            </td>
+            <td>
+              <button class="btn btn-sm btn-outline-success" *ngIf="ret.returnStatus === 'Pending'" (click)="verifyReturn(ret)">
+                Verify Return
+              </button>
+            </td>
+          </tr>
+          <tr *ngIf="returns.length === 0 && !loading">
+            <td colspan="6" class="text-center text-muted py-4">No returns pending verification.</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </div>

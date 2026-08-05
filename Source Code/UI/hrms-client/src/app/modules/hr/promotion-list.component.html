@@ -1,0 +1,206 @@
+<div class="page-toolbar">
+  <div>
+    <h1 class="page-title text-main">Internal Staff Promotions</h1>
+    <div class="text-secondary mt-1">Initiate and authorize employee career grade promotions and designation changes</div>
+  </div>
+  <div>
+    <button class="btn btn-primary btn-sm" (click)="openCreateModal()">
+      <i class="bi bi-graph-up me-1"></i> Request Promotion
+    </button>
+  </div>
+</div>
+
+<!-- Filters -->
+<div class="card p-3 mb-4 mt-2">
+  <div class="row g-3">
+    <div class="col-12 col-md-3">
+      <label class="form-label fs-8 text-secondary">Tenant Group</label>
+      <select class="form-select w-100" [(ngModel)]="tenantIdFilter" (change)="onTenantChange()">
+        @for (tenant of tenants; track tenant.tenantId) {
+          <option [value]="tenant.tenantId">{{ tenant.tenantName }}</option>
+        }
+      </select>
+    </div>
+    <div class="col-12 col-md-3">
+      <label class="form-label fs-8 text-secondary">Filter by Employee</label>
+      <select class="form-select w-100" [(ngModel)]="employeeIdFilter" (change)="loadPromotions()">
+        <option [value]="null">All Employees</option>
+        @for (emp of employees; track emp.employeeID) {
+          <option [value]="emp.employeeID">{{ emp.firstName }} {{ emp.lastName }} ({{ emp.employeeCode }})</option>
+        }
+      </select>
+    </div>
+    <div class="col-12 col-md-3">
+      <label class="form-label fs-8 text-secondary">Search Employees</label>
+      <div class="search-input-group w-100">
+        <i class="bi bi-search"></i>
+        <input type="text" class="form-control" placeholder="Search by name, code..." [(ngModel)]="searchText" (keyup.enter)="loadPromotions()">
+      </div>
+    </div>
+    <div class="col-12 col-md-3 d-flex gap-2 align-items-end">
+      <button class="btn btn-outline w-50" (click)="resetFilters()">Reset Filters</button>
+      <button class="btn btn-primary w-50" (click)="loadPromotions()">Filter</button>
+    </div>
+  </div>
+</div>
+
+<!-- Promotions Table -->
+<div class="card">
+  <div class="table-responsive">
+    <table class="table-enterprise">
+      <thead>
+        <tr>
+          <th>Employee</th>
+          <th>Old Designation</th>
+          <th>New Designation</th>
+          <th>Old Grade</th>
+          <th>New Grade</th>
+          <th>Effective Date</th>
+          <th>Status</th>
+          <th>Reason</th>
+          <th style="width: 150px; text-align: center;">Actions</th>
+        </tr>
+      </thead>
+      <tbody>
+        @if (isLoading) {
+          @for (row of [1, 2, 3]; track $index) {
+            <tr>
+              @for (col of [1, 2, 3, 4, 5, 6, 7, 8, 9]; track $index) {
+                <td><div class="skeleton-shimmer" style="height: 16px; width: 80%; background: #EAEFF4; border-radius: 4px;"></div></td>
+              }
+            </tr>
+          }
+        }
+
+        @if (!isLoading && promotions.length === 0) {
+          <tr>
+            <td colspan="9" class="text-center py-4 text-secondary">
+              <i class="bi bi-inbox fs-3 d-block mb-2 text-muted"></i>
+              No promotion records found.
+            </td>
+          </tr>
+        }
+
+        @if (!isLoading) {
+          @for (p of promotions; track p.employeePromotionID) {
+            <tr>
+              <td class="fw-bold">{{ p.employeeFullName }} <span class="text-secondary fs-9 d-block">{{ p.employeeCode }}</span></td>
+              <td>{{ p.oldDesignationName }}</td>
+              <td class="text-primary fw-bold">{{ p.newDesignationName }}</td>
+              <td>{{ p.oldGrade || '-' }}</td>
+              <td class="text-primary fw-bold">{{ p.newGrade || '-' }}</td>
+              <td>{{ p.effectiveDate | date:'mediumDate' }}</td>
+              <td>
+                <span class="badge" [ngClass]="{
+                  'badge-warning': p.status.toLowerCase() === 'pending',
+                  'badge-success': p.status.toLowerCase() === 'approved',
+                  'badge-info': p.status.toLowerCase() === 'completed'
+                }">{{ p.status }}</span>
+              </td>
+              <td>{{ p.reason || '-' }}</td>
+              <td class="text-center">
+                <div class="d-flex justify-content-center gap-1">
+                  @if (p.status.toLowerCase() === 'pending') {
+                    <button class="btn btn-outline btn-sm p-1 text-success border-success" title="Approve Request" (click)="approvePromotion(p)">
+                      <i class="bi bi-check-circle"></i> Approve
+                    </button>
+                  }
+                  @if (p.status.toLowerCase() === 'approved') {
+                    <button class="btn btn-outline btn-sm p-1 text-info border-info" title="Complete Execution" (click)="completePromotion(p)">
+                      <i class="bi bi-play-circle"></i> Execute
+                    </button>
+                  }
+                  @if (p.status.toLowerCase() === 'completed') {
+                    <span class="text-muted fs-8"><i class="bi bi-check-lg text-success"></i> Executed</span>
+                  }
+                </div>
+              </td>
+            </tr>
+          }
+        }
+      </tbody>
+    </table>
+  </div>
+</div>
+
+<!-- Request Promotion Modal -->
+@if (showModal) {
+  <div class="modal-backdrop">
+    <div class="modal-container">
+      <div class="modal-header">
+        <h4 class="card-title text-main"><i class="bi bi-graph-up me-2 text-primary"></i> Request Staff Promotion</h4>
+        <button class="btn-close" (click)="closeModal()"><i class="bi bi-x-lg"></i></button>
+      </div>
+      <div class="modal-body">
+        @if (errorMessage) {
+          <div class="alert alert-danger mb-3 p-3 rounded">{{ errorMessage }}</div>
+        }
+        <form [formGroup]="promotionForm" (ngSubmit)="savePromotion()">
+          <div class="mb-3">
+            <label class="form-label">Employee to Promote*</label>
+            <select class="form-select w-100" formControlName="employeeId" (change)="onEmployeeSelectChange()">
+              <option value="">Select Employee...</option>
+              @for (emp of employees; track emp.employeeID) {
+                <option [value]="emp.employeeID">{{ emp.firstName }} {{ emp.lastName }} ({{ emp.employeeCode }})</option>
+              }
+            </select>
+          </div>
+
+          <div class="row g-2 mb-3">
+            <div class="col-6">
+              <label class="form-label">Current Designation</label>
+              <select class="form-select w-100" formControlName="oldDesignationId" [disabled]="true">
+                <option value="">None</option>
+                @for (d of designations; track d.designationId) {
+                  <option [value]="d.designationId">{{ d.designationName }}</option>
+                }
+              </select>
+            </div>
+            <div class="col-6">
+              <label class="form-label">New Designation*</label>
+              <select class="form-select w-100" formControlName="newDesignationId">
+                <option value="">Choose Designation...</option>
+                @for (d of designations; track d.designationId) {
+                  <option [value]="d.designationId">{{ d.designationName }}</option>
+                }
+              </select>
+            </div>
+          </div>
+
+          <div class="row g-2 mb-3">
+            <div class="col-6">
+              <label class="form-label">Current Grade</label>
+              <input type="text" class="form-control" formControlName="oldGrade" [disabled]="true">
+            </div>
+            <div class="col-6">
+              <label class="form-label">New Grade</label>
+              <input type="text" class="form-control" formControlName="newGrade" placeholder="e.g. A3, M1">
+            </div>
+          </div>
+
+          <div class="mb-3">
+            <label class="form-label">Effective Date*</label>
+            <input type="date" class="form-control" formControlName="effectiveDate">
+          </div>
+
+          <div class="mb-3">
+            <label class="form-label">Promotion Justification</label>
+            <textarea class="form-control" rows="2" formControlName="reason" placeholder="Enter justification for promotion..."></textarea>
+          </div>
+
+          <div class="d-flex justify-content-end gap-2 mt-4">
+            <button type="button" class="btn btn-outline" (click)="closeModal()">Cancel</button>
+            <button type="submit" class="btn btn-primary" [disabled]="saving">Submit Request</button>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+}
+
+<!-- Notification Toast -->
+@if (toastMessage) {
+  <div class="toast-custom bg-dark text-white p-3 rounded">
+    <i class="bi bi-info-circle-fill me-2 text-primary"></i> {{ toastMessage }}
+  </div>
+}

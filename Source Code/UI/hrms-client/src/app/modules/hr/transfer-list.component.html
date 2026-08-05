@@ -1,0 +1,216 @@
+<div class="page-toolbar">
+  <div>
+    <h1 class="page-title text-main">Internal Staff Transfers</h1>
+    <div class="text-secondary mt-1">Initiate and authorize internal structural transfers across departments and branches</div>
+  </div>
+  <div>
+    <button class="btn btn-primary btn-sm" (click)="openCreateModal()">
+      <i class="bi bi-arrow-left-right me-1"></i> Request Transfer
+    </button>
+  </div>
+</div>
+
+<!-- Filters -->
+<div class="card p-3 mb-4 mt-2">
+  <div class="row g-3">
+    <div class="col-12 col-md-3">
+      <label class="form-label fs-8 text-secondary">Tenant Group</label>
+      <select class="form-select w-100" [(ngModel)]="tenantIdFilter" (change)="onTenantChange()">
+        @for (tenant of tenants; track tenant.tenantId) {
+          <option [value]="tenant.tenantId">{{ tenant.tenantName }}</option>
+        }
+      </select>
+    </div>
+    <div class="col-12 col-md-3">
+      <label class="form-label fs-8 text-secondary">Filter by Employee</label>
+      <select class="form-select w-100" [(ngModel)]="employeeIdFilter" (change)="loadTransfers()">
+        <option [value]="null">All Employees</option>
+        @for (emp of employees; track emp.employeeID) {
+          <option [value]="emp.employeeID">{{ emp.firstName }} {{ emp.lastName }} ({{ emp.employeeCode }})</option>
+        }
+      </select>
+    </div>
+    <div class="col-12 col-md-3">
+      <label class="form-label fs-8 text-secondary">Search Employees</label>
+      <div class="search-input-group w-100">
+        <i class="bi bi-search"></i>
+        <input type="text" class="form-control" placeholder="Search by name, code..." [(ngModel)]="searchText" (keyup.enter)="loadTransfers()">
+      </div>
+    </div>
+    <div class="col-12 col-md-3 d-flex gap-2 align-items-end">
+      <button class="btn btn-outline w-50" (click)="resetFilters()">Reset Filters</button>
+      <button class="btn btn-primary w-50" (click)="loadTransfers()">Filter</button>
+    </div>
+  </div>
+</div>
+
+<!-- Transfers Table -->
+<div class="card">
+  <div class="table-responsive">
+    <table class="table-enterprise">
+      <thead>
+        <tr>
+          <th>Employee</th>
+          <th>From Dept</th>
+          <th>To Dept</th>
+          <th>From Location</th>
+          <th>To Location</th>
+          <th>Effective Date</th>
+          <th>Status</th>
+          <th>Reason</th>
+          <th style="width: 150px; text-align: center;">Actions</th>
+        </tr>
+      </thead>
+      <tbody>
+        @if (isLoading) {
+          @for (row of [1, 2, 3]; track $index) {
+            <tr>
+              @for (col of [1, 2, 3, 4, 5, 6, 7, 8, 9]; track $index) {
+                <td><div class="skeleton-shimmer" style="height: 16px; width: 80%; background: #EAEFF4; border-radius: 4px;"></div></td>
+              }
+            </tr>
+          }
+        }
+
+        @if (!isLoading && transfers.length === 0) {
+          <tr>
+            <td colspan="9" class="text-center py-4 text-secondary">
+              <i class="bi bi-inbox fs-3 d-block mb-2 text-muted"></i>
+              No transfer records found.
+            </td>
+          </tr>
+        }
+
+        @if (!isLoading) {
+          @for (t of transfers; track t.employeeTransferID) {
+            <tr>
+              <td class="fw-bold">{{ t.employeeFullName }} <span class="text-secondary fs-9 d-block">{{ t.employeeCode }}</span></td>
+              <td>{{ t.fromDepartmentName }}</td>
+              <td class="text-primary fw-bold">{{ t.toDepartmentName }}</td>
+              <td>{{ t.fromLocationName }}</td>
+              <td class="text-primary fw-bold">{{ t.toLocationName }}</td>
+              <td>{{ t.effectiveDate | date:'mediumDate' }}</td>
+              <td>
+                <span class="badge" [ngClass]="{
+                  'badge-warning': t.status.toLowerCase() === 'pending',
+                  'badge-success': t.status.toLowerCase() === 'approved',
+                  'badge-info': t.status.toLowerCase() === 'completed'
+                }">{{ t.status }}</span>
+              </td>
+              <td>{{ t.reason || '-' }}</td>
+              <td class="text-center">
+                <div class="d-flex justify-content-center gap-1">
+                  @if (t.status.toLowerCase() === 'pending') {
+                    <button class="btn btn-outline btn-sm p-1 text-success border-success" title="Approve Request" (click)="approveTransfer(t)">
+                      <i class="bi bi-check-circle"></i> Approve
+                    </button>
+                  }
+                  @if (t.status.toLowerCase() === 'approved') {
+                    <button class="btn btn-outline btn-sm p-1 text-info border-info" title="Complete Execution" (click)="completeTransfer(t)">
+                      <i class="bi bi-play-circle"></i> Execute
+                    </button>
+                  }
+                  @if (t.status.toLowerCase() === 'completed') {
+                    <span class="text-muted fs-8"><i class="bi bi-check-lg text-success"></i> Executed</span>
+                  }
+                </div>
+              </td>
+            </tr>
+          }
+        }
+      </tbody>
+    </table>
+  </div>
+</div>
+
+<!-- Request Transfer Modal -->
+@if (showModal) {
+  <div class="modal-backdrop">
+    <div class="modal-container">
+      <div class="modal-header">
+        <h4 class="card-title text-main"><i class="bi bi-arrow-left-right me-2 text-primary"></i> Request Staff Transfer</h4>
+        <button class="btn-close" (click)="closeModal()"><i class="bi bi-x-lg"></i></button>
+      </div>
+      <div class="modal-body">
+        @if (errorMessage) {
+          <div class="alert alert-danger mb-3 p-3 rounded">{{ errorMessage }}</div>
+        }
+        <form [formGroup]="transferForm" (ngSubmit)="saveTransfer()">
+          <div class="mb-3">
+            <label class="form-label">Employee to Transfer*</label>
+            <select class="form-select w-100" formControlName="employeeId" (change)="onEmployeeSelectChange()">
+              <option value="">Select Employee...</option>
+              @for (emp of employees; track emp.employeeID) {
+                <option [value]="emp.employeeID">{{ emp.firstName }} {{ emp.lastName }} ({{ emp.employeeCode }})</option>
+              }
+            </select>
+          </div>
+
+          <div class="row g-2 mb-3">
+            <div class="col-6">
+              <label class="form-label">Current Department</label>
+              <select class="form-select w-100" formControlName="fromDepartmentId" [disabled]="true">
+                <option value="">None</option>
+                @for (d of departments; track d.departmentId) {
+                  <option [value]="d.departmentId">{{ d.departmentName }}</option>
+                }
+              </select>
+            </div>
+            <div class="col-6">
+              <label class="form-label">Destination Department*</label>
+              <select class="form-select w-100" formControlName="toDepartmentId">
+                <option value="">Choose Department...</option>
+                @for (d of departments; track d.departmentId) {
+                  <option [value]="d.departmentId">{{ d.departmentName }}</option>
+                }
+              </select>
+            </div>
+          </div>
+
+          <div class="row g-2 mb-3">
+            <div class="col-6">
+              <label class="form-label">Current Location</label>
+              <select class="form-select w-100" formControlName="fromLocationId" [disabled]="true">
+                <option value="">None</option>
+                @for (l of locations; track l.locationId) {
+                  <option [value]="l.locationId">{{ l.locationName }}</option>
+                }
+              </select>
+            </div>
+            <div class="col-6">
+              <label class="form-label">Destination Location*</label>
+              <select class="form-select w-100" formControlName="toLocationId">
+                <option value="">Choose Location...</option>
+                @for (l of locations; track l.locationId) {
+                  <option [value]="l.locationId">{{ l.locationName }}</option>
+                }
+              </select>
+            </div>
+          </div>
+
+          <div class="mb-3">
+            <label class="form-label">Effective Date*</label>
+            <input type="date" class="form-control" formControlName="effectiveDate">
+          </div>
+
+          <div class="mb-3">
+            <label class="form-label">Transfer Reason</label>
+            <textarea class="form-control" rows="2" formControlName="reason" placeholder="Enter reason for transfer..."></textarea>
+          </div>
+
+          <div class="d-flex justify-content-end gap-2 mt-4">
+            <button type="button" class="btn btn-outline" (click)="closeModal()">Cancel</button>
+            <button type="submit" class="btn btn-primary" [disabled]="saving">Submit Request</button>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+}
+
+<!-- Notification Toast -->
+@if (toastMessage) {
+  <div class="toast-custom bg-dark text-white p-3 rounded">
+    <i class="bi bi-info-circle-fill me-2 text-primary"></i> {{ toastMessage }}
+  </div>
+}

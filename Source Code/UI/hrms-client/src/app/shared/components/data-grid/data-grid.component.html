@@ -1,0 +1,73 @@
+<div class="table-responsive">
+  <table class="table align-middle table-row-dashed fs-6 gy-5 dataTable no-footer">
+    <thead>
+      <tr class="text-start text-gray-400 fw-bold fs-7 text-uppercase gs-0">
+        @for (col of columns; track col.key) {
+          <th 
+            [class.cursor-pointer]="col.sortable" 
+            (click)="onSort(col)"
+            class="min-w-100px">
+            {{ col.label }}
+            @if (col.sortable && sortKey === col.key) {
+              <i class="bi" [class.bi-arrow-up]="sortOrder === 'asc'" [class.bi-arrow-down]="sortOrder === 'desc'"></i>
+            }
+          </th>
+        }
+      </tr>
+    </thead>
+    <tbody class="fw-semibold text-gray-600">
+      @if (isLoading) {
+        @for (dummy of [1, 2, 3, 4, 5]; track $index) {
+          <tr>
+            @for (col of columns; track col.key) {
+              <td>
+                <div class="skeleton-loader"></div>
+              </td>
+            }
+          </tr>
+        }
+      } @else if (data.length === 0) {
+        <tr>
+          <td [attr.colspan]="columns.length" class="text-center py-10">
+            <div class="text-gray-400">No records found.</div>
+          </td>
+        </tr>
+      } @else {
+        @for (row of data; track $index) {
+          <tr>
+            @for (col of columns; track col.key) {
+              <td>
+                @switch (col.type) {
+                  @case ('date') {
+                    {{ row[col.key] | date:'mediumDate' }}
+                  }
+                  @case ('status') {
+                    <span class="badge" [ngClass]="row[col.key] === 'Active' || row[col.key] === true ? 'badge-light-success' : 'badge-light-danger'">
+                      {{ row[col.key] === true || row[col.key] === 'Active' ? 'Active' : 'Inactive' }}
+                    </span>
+                  }
+                  @case ('currency') {
+                    {{ row[col.key] | currency:'USD':'symbol':'1.2-2' }}
+                  }
+                  @case ('action') {
+                    <div class="d-flex gap-2">
+                      <button (click)="onAction('edit', row)" class="btn btn-icon btn-bg-light btn-active-color-primary btn-sm me-1" title="Edit">
+                        <i class="bi bi-pencil-fill fs-6"></i>
+                      </button>
+                      <button (click)="onAction('delete', row)" class="btn btn-icon btn-bg-light btn-active-color-danger btn-sm" title="Delete">
+                        <i class="bi bi-trash-fill fs-6"></i>
+                      </button>
+                    </div>
+                  }
+                  @default {
+                    {{ row[col.key] }}
+                  }
+                }
+              </td>
+            }
+          </tr>
+        }
+      }
+    </tbody>
+  </table>
+</div>

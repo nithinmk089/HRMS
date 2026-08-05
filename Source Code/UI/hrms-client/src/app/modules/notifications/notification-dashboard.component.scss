@@ -1,0 +1,40 @@
+.hover-card {
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+  &:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 20px rgba(0,0,0,0.08);
+  }
+}
+.quick-link-btn {
+  background: var(--card-bg);
+  border-color: var(--border-color);
+  color: var(--text-main);
+  transition: all 0.2s ease;
+  &:hover {
+    border-color: var(--primary-color);
+    background: var(--bg-color);
+  }
+}
+.bg-light-success {
+  background-color: rgba(80, 205, 137, 0.1) !important;
+}
+.bg-light-primary {
+  background-color: rgba(0, 158, 247, 0.1) !important;
+}
+.bg-light-danger {
+  background-color: rgba(241, 65, 108, 0.1) !important;
+}
+.bg-light-info {
+  background-color: rgba(114, 57, 234, 0.1) !important;
+}
+.bg-light-warning {
+  background-color: rgba(255, 199, 0, 0.1) !important;
+}
+.symbol-circle {
+  width: 48px;
+  height: 48px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}

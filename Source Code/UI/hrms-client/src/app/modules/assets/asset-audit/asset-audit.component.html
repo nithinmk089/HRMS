@@ -1,0 +1,89 @@
+<div class="page-toolbar">
+  <div>
+    <h1 class="page-title text-main">Asset Audit</h1>
+    <div class="text-secondary mt-1">Validate custody logs, perform device counts, check physical condition, and report variance.</div>
+  </div>
+  <div>
+    <button class="btn btn-primary btn-sm" (click)="openModal()"><i class="bi bi-plus-lg me-1"></i> Schedule Audit</button>
+  </div>
+</div>
+
+<div class="card">
+    <div class="card-body p-0">
+      <table class="table-enterprise">
+        <thead>
+          <tr>
+            <th>Audit ID</th>
+            <th>Audit Date</th>
+            <th>Auditor</th>
+            <th>Status</th>
+            <th>Findings</th>
+            <th>Action</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr *ngFor="let a of audits">
+            <td>{{ a.assetAuditID }}</td>
+            <td>{{ a.auditDate | date:'mediumDate' }}</td>
+            <td>{{ a.auditorID }}</td>
+            <td>
+              <span class="badge text-warning bg-light-warning" [ngClass]="a.auditStatus === 'Scheduled' ? 'badge-warning' : 'badge-success'">
+                {{ a.auditStatus }}
+              </span>
+            </td>
+            <td>{{ a.findings || 'No findings recorded yet.' }}</td>
+            <td>
+              <button class="btn btn-sm btn-outline-success" *ngIf="a.auditStatus === 'Scheduled'" (click)="completeAudit(a)">
+                Mark Verified
+              </button>
+            </td>
+          </tr>
+          <tr *ngIf="audits.length === 0 && !loading">
+            <td colspan="6" class="text-center text-muted py-4">No audits logged.</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- Create Modal -->
+  @if (showModal) {
+  <div class="modal-backdrop-custom"></div>
+}
+<div class="modal fade show d-block" tabindex="-1" role="dialog" aria-modal="true" *ngIf="showModal" >
+    <div class="modal-dialog">
+      <div class="modal-content" >
+        <div class="modal-header">
+          <h5 class="modal-title fw-bold">Schedule Audit</h5>
+          <button type="button" class="btn-close" (click)="closeModal()"></button>
+        </div>
+        <div class="modal-body">
+          <form [formGroup]="auditForm">
+            <div class="mb-3">
+              <label class="form-label">Asset to verify</label>
+              <select class="form-select" formControlName="assetID">
+                <option value="">Select Asset</option>
+                <option *ngFor="let ast of assets" [value]="ast.assetID">{{ ast.assetName }} ({{ ast.assetCode }})</option>
+              </select>
+            </div>
+            <div class="mb-3">
+              <label class="form-label">Auditor</label>
+              <select class="form-select" formControlName="auditorID">
+                <option value="">Select Auditor</option>
+                <option *ngFor="let emp of employees" [value]="emp.employeeID">{{ emp.firstName }} {{ emp.lastName }}</option>
+              </select>
+            </div>
+            <div class="mb-3">
+              <label class="form-label">Audit Date</label>
+              <input type="date" class="form-control" formControlName="auditDate">
+            </div>
+            <div class="alert alert-danger" *ngIf="errorMessage">{{ errorMessage }}</div>
+          </form>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-outline" (click)="closeModal()">Cancel</button>
+          <button type="button" class="btn btn-primary" [disabled]="auditForm.invalid || saving" (click)="saveAudit()">Schedule</button>
+        </div>
+      </div>
+    </div>
+  </div>

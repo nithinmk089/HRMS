@@ -1,0 +1,110 @@
+<div class="page-toolbar">
+  <div>
+    <h1 class="page-title text-main">My Notification Preferences</h1>
+    <div class="text-secondary mt-1">Configure your personal subscription matrix and select delivery intervals per business event</div>
+  </div>
+  <div>
+    <button (click)="loadPreferences()" class="btn btn-outline btn-sm">
+      <i class="bi bi-arrow-clockwise me-1"></i> Sync Settings
+    </button>
+  </div>
+</div>
+
+<!-- Preferences Matrix Card -->
+<div class="card mt-4">
+  <div class="card-header pb-2">
+    <h3 class="card-title text-main">
+      <i class="bi bi-sliders me-2 text-primary"></i>Delivery Matrix Settings
+    </h3>
+  </div>
+  <div class="card-body p-0">
+    <div class="table-responsive">
+      <table class="table align-middle mb-0">
+        <thead>
+          <tr class="text-muted fw-bold fs-7 text-uppercase bg-light">
+            <th class="ps-4 py-4">Business Trigger Event</th>
+            <th class="py-4 text-center" style="width: 160px;">In-App</th>
+            <th class="py-4 text-center" style="width: 160px;">Email</th>
+            <th class="py-4 text-center" style="width: 160px;">SMS</th>
+            <th class="py-4 text-center" style="width: 160px;">Push Alerts</th>
+            <th class="py-4 text-center" style="width: 160px;">MS Teams</th>
+          </tr>
+        </thead>
+        <tbody>
+          <!-- Loading State -->
+          <tr *ngIf="isLoading">
+            <td colspan="6" class="text-center p-5">
+              <div class="spinner-border text-primary spinner-border-sm" role="status">
+                <span class="visually-hidden">Loading...</span>
+              </div>
+              <div class="text-muted fs-7 mt-2">Loading preference mappings...</div>
+            </td>
+          </tr>
+
+          <!-- Data Rows -->
+          <ng-container *ngIf="!isLoading">
+            <tr *ngFor="let ev of businessEvents">
+              <!-- Event Label & Description -->
+              <td class="ps-4 py-4">
+                <div class="d-flex flex-column">
+                  <span class="fw-bold text-main fs-6">{{ ev }}</span>
+                  <span class="text-secondary fs-8 mt-1" [ngSwitch]="ev">
+                    <span *ngSwitchCase="'Tenant Created'">Alerts triggered when new company portals or organizational tenants are provisioned.</span>
+                    <span *ngSwitchCase="'Subscription Expiring'">Advanced warnings when tenant subscription licenses approach renewal thresholds.</span>
+                    <span *ngSwitchCase="'Payment Failed'">Alerts for failed invoicing, credit card declines, or payment errors.</span>
+                    <span *ngSwitchCase="'License Threshold Reached'">Alerts when seat count usage surpasses 80%, 90% or 100% of maximum quotas.</span>
+                    <span *ngSwitchDefault>System-generated telemetry event notifications.</span>
+                  </span>
+                </div>
+              </td>
+
+              <!-- Channels -->
+              <td class="text-center py-4 border-start" *ngFor="let ch of channels">
+                <div class="d-flex flex-column align-items-center gap-2">
+                  <!-- Enabled Switch -->
+                  <div class="form-check form-switch p-0 m-0">
+                    <input class="form-check-input" type="checkbox" 
+                           [id]="ev + '_' + ch" 
+                           [(ngModel)]="getPref(ev, ch).isEnabled" 
+                           (change)="togglePreference(ev, ch)" />
+                  </div>
+                  
+                  <!-- Frequency Dropdown -->
+                  <div class="w-100 px-2 mt-1" *ngIf="getPref(ev, ch).isEnabled">
+                    <select class="form-select form-select-xs font-monospace text-center fs-9 py-1 px-1 border-light bg-light text-main"
+                            [(ngModel)]="getPref(ev, ch).frequency"
+                            (change)="changeFrequency(ev, ch)">
+                      <option *ngFor="let freq of frequencies" [value]="freq">{{ freq }}</option>
+                    </select>
+                  </div>
+                  <span class="text-muted fs-9" *ngIf="!getPref(ev, ch).isEnabled">Disabled</span>
+                </div>
+              </td>
+            </tr>
+          </ng-container>
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>
+
+<div class="alert alert-dismissible bg-light-primary border border-primary d-flex flex-column flex-sm-row p-5 mt-5">
+  <i class="bi bi-shield-fill-check fs-2 text-primary me-4 mb-2 mb-sm-0"></i>
+  <div class="d-flex flex-column">
+    <h5 class="fw-bold text-main mb-1">Background Processing Digest Note</h5>
+    <span class="text-secondary fs-7">
+      Immediate alerts are pushed directly to notifications queues. Digest frequencies (Daily and Weekly) are batched automatically and processed in cron-cycles by the background queue listener.
+    </span>
+  </div>
+</div>
+
+<!-- Toast Alerts -->
+<div class="toast-container position-fixed bottom-0 end-0 p-3" style="z-index: 1055;">
+  <div class="toast show align-items-center text-white bg-dark border-0 shadow" role="alert" aria-live="assertive" aria-atomic="true" *ngIf="toastMessage">
+    <div class="d-flex">
+      <div class="toast-body">
+        <i class="bi bi-info-circle-fill me-2"></i> {{ toastMessage }}
+      </div>
+    </div>
+  </div>
+</div>

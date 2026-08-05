@@ -1,0 +1,43 @@
+<div class="page-toolbar">
+  <div>
+    <h1 class="page-title text-main">Asset Depreciation</h1>
+    <div class="text-secondary mt-1">Evaluate current book value, standard straight-line calculations, and amortization rates.</div>
+  </div>
+  <div>
+    <button class="btn btn-warning me-1" (click)="recalculate()" [disabled]="recalculating">
+        <span class="spinner-border spinner-border-sm" role="status" aria-hidden="true" *ngIf="recalculating"></span>
+        Recalculate Amortization
+      </button>
+    <button class="btn btn-primary btn-sm" (click)="loadReport()">Refresh</button>
+  </div>
+</div>
+
+<div class="card">
+    <div class="card-body p-0">
+      <table class="table-enterprise">
+        <thead>
+          <tr>
+            <th>Asset Code</th>
+            <th>Asset Name</th>
+            <th>Amortization Method</th>
+            <th>Annual Rate</th>
+            <th>Purchase Cost</th>
+            <th>Current Book Value</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr *ngFor="let d of depreciations">
+            <td class="font-monospace fw-bold">{{ d.assetCode }}</td>
+            <td class="fw-bold">{{ d.assetName }}</td>
+            <td>{{ d.depreciationMethod }}</td>
+            <td>{{ d.depreciationRate }}%</td>
+            <td>{{ d.purchaseCost | currency }}</td>
+            <td class="fw-bold text-success">{{ d.bookValue | currency }}</td>
+          </tr>
+          <tr *ngIf="depreciations.length === 0 && !loading">
+            <td colspan="6" class="text-center text-muted py-4">No depreciation logs calculated. Click Recalculate above.</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </div>

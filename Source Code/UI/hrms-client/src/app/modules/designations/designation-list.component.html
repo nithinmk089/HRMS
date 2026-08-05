@@ -1,0 +1,180 @@
+<div class="page-toolbar">
+  <div>
+    <h1 class="page-title text-main">Designations Registry</h1>
+    <div class="text-secondary mt-1">Configure employee rank structures, job titles, and grading tiers</div>
+  </div>
+  <div>
+    <button class="btn btn-primary btn-sm" (click)="openCreateModal()" [disabled]="tenants.length === 0">
+      <i class="bi bi-plus-lg me-1"></i> New Designation
+    </button>
+  </div>
+</div>
+
+<!-- Search/Filter Panel -->
+<div class="card p-4 mb-4 mt-2">
+  <div class="row g-3">
+    <div class="col-12 col-md-4">
+      <label class="form-label fs-8 text-secondary">Tenant Group</label>
+      <select class="form-select w-100" [(ngModel)]="tenantIdFilter" (change)="loadDesignations()">
+        @for (tenant of tenants; track tenant.tenantId) {
+          <option [value]="tenant.tenantId">{{ tenant.tenantName }}</option>
+        }
+      </select>
+    </div>
+    <div class="col-12 col-md-4">
+      <label class="form-label fs-8 text-secondary">Search Filter</label>
+      <div class="search-input-group w-100">
+        <i class="bi bi-search"></i>
+        <input type="text" class="form-control" placeholder="Search designation code/name..." [(ngModel)]="searchText" (keyup.enter)="loadDesignations()">
+      </div>
+    </div>
+    <div class="col-12 col-md-4 d-flex gap-2 align-items-end">
+      <button class="btn btn-outline w-50" (click)="resetFilters()">Reset</button>
+      <button class="btn btn-primary w-50" (click)="loadDesignations()">Search</button>
+    </div>
+  </div>
+</div>
+
+<!-- Data Grid -->
+<div class="card">
+  <div class="table-responsive">
+    <table class="table-enterprise">
+      <thead>
+        <tr>
+          <th>Designation Code</th>
+          <th>Designation Name</th>
+          <th>Grade / Pay Tier</th>
+          <th style="width: 120px; text-align: center;">Actions</th>
+        </tr>
+      </thead>
+      <tbody>
+        <!-- Loading Skeletons -->
+        @if (isLoading) {
+          @for (row of [1, 2, 3]; track $index) {
+            <tr>
+              @for (col of [1, 2, 3, 4]; track $index) {
+                <td>
+                  <div class="skeleton-shimmer" style="height: 16px; border-radius: 4px; background: #EAEFF4; width: 80%;"></div>
+                </td>
+              }
+            </tr>
+          }
+        }
+
+        <!-- Empty State -->
+        @if (!isLoading && designations.length === 0) {
+          <tr>
+            <td colspan="4" class="text-center py-5 text-secondary">
+              <i class="bi bi-folder-x fs-2 d-block mb-2 text-muted"></i>
+              No designations defined.
+            </td>
+          </tr>
+        }
+
+        <!-- Table Rows -->
+        @if (!isLoading) {
+          @for (desg of designations; track desg.designationId) {
+            <tr>
+              <td class="fw-bold">{{ desg.designationCode }}</td>
+              <td [title]="desg.designationName">{{ desg.designationName | truncate:30 }}</td>
+              <td [title]="desg.grade || ''">
+                @if (desg.grade) {
+                  <span class="badge badge-success">
+                    {{ desg.grade | truncate:30 }}
+                  </span>
+                } @else {
+                  <span class="text-muted fs-8">None</span>
+                }
+              </td>
+              <td class="text-center">
+                <div class="d-flex justify-content-center gap-2">
+                  <button class="btn btn-outline btn-sm p-1" title="Edit" (click)="openEditModal(desg)">
+                    <i class="bi bi-pencil-square text-primary"></i>
+                  </button>
+                  <button class="btn btn-outline btn-sm p-1" title="Delete" (click)="deleteDesignation(desg)">
+                    <i class="bi bi-trash text-danger"></i>
+                  </button>
+                </div>
+              </td>
+            </tr>
+          }
+        }
+      </tbody>
+    </table>
+  </div>
+</div>
+
+<!-- Modal Backdrop -->
+@if (showModal) {
+  <div class="modal-backdrop-custom"></div>
+}
+
+<!-- Create/Edit Modal -->
+@if (showModal) {
+  <div class="modal fade show d-block" tabindex="-1" role="dialog" aria-modal="true">
+    <div class="modal-dialog modal-dialog-centered">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title">{{ editMode ? 'Edit Designation Details' : 'Add Employee Designation' }}</h5>
+          <button type="button" class="btn-close" (click)="closeModal()" aria-label="Close"></button>
+        </div>
+        <form [formGroup]="desgForm" (ngSubmit)="saveDesignation()">
+          <div class="modal-body">
+            <div class="mb-3">
+              <label class="form-label">Tenant association <span class="text-danger">*</span></label>
+              <select class="form-select w-100" formControlName="tenantId">
+                @for (t of tenants; track t.tenantId) {
+                  <option [value]="t.tenantId">{{ t.tenantName }}</option>
+                }
+              </select>
+            </div>
+
+            <div class="mb-3">
+              <label class="form-label">Designation Code <span class="text-danger">*</span></label>
+              <input type="text" class="form-control" formControlName="designationCode" [readonly]="editMode" placeholder="e.g., ENG-MGR" maxlength="50">
+              @if (submitted && f['designationCode'].errors) {
+                <div class="text-danger fs-8 mt-1">
+                  Designation Code is required.
+                </div>
+              }
+            </div>
+
+            <div class="mb-3">
+              <label class="form-label">Designation Name <span class="text-danger">*</span></label>
+              <input type="text" class="form-control" formControlName="designationName" placeholder="e.g., Engineering Manager" maxlength="200">
+              @if (submitted && f['designationName'].errors) {
+                <div class="text-danger fs-8 mt-1">
+                  Designation Name is required.
+                </div>
+              }
+            </div>
+
+            <div class="mb-3">
+              <label class="form-label">Grade / Rank Tier (optional)</label>
+              <input type="text" class="form-control" formControlName="grade" placeholder="e.g., M4, G12, Executive" maxlength="50">
+            </div>
+
+            @if (errorMessage) {
+              <div class="alert alert-danger fs-8 p-2 my-2">
+                {{ errorMessage }}
+              </div>
+            }
+          </div>
+          <div class="modal-footer">
+            <button type="button" class="btn btn-outline" (click)="closeModal()">Cancel</button>
+            <button type="submit" class="btn btn-primary" [disabled]="saving">
+              {{ saving ? 'Saving...' : 'Save Designation' }}
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+}
+
+<!-- Notification Toast -->
+@if (toastMessage) {
+  <div class="toast-custom bg-dark text-white p-3 rounded">
+    <i class="bi bi-info-circle-fill me-2 text-primary"></i> {{ toastMessage }}
+  </div>
+}

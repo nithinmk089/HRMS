@@ -1,0 +1,1498 @@
+// ============================================================================
+// ENTERPRISE HRMS — GLOBAL DESIGN SYSTEM
+// Single Source of Truth: every token, component, and utility defined once.
+// Change a variable here → it cascades across every page automatically.
+// ============================================================================
+
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
+
+// ============================================================================
+// 1. DESIGN TOKENS
+// ============================================================================
+:root {
+    // ─── Color Palette ───
+    --color-primary:       #2563EB;
+    --color-primary-hover: #1D4ED8;
+    --color-primary-light: rgba(37, 99, 235, 0.08);
+    --color-primary-50:    #EFF6FF;
+    --color-primary-100:   #DBEAFE;
+
+    --color-success:       #059669;
+    --color-success-light: rgba(5, 150, 105, 0.08);
+    --color-warning:       #D97706;
+    --color-warning-light: rgba(217, 119, 6, 0.08);
+    --color-danger:        #DC2626;
+    --color-danger-light:  rgba(220, 38, 38, 0.08);
+    --color-info:          #7C3AED;
+    --color-info-light:    rgba(124, 58, 237, 0.08);
+
+    // ─── Surface & Background ───
+    --bg-body:             #F1F5F9;
+    --bg-card:             #FFFFFF;
+    --bg-sidebar:          #0F172A;
+    --bg-sidebar-hover:    #1E293B;
+    --bg-sidebar-active:   rgba(37, 99, 235, 0.12);
+    --bg-header:           rgba(255, 255, 255, 0.85);
+    --bg-input:            #FFFFFF;
+    --bg-muted:            #F8FAFC;
+    --bg-skeleton:         #E2E8F0;
+
+    // ─── Text ───
+    --text-heading:        #0F172A;
+    --text-primary:        #1E293B;
+    --text-secondary:      #475569;
+    --text-muted:          #94A3B8;
+    --text-inverse:        #FFFFFF;
+
+    // ─── Border ───
+    --border-color:        #E2E8F0;
+    --border-light:        #F1F5F9;
+    --border-focus:        var(--color-primary);
+
+    // ─── Border Radius Scale ───
+    --radius-sm:           4px;
+    --radius-md:           8px;
+    --radius-lg:           12px;
+    --radius-xl:           16px;
+    --radius-full:         9999px;
+
+    // ─── Elevation System ───
+    --shadow-xs:           0 1px 2px rgba(0, 0, 0, 0.04);
+    --shadow-sm:           0 1px 3px rgba(0, 0, 0, 0.06), 0 1px 2px rgba(0, 0, 0, 0.04);
+    --shadow-md:           0 4px 6px -1px rgba(0, 0, 0, 0.07), 0 2px 4px -2px rgba(0, 0, 0, 0.05);
+    --shadow-lg:           0 10px 15px -3px rgba(0, 0, 0, 0.08), 0 4px 6px -4px rgba(0, 0, 0, 0.05);
+    --shadow-xl:           0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 8px 10px -6px rgba(0, 0, 0, 0.04);
+
+    // ─── Typography ───
+    --font-base:           'Inter', system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+    --fs-xs:               11px;
+    --fs-sm:               12px;
+    --fs-base:             13px;
+    --fs-md:               14px;
+    --fs-lg:               15px;
+    --fs-xl:               16px;
+    --fs-2xl:              18px;
+    --fs-3xl:              22px;
+    --fs-4xl:              26px;
+
+    // ─── Spacing Scale (4px base) ───
+    --space-1:  4px;
+    --space-2:  8px;
+    --space-3:  12px;
+    --space-4:  16px;
+    --space-5:  20px;
+    --space-6:  24px;
+    --space-8:  32px;
+    --space-10: 40px;
+    --space-12: 48px;
+
+    // ─── Transitions ───
+    --transition-fast:     0.15s ease;
+    --transition-normal:   0.2s ease;
+    --transition-smooth:   0.3s cubic-bezier(0.4, 0, 0.2, 1);
+
+    // ─── Z-Index Layers ───
+    --z-dropdown:   100;
+    --z-sticky:     200;
+    --z-sidebar:    300;
+    --z-header:     400;
+    --z-modal-backdrop: 1050;
+    --z-modal:      1060;
+    --z-toast:      1100;
+
+    // ─── Layout Dimensions ───
+    --topbar-height:       56px;
+    --sidebar-width:       256px;
+    --content-padding:     24px;
+
+    // ─── Form & Table Dimensions ───
+    --input-height:        38px;
+    --table-row-height:    44px;
+    --table-header-height: 42px;
+}
+
+
+// ============================================================================
+// 2. BASE RESET & TYPOGRAPHY
+// ============================================================================
+*, *::before, *::after {
+    box-sizing: border-box;
+}
+
+body {
+    font-family: var(--font-base);
+    background-color: var(--bg-body);
+    color: var(--text-primary);
+    margin: 0;
+    font-size: var(--fs-base);
+    line-height: 1.5;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+}
+
+h1, h2, h3, h4, h5, h6 {
+    font-family: var(--font-base);
+    color: var(--text-heading);
+    font-weight: 600;
+    margin: 0;
+    line-height: 1.3;
+}
+
+a {
+    color: var(--color-primary);
+    text-decoration: none;
+    transition: color var(--transition-fast);
+}
+a:hover {
+    color: var(--color-primary-hover);
+}
+
+// ─── Typography Classes ───
+.page-title {
+    font-size: var(--fs-3xl);
+    font-weight: 700;
+    color: var(--text-heading);
+    letter-spacing: -0.3px;
+}
+.section-title {
+    font-size: var(--fs-xl);
+    font-weight: 600;
+    color: var(--text-heading);
+}
+.card-title {
+    font-size: var(--fs-lg);
+    font-weight: 600;
+    color: var(--text-heading);
+}
+.modal-title {
+    font-size: var(--fs-xl);
+    font-weight: 600;
+    color: var(--text-heading);
+}
+
+
+// ============================================================================
+// 3. LAYOUT SHELL
+// ============================================================================
+
+// ─── App Wrapper ───
+#kt_app_wrapper {
+    display: flex;
+    min-height: 100vh;
+}
+
+// ─── Sidebar ───
+#kt_app_sidebar {
+    width: var(--sidebar-width);
+    background: linear-gradient(180deg, #0F172A 0%, #1B2559 100%);
+    display: flex;
+    flex-direction: column;
+    position: fixed;
+    top: 0;
+    bottom: 0;
+    left: 0;
+    z-index: var(--z-sidebar);
+    border-right: 1px solid rgba(255, 255, 255, 0.06);
+}
+
+.sidebar-logo {
+    height: var(--topbar-height);
+    display: flex;
+    align-items: center;
+    padding: 0 var(--space-5);
+    border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+    color: var(--text-inverse);
+    font-size: var(--fs-xl);
+    font-weight: 700;
+    letter-spacing: -0.3px;
+    gap: var(--space-2);
+}
+
+.sidebar-menu {
+    list-style: none;
+    padding: var(--space-3) 0;
+    margin: 0;
+    overflow-y: auto;
+    flex: 1;
+
+    // Custom scrollbar for sidebar
+    &::-webkit-scrollbar {
+        width: 4px;
+    }
+    &::-webkit-scrollbar-track {
+        background: transparent;
+    }
+    &::-webkit-scrollbar-thumb {
+        background: rgba(255, 255, 255, 0.1);
+        border-radius: var(--radius-full);
+    }
+}
+
+.sidebar-menu li {
+    padding: 1px var(--space-3);
+}
+
+// Sidebar Section Labels (replaces inline styles on 9 sidebar section headers)
+.sidebar-section-label {
+    font-size: var(--fs-xs);
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.8px;
+    color: rgba(148, 163, 184, 0.5);
+    padding: 0 var(--space-3);
+    margin-top: var(--space-5);
+    margin-bottom: var(--space-1);
+}
+
+.nav-link-item {
+    display: flex;
+    align-items: center;
+    padding: 8px var(--space-3);
+    color: #94A3B8;
+    font-weight: 500;
+    font-size: var(--fs-base);
+    border-radius: var(--radius-md);
+    transition: all var(--transition-normal);
+    border: none;
+    background: transparent;
+    text-align: left;
+    width: 100%;
+    cursor: pointer;
+    position: relative;
+}
+
+.nav-link-item i {
+    font-size: var(--fs-md);
+    margin-right: var(--space-3);
+    width: 18px;
+    text-align: center;
+}
+
+.nav-link-item:hover {
+    background-color: var(--bg-sidebar-hover);
+    color: #E2E8F0;
+}
+
+.nav-link-item.active {
+    background-color: var(--bg-sidebar-active);
+    color: var(--color-primary);
+    font-weight: 600;
+}
+.nav-link-item.active::before {
+    content: '';
+    position: absolute;
+    left: -12px;
+    top: 50%;
+    transform: translateY(-50%);
+    width: 3px;
+    height: 24px;
+    background: var(--color-primary);
+    border-radius: 0 var(--radius-sm) var(--radius-sm) 0;
+}
+.nav-link-item.active i {
+    color: var(--color-primary);
+}
+
+// ─── Main Content Wrapper ───
+#kt_app_main {
+    flex-grow: 1;
+    display: flex;
+    flex-direction: column;
+    min-width: 0;
+    margin-left: var(--sidebar-width);
+}
+
+// ─── Header / Topbar ───
+#kt_app_header {
+    height: var(--topbar-height);
+    background: var(--bg-header);
+    backdrop-filter: blur(12px);
+    border-bottom: 1px solid var(--border-color);
+    padding: 0 var(--content-padding);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    position: sticky;
+    top: 0;
+    z-index: var(--z-header);
+}
+
+// ─── Content Area ───
+#kt_app_content {
+    padding: 0 var(--content-padding) var(--content-padding) var(--content-padding);
+    flex-grow: 1;
+}
+
+// ─── User Avatar ───
+.user-avatar {
+    width: 36px;
+    height: 36px;
+    min-width: 36px;
+    min-height: 36px;
+    flex-shrink: 0;
+    border-radius: 50%;
+    background: linear-gradient(135deg, var(--color-primary-50) 0%, var(--color-primary-100) 100%);
+    color: var(--color-primary);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: 700;
+    font-size: 13px;
+    line-height: 1;
+    border: 2px solid var(--color-primary-100);
+    box-shadow: 0 2px 4px rgba(37, 99, 235, 0.12);
+}
+
+
+// ============================================================================
+// 4. STANDARD PAGE COMPONENTS
+// ============================================================================
+
+// ─── Page Toolbar (consistent across all list pages) ───
+.page-toolbar {
+    padding: var(--space-4) var(--content-padding);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    background-color: var(--bg-body);
+}
+
+// ─── Filter Panel (replaces "card p-4 mb-4 mt-2" pattern) ───
+// Note: pages currently use `card p-4 mb-4 mt-2` directly — this class provides
+// the standardized look. Both patterns will work identically.
+
+// ─── Empty State ───
+.empty-state {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: var(--space-12) var(--space-4);
+    color: var(--text-secondary);
+    text-align: center;
+
+    i {
+        font-size: 2rem;
+        color: var(--text-muted);
+        margin-bottom: var(--space-2);
+    }
+}
+
+
+// ============================================================================
+// 5. CARDS
+// ============================================================================
+.card {
+    background: var(--bg-card);
+    border-radius: var(--radius-lg);
+    border: 1px solid var(--border-color);
+    box-shadow: var(--shadow-sm);
+    margin-bottom: var(--space-5);
+    transition: box-shadow var(--transition-normal);
+}
+
+.card-header {
+    padding: var(--space-3) var(--space-4);
+    border-bottom: 1px solid var(--border-color);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    background: transparent;
+}
+
+.card-body {
+    padding: var(--space-4);
+}
+
+// ─── Interactive Hover Card ───
+.hover-card {
+    transition: transform var(--transition-smooth), box-shadow var(--transition-smooth);
+    cursor: default;
+}
+.hover-card:hover {
+    transform: translateY(-3px);
+    box-shadow: var(--shadow-lg);
+}
+
+// ─── Dashboard Stat Cards (border-left accent) ───
+.stat-card--primary { border-left: 4px solid var(--color-primary); }
+.stat-card--success { border-left: 4px solid var(--color-success); }
+.stat-card--info    { border-left: 4px solid var(--color-info); }
+.stat-card--warning { border-left: 4px solid var(--color-warning); }
+.stat-card--danger  { border-left: 4px solid var(--color-danger); }
+
+// ─── Symbol Circle (icon badge background) ───
+.symbol-circle {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: var(--radius-full);
+    width: 48px;
+    height: 48px;
+}
+.bg-light-primary { background-color: var(--color-primary-light); }
+.bg-light-success { background-color: var(--color-success-light); }
+.bg-light-info    { background-color: var(--color-info-light); }
+.bg-light-warning { background-color: var(--color-warning-light); }
+.bg-light-danger  { background-color: var(--color-danger-light); }
+
+// ─── KPI Cards (gradient background — Employee List) ───
+.kpi-card {
+    box-shadow: var(--shadow-md);
+    transition: transform var(--transition-normal), box-shadow var(--transition-normal);
+    cursor: default;
+    position: relative;
+    overflow: hidden;
+    border: none;
+    border-radius: var(--radius-lg);
+}
+.kpi-card:hover {
+    transform: translateY(-3px);
+    box-shadow: var(--shadow-lg);
+}
+.kpi-value {
+    font-size: 28px;
+    font-weight: 700;
+    letter-spacing: -1px;
+}
+.bg-primary-gradient { background: linear-gradient(135deg, #2563EB 0%, #1E40AF 100%); }
+.bg-success-gradient { background: linear-gradient(135deg, #059669 0%, #047857 100%); }
+.bg-warning-gradient { background: linear-gradient(135deg, #D97706 0%, #B45309 100%); }
+.bg-danger-gradient  { background: linear-gradient(135deg, #DC2626 0%, #B91C1C 100%); }
+.text-white-50 { color: rgba(255, 255, 255, 0.7) !important; }
+.text-white-20 { color: rgba(255, 255, 255, 0.2) !important; }
+
+// ─── Quick Link Button (Dashboard) ───
+.quick-link-btn {
+    background: var(--bg-card);
+    transition: all var(--transition-normal);
+    cursor: pointer;
+    border-radius: var(--radius-md);
+}
+.quick-link-btn:hover {
+    border-color: var(--color-primary) !important;
+    background-color: var(--color-primary-50);
+    transform: translateY(-2px);
+    box-shadow: var(--shadow-md);
+}
+
+
+// ============================================================================
+// 6. BUTTONS (STANDARDIZED)
+// ============================================================================
+.btn {
+    font-family: var(--font-base);
+    font-weight: 500;
+    font-size: var(--fs-base);
+    padding: 8px 16px;
+    height: var(--input-height);
+    border-radius: var(--radius-md);
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: var(--space-1);
+    transition: all var(--transition-normal);
+    border: 1px solid transparent;
+    cursor: pointer;
+    white-space: nowrap;
+    line-height: 1;
+}
+.btn:focus-visible {
+    outline: 2px solid var(--color-primary);
+    outline-offset: 2px;
+}
+
+// ─── Primary Button ───
+.btn-primary {
+    background: var(--color-primary);
+    color: var(--text-inverse);
+    border-color: var(--color-primary);
+    box-shadow: 0 1px 3px rgba(37, 99, 235, 0.2);
+}
+.btn-primary:hover {
+    background: var(--color-primary-hover);
+    border-color: var(--color-primary-hover);
+    box-shadow: 0 4px 12px rgba(37, 99, 235, 0.3);
+    transform: translateY(-1px);
+}
+.btn-primary:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+    box-shadow: none;
+    transform: none;
+}
+
+// ─── Outline Button ───
+.btn-outline {
+    background: var(--bg-card);
+    border-color: var(--border-color);
+    color: var(--text-primary);
+}
+.btn-outline:hover {
+    background: var(--color-primary);
+    color: #ffffff !important;
+    border-color: var(--color-primary);
+}
+
+// ─── Outline Variants ───
+.btn-outline-primary {
+    background: transparent;
+    border-color: var(--color-primary);
+    color: var(--color-primary);
+}
+.btn-outline-primary:hover {
+    background: var(--color-primary);
+    color: #ffffff !important;
+    border-color: var(--color-primary);
+}
+
+.btn-outline-success {
+    background: transparent;
+    border-color: var(--color-success);
+    color: var(--color-success);
+}
+.btn-outline-success:hover {
+    background: var(--color-success);
+    color: #ffffff !important;
+    border-color: var(--color-success);
+}
+
+.btn-outline-danger {
+    background: transparent;
+    border-color: var(--color-danger);
+    color: var(--color-danger);
+}
+.btn-outline-danger:hover {
+    background: var(--color-danger);
+    color: #ffffff !important;
+    border-color: var(--color-danger);
+}
+
+.btn-outline-warning {
+    background: transparent;
+    border-color: var(--color-warning);
+    color: var(--color-warning);
+}
+.btn-outline-warning:hover {
+    background: var(--color-warning);
+    color: #ffffff !important;
+    border-color: var(--color-warning);
+}
+
+.btn-outline-info {
+    background: transparent;
+    border-color: var(--color-info);
+    color: var(--color-info);
+}
+.btn-outline-info:hover {
+    background: var(--color-info);
+    color: #ffffff !important;
+    border-color: var(--color-info);
+}
+
+// Ensure all text and icons inside outline buttons turn white on hover
+.btn-outline:hover *,
+.btn-outline-primary:hover *,
+.btn-outline-success:hover *,
+.btn-outline-danger:hover *,
+.btn-outline-warning:hover *,
+.btn-outline-info:hover * {
+    color: #ffffff !important;
+}
+
+// ─── Success Button ───
+.btn-success {
+    background: var(--color-success);
+    color: var(--text-inverse);
+    border-color: var(--color-success);
+}
+.btn-success:hover {
+    opacity: 0.9;
+    transform: translateY(-1px);
+}
+
+// ─── Size Variants ───
+.btn-sm {
+    height: 32px;
+    padding: 6px 12px;
+    font-size: var(--fs-sm);
+    border-radius: var(--radius-sm);
+}
+
+// ─── Icon-Only Button (replaces repeated "btn btn-outline btn-sm p-1") ───
+.btn-icon {
+    width: 32px;
+    height: 32px;
+    padding: 0;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    background: transparent;
+    border: 1px solid var(--border-color);
+    border-radius: var(--radius-md);
+    color: var(--text-secondary);
+    cursor: pointer;
+    transition: all var(--transition-fast);
+}
+.btn-icon:hover {
+    background: var(--bg-muted);
+    border-color: var(--color-primary);
+}
+
+
+// ============================================================================
+// 7. FORMS & INPUTS (STANDARDIZED)
+// ============================================================================
+.form-label {
+    font-size: var(--fs-base);
+    font-weight: 500;
+    color: var(--text-primary);
+    margin-bottom: var(--space-1);
+    display: block;
+}
+
+.form-control {
+    height: var(--input-height);
+    padding: 8px 12px;
+    font-size: var(--fs-md);
+    font-family: var(--font-base);
+    border: 1px solid var(--border-color);
+    border-radius: var(--radius-md);
+    color: var(--text-primary);
+    background-color: var(--bg-input);
+    transition: border-color var(--transition-fast), box-shadow var(--transition-fast);
+    width: 100%;
+    box-sizing: border-box;
+}
+.form-control:focus {
+    border-color: var(--border-focus);
+    outline: none;
+    box-shadow: 0 0 0 3px var(--color-primary-light);
+}
+.form-control::placeholder {
+    color: var(--text-muted);
+}
+.form-control[readonly] {
+    background-color: var(--bg-muted);
+    color: var(--text-secondary);
+}
+
+.form-select {
+    display: block;
+    width: 100%;
+    height: var(--input-height);
+    padding: 6px 36px 6px 12px;
+    font-size: var(--fs-base);
+    font-family: var(--font-base);
+    font-weight: 400;
+    line-height: 1.5;
+    color: var(--text-primary);
+    background-color: var(--bg-input);
+    background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3e%3cpath fill='none' stroke='%23475569' stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='m2 5 6 6 6-6'/%3e%3c/svg%3e");
+    background-repeat: no-repeat;
+    background-position: right 12px center;
+    background-size: 14px 12px;
+    border: 1px solid var(--border-color);
+    border-radius: var(--radius-md);
+    transition: border-color var(--transition-fast), box-shadow var(--transition-fast);
+    cursor: pointer;
+    -webkit-appearance: none;
+    -moz-appearance: none;
+    appearance: none;
+}
+.form-select:focus {
+    border-color: var(--border-focus);
+    outline: none;
+    box-shadow: 0 0 0 3px var(--color-primary-light);
+}
+.form-select-sm {
+    height: 32px;
+    padding: 4px 24px 4px 8px;
+    font-size: var(--fs-sm);
+}
+
+textarea.form-control {
+    height: auto;
+    min-height: 80px;
+    resize: vertical;
+}
+
+// ─── Search Input Group ───
+.search-input-group {
+    position: relative;
+    width: 250px;
+}
+.search-input-group i {
+    position: absolute;
+    left: 12px;
+    top: 50%;
+    transform: translateY(-50%);
+    color: var(--text-muted);
+    font-size: var(--fs-md);
+    pointer-events: none;
+    transition: color var(--transition-fast);
+}
+.search-input-group .form-control {
+    padding-left: 36px;
+}
+.search-input-group:focus-within i {
+    color: var(--color-primary);
+}
+
+// ─── Form Check / Switch ───
+.form-check {
+    display: flex;
+    align-items: center;
+    gap: var(--space-2);
+}
+.form-check-input {
+    width: 18px;
+    height: 18px;
+    cursor: pointer;
+    accent-color: var(--color-primary);
+}
+.form-switch .form-check-input {
+    width: 36px;
+    height: 20px;
+    appearance: auto;
+}
+
+
+// ============================================================================
+// 8. ENTERPRISE DATA GRID (STANDARDIZED)
+// ============================================================================
+.table-responsive {
+    overflow-x: auto;
+}
+
+.table-enterprise {
+    width: 100%;
+    border-collapse: collapse;
+    background: var(--bg-card);
+}
+
+.table-enterprise th {
+    height: var(--table-header-height);
+    font-size: var(--fs-sm);
+    font-weight: 600;
+    color: var(--text-secondary);
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    padding: 0 var(--space-4);
+    border-bottom: 2px solid var(--border-color);
+    background-color: var(--bg-muted);
+    text-align: left;
+    white-space: nowrap;
+    position: sticky;
+    top: 0;
+    z-index: 1;
+}
+
+.table-enterprise td {
+    height: var(--table-row-height);
+    font-size: var(--fs-base);
+    color: var(--text-primary);
+    padding: 0 var(--space-4);
+    border-bottom: 1px solid var(--border-light);
+    vertical-align: middle;
+}
+
+.table-enterprise tbody tr {
+    transition: background-color var(--transition-fast);
+}
+.table-enterprise tbody tr:hover {
+    background-color: var(--color-primary-50);
+}
+
+// ─── Standardized Action Column ───
+.th-actions {
+    width: 140px;
+    text-align: center;
+}
+
+// ─── Clickable Table Row (Employee list) ───
+.clickable-row {
+    cursor: pointer;
+    transition: background-color var(--transition-fast);
+}
+.clickable-row:hover {
+    background-color: var(--color-primary-50) !important;
+}
+
+// ─── Basic table (used in data import error report) ───
+.table {
+    width: 100%;
+    border-collapse: collapse;
+}
+.table th, .table td {
+    padding: 8px 12px;
+    border-bottom: 1px solid var(--border-color);
+    font-size: var(--fs-base);
+    text-align: left;
+}
+.table th {
+    font-weight: 600;
+    color: var(--text-secondary);
+    background: var(--bg-muted);
+}
+.table-sm th, .table-sm td {
+    padding: 6px 10px;
+    font-size: var(--fs-sm);
+}
+.table-hover tbody tr:hover {
+    background-color: var(--bg-muted);
+}
+
+
+// ============================================================================
+// 9. MODAL SYSTEM (STANDARDIZED)
+// ============================================================================
+
+// ─── Modal Backdrop (used by all modal patterns) ───
+.modal-backdrop-custom,
+.modal-backdrop {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100vw;
+    height: 100vh;
+    background: rgba(15, 23, 42, 0.5);
+    z-index: var(--z-modal-backdrop);
+    backdrop-filter: blur(4px);
+    animation: fadeIn var(--transition-fast);
+}
+
+// For employee modal pattern that uses .modal-backdrop as a flexbox container
+.modal-backdrop {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+// ─── Modal Dialog Structure (Bootstrap-like pattern) ───
+.modal {
+    z-index: var(--z-modal);
+    background: none;
+}
+.modal-dialog {
+    margin: auto;
+    max-width: 550px;
+    width: 90%;
+}
+.modal-dialog-centered {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 100vh;
+}
+
+// ─── Modal Content (shared across all modal patterns) ───
+.modal-content,
+.modal-container {
+    background: var(--bg-card);
+    border: none;
+    border-radius: var(--radius-xl);
+    box-shadow: var(--shadow-xl);
+    animation: scaleUp var(--transition-smooth);
+    display: flex;
+    flex-direction: column;
+    width: 100%;
+}
+
+.modal-container {
+    width: 90%;
+    max-width: 550px;
+}
+.modal-container.modal-lg {
+    max-width: 800px;
+}
+
+.modal-header {
+    padding: var(--space-4) var(--space-5);
+    border-bottom: 1px solid var(--border-color);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+}
+
+.modal-body {
+    padding: var(--space-5);
+}
+
+.modal-footer {
+    padding: var(--space-3) var(--space-5);
+    border-top: 1px solid var(--border-color);
+    display: flex;
+    justify-content: flex-end;
+    gap: var(--space-2);
+}
+
+// ─── Close Button ───
+.btn-close {
+    box-sizing: border-box;
+    width: 28px;
+    height: 28px;
+    padding: 0;
+    color: var(--text-secondary);
+    background: transparent !important;
+    background-image: none !important;
+    border: 0;
+    border-radius: var(--radius-md);
+    opacity: 0.7;
+    cursor: pointer;
+    transition: all var(--transition-fast);
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.25rem;
+    line-height: 1;
+}
+.btn-close:empty::before {
+    content: '×';
+    font-size: 1.4rem;
+    font-weight: 400;
+    line-height: 1;
+}
+.btn-close:hover {
+    color: var(--color-danger) !important;
+    background-color: var(--color-danger-light) !important;
+    opacity: 1;
+}
+
+
+// ============================================================================
+// 10. TOAST NOTIFICATIONS
+// ============================================================================
+.toast-custom {
+    position: fixed;
+    bottom: 24px;
+    right: 24px;
+    z-index: var(--z-toast);
+    box-shadow: var(--shadow-xl);
+    animation: slideInUp 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+    border-radius: var(--radius-md);
+    backdrop-filter: blur(8px);
+}
+
+
+// ============================================================================
+// 11. LOADING STATES
+// ============================================================================
+
+// ─── Skeleton Shimmer (with built-in defaults — no inline styles needed) ───
+.skeleton-shimmer {
+    height: 16px;
+    width: 80%;
+    border-radius: var(--radius-sm);
+    background: linear-gradient(90deg, var(--bg-skeleton) 25%, #CBD5E1 50%, var(--bg-skeleton) 75%);
+    background-size: 200% 100%;
+    animation: loading-shimmer 1.5s ease-in-out infinite;
+}
+
+// ─── Spinners ───
+.spinner {
+    width: 18px;
+    height: 18px;
+    border: 2px solid rgba(255, 255, 255, 0.3);
+    border-top-color: var(--text-inverse);
+    border-radius: var(--radius-full);
+    animation: spin 0.6s linear infinite;
+}
+.spinner-border {
+    display: inline-block;
+    width: 1rem;
+    height: 1rem;
+    border: 2px solid currentColor;
+    border-right-color: transparent;
+    border-radius: var(--radius-full);
+    animation: spin 0.75s linear infinite;
+}
+.spinner-border-sm {
+    width: 0.8rem;
+    height: 0.8rem;
+    border-width: 1.5px;
+}
+
+
+// ============================================================================
+// 12. BADGES & STATUS
+// ============================================================================
+.badge {
+    padding: 4px 10px;
+    border-radius: var(--radius-full);
+    font-weight: 600;
+    font-size: var(--fs-xs);
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    letter-spacing: 0.3px;
+    text-transform: uppercase;
+}
+.badge-success { background: var(--color-success-light); color: var(--color-success); }
+.badge-warning { background: var(--color-warning-light); color: var(--color-warning); }
+.badge-danger  { background: var(--color-danger-light); color: var(--color-danger); }
+.badge-info    { background: var(--color-info-light); color: var(--color-info); }
+
+// ─── Background Badges (used in data import) ───
+.bg-primary   { background-color: var(--color-primary) !important; }
+.bg-success   { background-color: var(--color-success) !important; }
+.bg-info      { background-color: var(--color-info) !important; }
+.bg-warning   { background-color: var(--color-warning) !important; }
+.bg-danger    { background-color: var(--color-danger) !important; }
+.bg-secondary { background-color: var(--text-secondary) !important; }
+.bg-dark      { background-color: #0F172A !important; }
+.bg-light     { background-color: var(--bg-muted) !important; }
+.bg-white     { background-color: var(--bg-card) !important; }
+.bg-transparent { background-color: transparent !important; }
+.rounded-pill { border-radius: var(--radius-full) !important; }
+
+
+// ============================================================================
+// 13. ALERTS
+// ============================================================================
+.alert {
+    padding: var(--space-3) var(--space-4);
+    border-radius: var(--radius-md);
+    font-size: var(--fs-base);
+    border: 1px solid transparent;
+    margin-bottom: var(--space-4);
+}
+.alert-heading {
+    font-size: var(--fs-lg);
+    font-weight: 600;
+    margin-bottom: var(--space-1);
+}
+.alert-success {
+    background: var(--color-success-light);
+    color: var(--color-success);
+    border-color: rgba(5, 150, 105, 0.15);
+}
+.alert-warning {
+    background: var(--color-warning-light);
+    color: var(--color-warning);
+    border-color: rgba(217, 119, 6, 0.15);
+}
+.alert-danger {
+    background: var(--color-danger-light);
+    color: var(--color-danger);
+    border-color: rgba(220, 38, 38, 0.15);
+}
+.alert-info {
+    background: var(--color-info-light);
+    color: var(--color-info);
+    border-color: rgba(124, 58, 237, 0.15);
+}
+
+
+// ============================================================================
+// 14. NAVIGATION TABS
+// ============================================================================
+.nav {
+    display: flex;
+    list-style: none;
+    padding: 0;
+    margin: 0;
+}
+.nav-tabs {
+    border-bottom: 2px solid var(--border-color);
+}
+.nav-item {
+    margin-bottom: -2px;
+}
+.nav-link {
+    display: inline-flex;
+    align-items: center;
+    padding: var(--space-3) var(--space-4);
+    color: var(--text-secondary);
+    font-weight: 500;
+    font-size: var(--fs-base);
+    border: none;
+    border-bottom: 3px solid transparent;
+    background: transparent;
+    cursor: pointer;
+    transition: all var(--transition-fast);
+    white-space: nowrap;
+}
+.nav-link:hover {
+    color: var(--color-primary);
+}
+.nav-link.active {
+    color: var(--color-primary);
+    background: transparent;
+    border-bottom-color: var(--color-primary);
+    font-weight: 600;
+}
+
+// ─── Tab Headers (card-header-tabs) ───
+.card-header-tabs {
+    margin-bottom: -1px;
+}
+
+
+// ============================================================================
+// 15. LIST GROUPS
+// ============================================================================
+.list-group {
+    display: flex;
+    flex-direction: column;
+}
+.list-group-item {
+    padding: var(--space-3) var(--space-4);
+    border: none;
+    border-bottom: 1px solid var(--border-light);
+    background: var(--bg-card);
+    color: var(--text-primary);
+    font-size: var(--fs-base);
+}
+.list-group-item:last-child {
+    border-bottom: none;
+}
+.list-group-item-action {
+    cursor: pointer;
+    transition: background-color var(--transition-fast);
+    width: 100%;
+    text-align: left;
+    border: none;
+    font-family: var(--font-base);
+}
+.list-group-item-action:hover {
+    background-color: var(--bg-muted);
+}
+.list-group-item.active {
+    background-color: var(--color-primary-light);
+    border-left: 3px solid var(--color-primary);
+}
+
+
+// ============================================================================
+// 16. SPECIAL COMPONENTS
+// ============================================================================
+
+// ─── Drop Zone (Data Import) ───
+.drop-zone {
+    background-color: var(--bg-muted);
+    transition: all var(--transition-normal);
+    cursor: pointer;
+    border-radius: var(--radius-lg);
+}
+.drop-zone:hover {
+    background-color: var(--color-primary-50);
+    border-color: var(--color-primary) !important;
+}
+
+// ─── Selected File Card ───
+.selected-file-card {
+    border-left: 4px solid var(--color-success) !important;
+}
+
+// ─── Timeline (Dashboard) ───
+.timeline-label {}
+.timeline-item {}
+.timeline-dot {
+    width: 10px;
+    height: 10px;
+    border-radius: var(--radius-full);
+    align-self: center;
+    flex-shrink: 0;
+}
+
+// ─── Pagination ───
+.pagination-container {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: var(--space-3) 0;
+}
+.pagination {
+    display: flex;
+    list-style: none;
+    padding: 0;
+    margin: 0;
+    gap: var(--space-1);
+}
+.page-link {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 32px;
+    height: 32px;
+    padding: 0 8px;
+    border-radius: var(--radius-sm);
+    font-size: var(--fs-base);
+    font-weight: 500;
+    color: var(--text-secondary);
+    cursor: pointer;
+    transition: all var(--transition-fast);
+}
+.page-item.active .page-link {
+    background-color: var(--color-primary);
+    color: var(--text-inverse);
+}
+.page-link:hover:not(.active) {
+    background-color: var(--bg-muted);
+}
+
+// ─── Dropdowns ───
+.dropdown-menu {
+    border: 1px solid var(--border-color);
+    border-radius: var(--radius-md);
+    box-shadow: var(--shadow-lg);
+    padding: var(--space-2) 0;
+    background: var(--bg-card);
+}
+.dropdown-item {
+    font-size: var(--fs-base);
+    padding: 8px var(--space-4);
+    color: var(--text-secondary);
+    transition: all var(--transition-fast);
+}
+.dropdown-item:hover {
+    background-color: var(--bg-muted);
+    color: var(--color-primary);
+}
+
+
+// ============================================================================
+// 17. ANIMATIONS
+// ============================================================================
+@keyframes fadeIn {
+    from { opacity: 0; }
+    to   { opacity: 1; }
+}
+
+@keyframes fadeInUp {
+    from { transform: translateY(20px); opacity: 0; }
+    to   { transform: translateY(0); opacity: 1; }
+}
+
+@keyframes scaleUp {
+    from { transform: scale(0.95); opacity: 0; }
+    to   { transform: scale(1); opacity: 1; }
+}
+
+@keyframes loading-shimmer {
+    0%   { background-position: 200% 0; }
+    100% { background-position: -200% 0; }
+}
+
+@keyframes slideInUp {
+    from { transform: translateY(100px); opacity: 0; }
+    to   { transform: translateY(0); opacity: 1; }
+}
+
+@keyframes spin {
+    to { transform: rotate(360deg); }
+}
+
+.animate-fade-in {
+    animation: fadeIn 0.4s ease-out;
+}
+
+
+// ============================================================================
+// 18. UTILITY CLASSES
+// ============================================================================
+
+// ─── Display ───
+.d-flex        { display: flex !important; }
+.d-inline-flex { display: inline-flex !important; }
+.d-block       { display: block !important; }
+.d-inline-block{ display: inline-block !important; }
+.d-none        { display: none !important; }
+
+// ─── Flex ───
+.flex-column   { flex-direction: column !important; }
+.flex-wrap     { flex-wrap: wrap !important; }
+.flex-grow-1   { flex-grow: 1 !important; }
+.justify-content-start   { justify-content: flex-start !important; }
+.justify-content-end     { justify-content: flex-end !important; }
+.justify-content-center  { justify-content: center !important; }
+.justify-content-between { justify-content: space-between !important; }
+.align-items-start   { align-items: flex-start !important; }
+.align-items-end     { align-items: flex-end !important; }
+.align-items-center  { align-items: center !important; }
+
+// ─── Gap ───
+.gap-1 { gap: var(--space-1) !important; }
+.gap-2 { gap: var(--space-2) !important; }
+.gap-3 { gap: var(--space-3) !important; }
+.gap-4 { gap: var(--space-4) !important; }
+
+// ─── Margin ───
+.m-0  { margin: 0 !important; }
+.mt-1 { margin-top: var(--space-1) !important; }
+.mt-2 { margin-top: var(--space-2) !important; }
+.mt-3 { margin-top: var(--space-3) !important; }
+.mt-4 { margin-top: var(--space-4) !important; }
+.mb-0 { margin-bottom: 0 !important; }
+.mb-1 { margin-bottom: var(--space-1) !important; }
+.mb-2 { margin-bottom: var(--space-2) !important; }
+.mb-3 { margin-bottom: var(--space-3) !important; }
+.mb-4 { margin-bottom: var(--space-4) !important; }
+.mb-5 { margin-bottom: var(--space-5) !important; }
+.me-1 { margin-right: var(--space-1) !important; }
+.me-2 { margin-right: var(--space-2) !important; }
+.me-3 { margin-right: var(--space-3) !important; }
+.ms-1 { margin-left: var(--space-1) !important; }
+.ms-2 { margin-left: var(--space-2) !important; }
+.my-2 { margin-top: var(--space-2) !important; margin-bottom: var(--space-2) !important; }
+.my-4 { margin-top: var(--space-4) !important; margin-bottom: var(--space-4) !important; }
+
+// ─── Padding ───
+.p-0  { padding: 0 !important; }
+.p-1  { padding: var(--space-1) !important; }
+.p-2  { padding: var(--space-2) !important; }
+.p-3  { padding: var(--space-3) !important; }
+.p-4  { padding: var(--space-4) !important; }
+.p-5  { padding: var(--space-5) !important; }
+.px-2 { padding-left: var(--space-2) !important; padding-right: var(--space-2) !important; }
+.px-3 { padding-left: var(--space-3) !important; padding-right: var(--space-3) !important; }
+.px-4 { padding-left: var(--space-4) !important; padding-right: var(--space-4) !important; }
+.py-1 { padding-top: var(--space-1) !important; padding-bottom: var(--space-1) !important; }
+.py-2 { padding-top: var(--space-2) !important; padding-bottom: var(--space-2) !important; }
+.py-3 { padding-top: var(--space-3) !important; padding-bottom: var(--space-3) !important; }
+.py-5 { padding-top: var(--space-5) !important; padding-bottom: var(--space-5) !important; }
+
+// ─── Sizing ───
+.w-100 { width: 100% !important; }
+.w-50  { width: 50% !important; }
+.w-30  { width: 30% !important; }
+.w-auto{ width: auto !important; }
+.h-100 { height: 100% !important; }
+
+// ─── Text ───
+.text-center    { text-align: center !important; }
+.text-start     { text-align: left !important; }
+.text-end       { text-align: right !important; }
+.text-uppercase { text-transform: uppercase !important; }
+.text-decoration-none { text-decoration: none !important; }
+.uppercase { text-transform: uppercase !important; }
+
+// ─── Font Weight ───
+.fw-bold     { font-weight: 700 !important; }
+.fw-bolder   { font-weight: 800 !important; }
+.fw-semibold { font-weight: 600 !important; }
+.fw-medium   { font-weight: 500 !important; }
+.fw-normal   { font-weight: 400 !important; }
+
+// ─── Font Sizes ───
+.fs-1  { font-size: 2rem !important; }
+.fs-2  { font-size: 1.5rem !important; }
+.fs-3  { font-size: 1.25rem !important; }
+.fs-4  { font-size: 1.125rem !important; }
+.fs-5  { font-size: 1rem !important; }
+.fs-6  { font-size: var(--fs-lg) !important; }
+.fs-7  { font-size: var(--fs-base) !important; }
+.fs-8  { font-size: var(--fs-sm) !important; }
+.fs-9  { font-size: var(--fs-xs) !important; }
+.small { font-size: var(--fs-sm) !important; }
+.h3    { font-size: 1.25rem; font-weight: 700; }
+
+// ─── Text Colors ───
+.text-main      { color: var(--text-heading) !important; }
+.text-primary   { color: var(--color-primary) !important; }
+.text-secondary { color: var(--text-secondary) !important; }
+.text-muted     { color: var(--text-muted) !important; }
+.text-success   { color: var(--color-success) !important; }
+.text-danger    { color: var(--color-danger) !important; }
+.text-warning   { color: var(--color-warning) !important; }
+.text-info      { color: var(--color-info) !important; }
+.text-white     { color: var(--text-inverse) !important; }
+.text-dark      { color: var(--text-heading) !important; }
+
+// ─── Borders ───
+.border        { border: 1px solid var(--border-color) !important; }
+.border-0      { border: 0 !important; }
+.border-2      { border-width: 2px !important; }
+.border-bottom { border-bottom: 1px solid var(--border-color) !important; }
+.border-top    { border-top: 1px solid var(--border-color) !important; }
+.border-dashed { border-style: dashed !important; }
+.border-danger { border-color: var(--color-danger) !important; }
+.border-primary{ border-color: var(--color-primary) !important; }
+.border-secondary { border-color: var(--text-secondary) !important; }
+
+// ─── Border Radius ───
+.rounded   { border-radius: var(--radius-md) !important; }
+.rounded-3 { border-radius: var(--radius-lg) !important; }
+.rounded-4 { border-radius: var(--radius-xl) !important; }
+
+// ─── Shadows ───
+.shadow-sm { box-shadow: var(--shadow-sm) !important; }
+
+// ─── Overflow ───
+.overflow-auto   { overflow: auto !important; }
+.overflow-y-auto { overflow-y: auto !important; }
+.overflow-hidden { overflow: hidden !important; }
+
+// ─── Grid System ───
+.container-fluid {
+    width: 100%;
+    padding-right: var(--content-padding);
+    padding-left: var(--content-padding);
+    margin-right: auto;
+    margin-left: auto;
+}
+
+.row {
+    display: flex;
+    flex-wrap: wrap;
+    margin-right: calc(var(--space-3) * -1);
+    margin-left: calc(var(--space-3) * -1);
+}
+
+// Grid gutters
+.g-3 { --grid-gutter: var(--space-3); }
+.g-4 { --grid-gutter: var(--space-4); }
+.g-5 { --grid-gutter: var(--space-5); }
+
+.g-3 > [class*="col"] { padding: var(--space-3); }
+.g-4 > [class*="col"] { padding: var(--space-4); }
+.g-5 > [class*="col"] { padding: var(--space-5); }
+
+// Column definitions
+[class*="col"] {
+    position: relative;
+    width: 100%;
+    padding-right: var(--space-3);
+    padding-left: var(--space-3);
+}
+
+.col-6  { flex: 0 0 50%; max-width: 50%; }
+.col-12 { flex: 0 0 100%; max-width: 100%; }
+
+@media (min-width: 576px) {
+    .col-sm-6 { flex: 0 0 50%; max-width: 50%; }
+}
+
+@media (min-width: 768px) {
+    .col-md-3 { flex: 0 0 25%; max-width: 25%; }
+    .col-md-4 { flex: 0 0 33.333333%; max-width: 33.333333%; }
+    .col-md-5 { flex: 0 0 41.666667%; max-width: 41.666667%; }
+    .col-md-6 { flex: 0 0 50%; max-width: 50%; }
+}
+
+@media (min-width: 992px) {
+    .col-lg-3 { flex: 0 0 25%; max-width: 25%; }
+    .col-lg-4 { flex: 0 0 33.333333%; max-width: 33.333333%; }
+    .col-lg-6 { flex: 0 0 50%; max-width: 50%; }
+    .col-lg-8 { flex: 0 0 66.666667%; max-width: 66.666667%; }
+}
+
+// ─── Visibility ───
+[hidden] { display: none !important; }
+
+// ─── Code ───
+code {
+    font-family: 'SF Mono', 'Fira Code', 'Fira Mono', 'Roboto Mono', monospace;
+    font-size: var(--fs-sm);
+    padding: 2px 6px;
+    border-radius: var(--radius-sm);
+    background: var(--bg-muted);
+    color: var(--color-danger);
+}
+
+// ─── Selection ───
+::selection {
+    background: var(--color-primary-light);
+    color: var(--color-primary);
+}

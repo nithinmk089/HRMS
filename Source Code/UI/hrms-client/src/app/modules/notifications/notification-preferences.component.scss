@@ -1,0 +1,44 @@
+.text-main {
+  color: var(--text-main);
+}
+
+.text-secondary {
+  color: var(--text-muted);
+}
+
+.bg-light {
+  background-color: var(--bg-color) !important;
+}
+
+.bg-light-primary {
+  background-color: rgba(0, 158, 247, 0.05) !important;
+}
+
+.border-primary {
+  border-color: rgba(0, 158, 247, 0.25) !important;
+}
+
+.form-select-xs {
+  font-size: 0.75rem;
+  padding: 0.2rem 1.5rem 0.2rem 0.4rem;
+  border-radius: 0.25rem;
+  min-width: 110px;
+}
+
+.toast {
+  border-radius: 0.475rem;
+  background-color: #1e1e2d !important;
+  font-size: 0.85rem;
+  opacity: 0.95;
+}
+
+table {
+  tbody {
+    tr {
+      transition: background-color 0.15s ease;
+      &:hover {
+        background-color: rgba(0, 0, 0, 0.015);
+      }
+    }
+  }
+}

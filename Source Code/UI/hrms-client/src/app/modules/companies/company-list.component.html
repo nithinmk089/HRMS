@@ -1,0 +1,144 @@
+<div class="page-toolbar">
+  <div>
+    <h1 class="page-title text-main">Companies Registry</h1>
+    <div class="text-secondary mt-1">Manage corporate entities, legal parameters, tax IDs, and communications</div>
+  </div>
+  <div>
+    <button class="btn btn-primary btn-sm" (click)="openCreateModal()" [disabled]="tenants.length === 0">
+      <i class="bi bi-plus-lg me-1"></i> New Company
+    </button>
+  </div>
+</div>
+
+<!-- Search/Filter Panel -->
+<div class="card p-4 mb-4 mt-2">
+  <div class="row g-3">
+    <div class="col-12 col-md-4">
+      <label class="form-label fs-8 text-secondary">Tenant Group <span class="text-danger">*</span></label>
+      <select class="form-select w-100" [(ngModel)]="tenantIdFilter" (change)="onTenantChange()">
+        @for (tenant of tenants; track tenant.tenantId) {
+          <option [value]="tenant.tenantId">{{ tenant.tenantName }} ({{ tenant.tenantCode }})</option>
+        }
+      </select>
+    </div>
+    <div class="col-12 col-md-4">
+      <label class="form-label fs-8 text-secondary">Search Filter</label>
+      <div class="search-input-group w-100">
+        <i class="bi bi-search"></i>
+        <input type="text" class="form-control" placeholder="Search code or name..." [(ngModel)]="searchText" (keyup.enter)="loadCompanies()">
+      </div>
+    </div>
+    <div class="col-12 col-md-4 d-flex gap-2 align-items-end">
+      <button class="btn btn-outline w-50" (click)="resetFilters()">Reset</button>
+      <button class="btn btn-primary w-50" (click)="loadCompanies()">Search</button>
+    </div>
+  </div>
+</div>
+
+<!-- Data Grid -->
+<div class="card">
+  <div class="table-responsive">
+    <table class="table-enterprise">
+      <thead>
+        <tr>
+          <th>Company Code</th>
+          <th>Company Name</th>
+          <th>Legal Name</th>
+          <th>Tax Number</th>
+          <th>Email</th>
+          <th>Phone</th>
+          <th>Website</th>
+          <th style="width: 120px; text-align: center;">Actions</th>
+        </tr>
+      </thead>
+      <tbody>
+        <!-- Loading Skeletons -->
+        @if (isLoading) {
+          @for (row of [1, 2, 3, 4, 5]; track $index) {
+            <tr>
+              @for (col of [1, 2, 3, 4, 5, 6, 7, 8]; track $index) {
+                <td>
+                  <div class="skeleton-shimmer" style="height: 16px; border-radius: 4px; background: #EAEFF4; width: 80%;"></div>
+                </td>
+              }
+            </tr>
+          }
+        }
+
+        <!-- Empty State -->
+        @if (!isLoading && companies.length === 0) {
+          <tr>
+            <td colspan="8" class="text-center py-5 text-secondary">
+              <i class="bi bi-folder-x fs-2 d-block mb-2 text-muted"></i>
+              No companies found for this tenant.
+            </td>
+          </tr>
+        }
+
+        <!-- Table Rows -->
+        @if (!isLoading) {
+          @for (company of companies; track company.companyId) {
+            <tr>
+              <td class="fw-bold">{{ company.companyCode }}</td>
+              <td [title]="company.companyName">{{ company.companyName | truncate:30 }}</td>
+              <td [title]="company.legalName || ''">{{ company.legalName ? (company.legalName | truncate:30) : '-' }}</td>
+              <td>{{ company.taxNumber || '-' }}</td>
+              <td [title]="company.email || ''">{{ company.email ? (company.email | truncate:30) : '-' }}</td>
+              <td>{{ company.phone || '-' }}</td>
+              <td [title]="company.website || ''">
+                @if (company.website) {
+                  <a [href]="company.website" target="_blank" class="fs-8 text-primary">
+                    {{ company.website | truncate:30 }} <i class="bi bi-box-arrow-up-right fs-9"></i>
+                  </a>
+                } @else {
+                  <span>-</span>
+                }
+              </td>
+              <td class="text-center">
+                <div class="d-flex justify-content-center gap-2">
+                  <button class="btn btn-outline btn-sm p-1" title="Edit" (click)="openEditModal(company)">
+                    <i class="bi bi-pencil-square text-primary"></i>
+                  </button>
+                  <button class="btn btn-outline btn-sm p-1" title="Delete" (click)="deleteCompany(company)">
+                    <i class="bi bi-trash text-danger"></i>
+                  </button>
+                </div>
+              </td>
+            </tr>
+          }
+        }
+      </tbody>
+    </table>
+  </div>
+
+  <!-- Pagination -->
+  @if (companies.length > 0) {
+    <div class="pagination-container px-4">
+      <div class="text-secondary fs-8">
+        Showing Page {{ page }} (Page size: {{ pageSize }})
+      </div>
+      <div class="d-flex gap-2">
+        <button class="btn btn-outline btn-sm" [disabled]="page === 1" (click)="prevPage()">Previous</button>
+        <button class="btn btn-outline btn-sm" [disabled]="companies.length < pageSize" (click)="nextPage()">Next</button>
+      </div>
+    </div>
+  }
+</div>
+
+<app-company-create-modal
+  [isOpen]="showModal"
+  [company]="selectedCompany"
+  [tenants]="tenants"
+  [saving]="saving"
+  [errorMessage]="errorMessage"
+  [defaultTenantId]="tenantIdFilter"
+  (close)="closeModal()"
+  (save)="onSaveCompany($event)">
+</app-company-create-modal>
+
+<!-- Notification Toast -->
+@if (toastMessage) {
+  <div class="toast-custom bg-dark text-white p-3 rounded">
+    <i class="bi bi-info-circle-fill me-2 text-primary"></i> {{ toastMessage }}
+  </div>
+}

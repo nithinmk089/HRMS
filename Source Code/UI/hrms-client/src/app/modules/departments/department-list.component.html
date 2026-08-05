@@ -1,0 +1,135 @@
+<div class="page-toolbar">
+  <div>
+    <h1 class="page-title text-main">Departments Tree</h1>
+    <div class="text-secondary mt-1">Configure company divisions, department hierarchies, and functional groups</div>
+  </div>
+  <div>
+    <button class="btn btn-primary btn-sm" (click)="openCreateModal()" [disabled]="businessUnits.length === 0">
+      <i class="bi bi-plus-lg me-1"></i> New Department
+    </button>
+  </div>
+</div>
+
+<!-- Search/Filter Panel -->
+<div class="card p-4 mb-4 mt-2">
+  <div class="row g-3">
+    <div class="col-12 col-md-3">
+      <label class="form-label fs-8 text-secondary">Tenant Group</label>
+      <select class="form-select w-100" [(ngModel)]="tenantIdFilter" (change)="onTenantChange()">
+        @for (tenant of tenants; track tenant.tenantId) {
+          <option [value]="tenant.tenantId">{{ tenant.tenantName }}</option>
+        }
+      </select>
+    </div>
+    <div class="col-12 col-md-3">
+      <label class="form-label fs-8 text-secondary">Business Unit</label>
+      <select class="form-select w-100" [(ngModel)]="buIdFilter" (change)="loadDepartments()">
+        <option value="0">All Business Units</option>
+        @for (bu of businessUnits; track bu.businessUnitId) {
+          <option [value]="bu.businessUnitId">{{ bu.businessUnitName }}</option>
+        }
+      </select>
+    </div>
+    <div class="col-12 col-md-3">
+      <label class="form-label fs-8 text-secondary">Search Filter</label>
+      <div class="search-input-group w-100">
+        <i class="bi bi-search"></i>
+        <input type="text" class="form-control" placeholder="Search departments..." [(ngModel)]="searchText" (keyup.enter)="loadDepartments()">
+      </div>
+    </div>
+    <div class="col-12 col-md-3 d-flex gap-2 align-items-end">
+      <button class="btn btn-outline w-50" (click)="resetFilters()">Reset</button>
+      <button class="btn btn-primary w-50" (click)="loadDepartments()">Search</button>
+    </div>
+  </div>
+</div>
+
+<!-- Data Grid -->
+<div class="card">
+  <div class="table-responsive">
+    <table class="table-enterprise">
+      <thead>
+        <tr>
+          <th>Department Code</th>
+          <th>Department Name</th>
+          <th>Business Unit</th>
+          <th>Parent Department</th>
+          <th style="width: 120px; text-align: center;">Actions</th>
+        </tr>
+      </thead>
+      <tbody>
+        <!-- Loading Skeletons -->
+        @if (isLoading) {
+          @for (row of [1, 2, 3, 4]; track $index) {
+            <tr>
+              @for (col of [1, 2, 3, 4, 5]; track $index) {
+                <td>
+                  <div class="skeleton-shimmer" style="height: 16px; border-radius: 4px; background: #EAEFF4; width: 80%;"></div>
+                </td>
+              }
+            </tr>
+          }
+        }
+
+        <!-- Empty State -->
+        @if (!isLoading && departments.length === 0) {
+          <tr>
+            <td colspan="5" class="text-center py-5 text-secondary">
+              <i class="bi bi-folder-x fs-2 d-block mb-2 text-muted"></i>
+              No departments found.
+            </td>
+          </tr>
+        }
+
+        <!-- Table Rows -->
+        @if (!isLoading) {
+          @for (dept of departments; track dept.departmentId) {
+            <tr>
+              <td class="fw-bold">{{ dept.departmentCode }}</td>
+              <td [title]="dept.departmentName">{{ dept.departmentName | truncate:30 }}</td>
+              <td [title]="getBuName(dept.businessUnitId)">{{ getBuName(dept.businessUnitId) | truncate:30 }}</td>
+              <td [title]="dept.parentDepartmentId ? getParentDeptName(dept.parentDepartmentId) : ''">
+                @if (dept.parentDepartmentId) {
+                  <span class="badge badge-info">
+                    {{ getParentDeptName(dept.parentDepartmentId) | truncate:30 }}
+                  </span>
+                } @else {
+                  <span class="text-muted">-</span>
+                }
+              </td>
+              <td class="text-center">
+                <div class="d-flex justify-content-center gap-2">
+                  <button class="btn btn-outline btn-sm p-1" title="Edit" (click)="openEditModal(dept)">
+                    <i class="bi bi-pencil-square text-primary"></i>
+                  </button>
+                  <button class="btn btn-outline btn-sm p-1" title="Delete" (click)="deleteDepartment(dept)">
+                    <i class="bi bi-trash text-danger"></i>
+                  </button>
+                </div>
+              </td>
+            </tr>
+          }
+        }
+      </tbody>
+    </table>
+  </div>
+</div>
+
+<app-department-create-modal
+  [isOpen]="showModal"
+  [department]="selectedDept"
+  [tenants]="tenants"
+  [saving]="saving"
+  [errorMessage]="errorMessage"
+  [defaultTenantId]="tenantIdFilter"
+  [defaultBusinessUnitId]="buIdFilter"
+  (close)="closeModal()"
+  (save)="onSaveDepartment($event)">
+</app-department-create-modal>
+
+<!-- Notification Toast -->
+@if (toastMessage) {
+  <div class="toast-custom bg-dark text-white p-3 rounded">
+    <i class="bi bi-info-circle-fill me-2 text-primary"></i> {{ toastMessage }}
+  </div>
+}

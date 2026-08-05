@@ -1,0 +1,185 @@
+<div class="page-toolbar">
+  <div>
+    <h1 class="page-title text-main">Communications Analytics</h1>
+    <div class="text-secondary mt-1">Real-time tracking of notification delivery rates, channel metrics, and escalations</div>
+  </div>
+  <div>
+    <button (click)="loadMetrics()" class="btn btn-primary btn-sm">
+      <i class="bi bi-arrow-clockwise me-1"></i> Refresh Stats
+    </button>
+  </div>
+</div>
+
+<div class="row g-5 mb-5 mt-1" *ngIf="!isLoading && metrics">
+  <!-- Delivery Rate -->
+  <div class="col-12 col-md-6 col-lg-3">
+    <div class="card p-5 h-100 hover-card" style="border-left: 4px solid var(--success-color);">
+      <div class="d-flex justify-content-between align-items-center">
+        <div>
+          <div class="text-muted fw-bold text-uppercase fs-7 mb-1">Delivery Rate</div>
+          <div class="fs-2 fw-bolder text-main">{{ metrics.deliveryRate | number:'1.1-1' }}%</div>
+        </div>
+        <div class="symbol-circle bg-light-success p-3">
+          <i class="bi bi-check-circle-fill fs-3 text-success"></i>
+        </div>
+      </div>
+      <div class="text-secondary fs-8 mt-3">
+        Total delivered: <span class="fw-semibold text-main">{{ metrics.deliveredCount }}</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- Read Rate -->
+  <div class="col-12 col-md-6 col-lg-3">
+    <div class="card p-5 h-100 hover-card" style="border-left: 4px solid var(--primary-color);">
+      <div class="d-flex justify-content-between align-items-center">
+        <div>
+          <div class="text-muted fw-bold text-uppercase fs-7 mb-1">Read Rate</div>
+          <div class="fs-2 fw-bolder text-main">{{ metrics.readRate | number:'1.1-1' }}%</div>
+        </div>
+        <div class="symbol-circle bg-light-primary p-3">
+          <i class="bi bi-envelope-open-fill fs-3 text-primary"></i>
+        </div>
+      </div>
+      <div class="text-secondary fs-8 mt-3">
+        Total read: <span class="fw-semibold text-main">{{ metrics.readCount }}</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- Failure Rate -->
+  <div class="col-12 col-md-6 col-lg-3">
+    <div class="card p-5 h-100 hover-card" style="border-left: 4px solid var(--danger-color);">
+      <div class="d-flex justify-content-between align-items-center">
+        <div>
+          <div class="text-muted fw-bold text-uppercase fs-7 mb-1">Failure Rate</div>
+          <div class="fs-2 fw-bolder text-main">{{ metrics.failureRate | number:'1.1-1' }}%</div>
+        </div>
+        <div class="symbol-circle bg-light-danger p-3">
+          <i class="bi bi-x-circle-fill fs-3 text-danger"></i>
+        </div>
+      </div>
+      <div class="text-secondary fs-8 mt-3">
+        Total failed: <span class="fw-semibold text-main">{{ metrics.failedCount }}</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- Total Processed -->
+  <div class="col-12 col-md-6 col-lg-3">
+    <div class="card p-5 h-100 hover-card" style="border-left: 4px solid var(--info-color);">
+      <div class="d-flex justify-content-between align-items-center">
+        <div>
+          <div class="text-muted fw-bold text-uppercase fs-7 mb-1">Total Processed</div>
+          <div class="fs-2 fw-bolder text-main">{{ metrics.totalProcessed }}</div>
+        </div>
+        <div class="symbol-circle bg-light-info p-3">
+          <i class="bi bi-cpu-fill fs-3 text-info"></i>
+        </div>
+      </div>
+      <div class="text-secondary fs-8 mt-3">
+        Sent, delivered, failed and read
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="row g-5" *ngIf="!isLoading">
+  <div class="col-12 col-lg-6">
+    <div class="card h-100">
+      <div class="card-header">
+        <h3 class="card-title"><i class="bi bi-lightning-charge-fill me-2 text-warning"></i>Communication Configurations</h3>
+      </div>
+      <div class="card-body">
+        <div class="row g-3">
+          <div class="col-6">
+            <a routerLink="/notifications/history" class="quick-link-btn d-flex align-items-center p-3 border rounded text-decoration-none">
+              <div class="p-2 bg-light-primary rounded me-3"><i class="bi bi-clock-history text-primary fs-5"></i></div>
+              <div>
+                <div class="fw-bold text-main">Registry Queue</div>
+                <div class="text-muted fs-8">View history & retries</div>
+              </div>
+            </a>
+          </div>
+          <div class="col-6">
+            <a routerLink="/notifications/templates" class="quick-link-btn d-flex align-items-center p-3 border rounded text-decoration-none">
+              <div class="p-2 bg-light-success rounded me-3"><i class="bi bi-file-earmark-text-fill text-success fs-5"></i></div>
+              <div>
+                <div class="fw-bold text-main">Channel Templates</div>
+                <div class="text-muted fs-8">Email, SMS, Teams content</div>
+              </div>
+            </a>
+          </div>
+          <div class="col-6">
+            <a routerLink="/notifications/preferences" class="quick-link-btn d-flex align-items-center p-3 border rounded text-decoration-none">
+              <div class="p-2 bg-light-info rounded me-3"><i class="bi bi-bell-fill text-info fs-5"></i></div>
+              <div>
+                <div class="fw-bold text-main">My Preferences</div>
+                <div class="text-muted fs-8">Immediate / Digest frequency</div>
+              </div>
+            </a>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="col-12 col-lg-6">
+    <div class="card h-100">
+      <div class="card-header">
+        <h3 class="card-title"><i class="bi bi-info-circle-fill me-2 text-info"></i>Active Notification Channels</h3>
+      </div>
+      <div class="card-body">
+        <ul class="list-group list-group-flush">
+          <li class="list-group-item d-flex justify-content-between align-items-center py-3">
+            <div class="d-flex align-items-center">
+              <i class="bi bi-envelope-fill text-primary fs-5 me-3"></i>
+              <div>
+                <div class="fw-semibold">Email Channel</div>
+                <span class="text-muted fs-8">SMTP server configuration</span>
+              </div>
+            </div>
+            <span class="badge badge-success">Online</span>
+          </li>
+          <li class="list-group-item d-flex justify-content-between align-items-center py-3">
+            <div class="d-flex align-items-center">
+              <i class="bi bi-chat-left-dots-fill text-success fs-5 me-3"></i>
+              <div>
+                <div class="fw-semibold">SMS Gateway</div>
+                <span class="text-muted fs-8">Twilio API integration</span>
+              </div>
+            </div>
+            <span class="badge badge-success">Online</span>
+          </li>
+          <li class="list-group-item d-flex justify-content-between align-items-center py-3">
+            <div class="d-flex align-items-center">
+              <i class="bi bi-microsoft text-info fs-5 me-3"></i>
+              <div>
+                <div class="fw-semibold">Microsoft Teams Webhooks</div>
+                <span class="text-muted fs-8">Active channels configuration</span>
+              </div>
+            </div>
+            <span class="badge badge-success">Online</span>
+          </li>
+          <li class="list-group-item d-flex justify-content-between align-items-center py-3">
+            <div class="d-flex align-items-center">
+              <i class="bi bi-app-indicator text-warning fs-5 me-3"></i>
+              <div>
+                <div class="fw-semibold">In-App Alerts</div>
+                <span class="text-muted fs-8">Real-time SignalR notifications</span>
+              </div>
+            </div>
+            <span class="badge badge-success">Online</span>
+          </li>
+        </ul>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="text-center p-5 mt-5" *ngIf="isLoading">
+  <div class="spinner-border text-primary" role="status">
+    <span class="visually-hidden">Loading Metrics...</span>
+  </div>
+  <div class="text-secondary mt-2">Aggregating delivery statistics...</div>
+</div>

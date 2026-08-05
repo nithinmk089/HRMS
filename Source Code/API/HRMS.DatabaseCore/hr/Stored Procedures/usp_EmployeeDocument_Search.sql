@@ -1,0 +1,1 @@
+﻿CREATE PROCEDURE hr.usp_EmployeeDocument_Search @TenantID BIGINT, @EmployeeID BIGINT, @DocumentType NVARCHAR(50) = NULL AS BEGIN SET NOCOUNT ON; SELECT * FROM hr.vw_EmployeeDocuments WHERE TenantID = @TenantID AND EmployeeID = @EmployeeID AND (@DocumentType IS NULL OR DocumentType = @DocumentType); END;

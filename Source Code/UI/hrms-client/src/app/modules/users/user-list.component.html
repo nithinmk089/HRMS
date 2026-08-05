@@ -1,0 +1,136 @@
+<div class="page-toolbar">
+  <div>
+    <h1 class="page-title text-main">User Accounts</h1>
+    <div class="text-secondary mt-1">Configure application accounts, toggle security lock status, and audit user logins</div>
+  </div>
+  <div>
+    <button class="btn btn-primary btn-sm" (click)="openCreateModal()" [disabled]="tenants.length === 0">
+      <i class="bi bi-plus-lg me-1"></i> New User
+    </button>
+  </div>
+</div>
+
+<!-- Search/Filter Panel -->
+<div class="card p-4 mb-4 mt-2">
+  <div class="row g-3">
+    <div class="col-12 col-md-4">
+      <label class="form-label fs-8 text-secondary">Tenant Group</label>
+      <select class="form-select w-100" [(ngModel)]="tenantIdFilter" (change)="loadUsers()">
+        @for (tenant of tenants; track tenant.tenantId) {
+          <option [value]="tenant.tenantId">{{ tenant.tenantName }}</option>
+        }
+      </select>
+    </div>
+    <div class="col-12 col-md-4">
+      <label class="form-label fs-8 text-secondary">Search Filter</label>
+      <div class="search-input-group w-100">
+        <i class="bi bi-search"></i>
+        <input type="text" class="form-control" placeholder="Search by username or email..." [(ngModel)]="searchText" (keyup.enter)="loadUsers()">
+      </div>
+    </div>
+    <div class="col-12 col-md-4 d-flex gap-2 align-items-end">
+      <button class="btn btn-outline w-50" (click)="resetFilters()">Reset</button>
+      <button class="btn btn-primary w-50" (click)="loadUsers()">Search</button>
+    </div>
+  </div>
+</div>
+
+<!-- Data Grid -->
+<div class="card">
+  <div class="table-responsive">
+    <table class="table-enterprise">
+      <thead>
+        <tr>
+          <th>Username</th>
+          <th>Email Address</th>
+          <th>Employee ID</th>
+          <th>Status</th>
+          <th>Last Login</th>
+          <th style="width: 150px; text-align: center;">Actions</th>
+        </tr>
+      </thead>
+      <tbody>
+        <!-- Loading Skeletons -->
+        @if (isLoading) {
+          @for (row of [1, 2, 3]; track $index) {
+            <tr>
+              @for (col of [1, 2, 3, 4, 5, 6]; track $index) {
+                <td>
+                  <div class="skeleton-shimmer" style="height: 16px; border-radius: 4px; background: #EAEFF4; width: 80%;"></div>
+                </td>
+              }
+            </tr>
+          }
+        }
+
+        <!-- Empty State -->
+        @if (!isLoading && users.length === 0) {
+          <tr>
+            <td colspan="6" class="text-center py-5 text-secondary">
+              <i class="bi bi-folder-x fs-2 d-block mb-2 text-muted"></i>
+              No user accounts found.
+            </td>
+          </tr>
+        }
+
+        <!-- Table Rows -->
+        @if (!isLoading) {
+          @for (user of users; track user.userId) {
+            <tr>
+              <td class="fw-bold" [title]="user.userName">{{ user.userName | truncate:30 }}</td>
+              <td [title]="user.email">{{ user.email | truncate:30 }}</td>
+              <td [title]="user.employeeCode || user.employeeId || ''">{{ user.employeeCode || user.employeeId || '-' }}</td>
+              <td>
+                <span class="badge" [ngClass]="{
+                  'badge-success': !user.isLocked,
+                  'badge-danger': user.isLocked
+                }">
+                  {{ user.isLocked ? 'Locked' : 'Active' }}
+                </span>
+              </td>
+              <td>{{ user.lastLoginDate ? (user.lastLoginDate | date:'dd-MMM-yyyy HH:mm') : 'Never' }}</td>
+              <td class="text-center">
+                <div class="d-flex justify-content-center gap-2">
+                  <button class="btn btn-outline btn-sm p-1" title="Edit User" (click)="openEditModal(user)">
+                    <i class="bi bi-pencil-square text-primary"></i>
+                  </button>
+                  @if (!user.isLocked) {
+                    <button class="btn btn-outline btn-sm p-1" title="Lock Account" (click)="toggleLock(user, true)">
+                      <i class="bi bi-lock text-danger"></i>
+                    </button>
+                  }
+                  @if (user.isLocked) {
+                    <button class="btn btn-outline btn-sm p-1" title="Unlock Account" (click)="toggleLock(user, false)">
+                      <i class="bi bi-unlock text-success"></i>
+                    </button>
+                  }
+                  <button class="btn btn-outline btn-sm p-1" title="Delete Account" (click)="deleteUser(user)">
+                    <i class="bi bi-trash text-danger"></i>
+                  </button>
+                </div>
+              </td>
+            </tr>
+          }
+        }
+      </tbody>
+    </table>
+  </div>
+</div>
+
+<app-user-create-modal
+  [isOpen]="showModal"
+  [user]="selectedUser"
+  [tenants]="tenants"
+  [saving]="saving"
+  [errorMessage]="errorMessage"
+  [defaultTenantId]="tenantIdFilter"
+  (close)="closeModal()"
+  (save)="onSaveUser($event)">
+</app-user-create-modal>
+
+<!-- Notification Toast -->
+@if (toastMessage) {
+  <div class="toast-custom bg-dark text-white p-3 rounded">
+    <i class="bi bi-info-circle-fill me-2 text-primary"></i> {{ toastMessage }}
+  </div>
+}

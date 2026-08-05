@@ -1,0 +1,39 @@
+<div class="page-toolbar">
+  <div>
+    <h1 class="page-title text-main">Asset Inventory</h1>
+    <div class="text-secondary mt-1">Verify quantities and locations of warehouse stock, spare keys and device pools.</div>
+  </div>
+  <div>
+    <button class="btn btn-primary btn-sm" (click)="loadInventory()">Refresh</button>
+  </div>
+</div>
+
+<div class="card">
+    <div class="card-body p-0">
+      <table class="table-enterprise">
+        <thead>
+          <tr>
+            <th>Asset Code</th>
+            <th>Asset Name</th>
+            <th>Location</th>
+            <th>Quantity In Stock</th>
+            <th>Status</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr *ngFor="let item of inventory">
+            <td class="font-monospace fw-bold">{{ item.assetCode }}</td>
+            <td class="fw-bold">{{ item.assetName }}</td>
+            <td>{{ item.locationName || 'Main Store' }}</td>
+            <td class="fw-bold text-primary">{{ item.quantity }}</td>
+            <td>
+              <span class="badge badge-success">{{ item.inventoryStatus }}</span>
+            </td>
+          </tr>
+          <tr *ngIf="inventory.length === 0 && !loading">
+            <td colspan="5" class="text-center text-muted py-4">No warehouse inventory records logged.</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </div>

@@ -1,0 +1,187 @@
+<div class="page-toolbar">
+  <div>
+    <h1 class="page-title text-main">Physical Locations</h1>
+    <div class="text-secondary mt-1">Configure company offices, branches, and warehouses across jurisdictions</div>
+  </div>
+  <div>
+    <button class="btn btn-primary btn-sm" (click)="openCreateModal()" [disabled]="tenants.length === 0">
+      <i class="bi bi-plus-lg me-1"></i> New Location
+    </button>
+  </div>
+</div>
+
+<!-- Search/Filter Panel -->
+<div class="card p-4 mb-4 mt-2">
+  <div class="row g-3">
+    <div class="col-12 col-md-4">
+      <label class="form-label fs-8 text-secondary">Tenant Group</label>
+      <select class="form-select w-100" [(ngModel)]="tenantIdFilter" (change)="loadLocations()">
+        @for (tenant of tenants; track tenant.tenantId) {
+          <option [value]="tenant.tenantId">{{ tenant.tenantName }}</option>
+        }
+      </select>
+    </div>
+    <div class="col-12 col-md-4">
+      <label class="form-label fs-8 text-secondary">Search Filter</label>
+      <div class="search-input-group w-100">
+        <i class="bi bi-search"></i>
+        <input type="text" class="form-control" placeholder="Search by name, state, or city..." [(ngModel)]="searchText" (keyup.enter)="loadLocations()">
+      </div>
+    </div>
+    <div class="col-12 col-md-4 d-flex gap-2 align-items-end">
+      <button class="btn btn-outline w-50" (click)="resetFilters()">Reset</button>
+      <button class="btn btn-primary w-50" (click)="loadLocations()">Search</button>
+    </div>
+  </div>
+</div>
+
+<!-- Data Grid -->
+<div class="card">
+  <div class="table-responsive">
+    <table class="table-enterprise">
+      <thead>
+        <tr>
+          <th>Location Code</th>
+          <th>Location Name</th>
+          <th>Country</th>
+          <th>State / Province</th>
+          <th>City</th>
+          <th style="width: 120px; text-align: center;">Actions</th>
+        </tr>
+      </thead>
+      <tbody>
+        <!-- Loading Skeletons -->
+        @if (isLoading) {
+          @for (row of [1, 2, 3]; track $index) {
+            <tr>
+              @for (col of [1, 2, 3, 4, 5, 6]; track $index) {
+                <td>
+                  <div class="skeleton-shimmer" style="height: 16px; border-radius: 4px; background: #EAEFF4; width: 80%;"></div>
+                </td>
+              }
+            </tr>
+          }
+        }
+
+        <!-- Empty State -->
+        @if (!isLoading && locations.length === 0) {
+          <tr>
+            <td colspan="6" class="text-center py-5 text-secondary">
+              <i class="bi bi-folder-x fs-2 d-block mb-2 text-muted"></i>
+              No locations defined.
+            </td>
+          </tr>
+        }
+
+        <!-- Table Rows -->
+        @if (!isLoading) {
+          @for (loc of locations; track loc.locationId) {
+            <tr>
+              <td class="fw-bold">{{ loc.locationCode }}</td>
+              <td [title]="loc.locationName">{{ loc.locationName | truncate:30 }}</td>
+              <td>{{ loc.countryCode || '-' }}</td>
+              <td>{{ loc.stateCode || '-' }}</td>
+              <td [title]="loc.city || ''">{{ loc.city ? (loc.city | truncate:30) : '-' }}</td>
+              <td class="text-center">
+                <div class="d-flex justify-content-center gap-2">
+                  <button class="btn btn-outline btn-sm p-1" title="Edit" (click)="openEditModal(loc)">
+                    <i class="bi bi-pencil-square text-primary"></i>
+                  </button>
+                  <button class="btn btn-outline btn-sm p-1" title="Delete" (click)="deleteLocation(loc)">
+                    <i class="bi bi-trash text-danger"></i>
+                  </button>
+                </div>
+              </td>
+            </tr>
+          }
+        }
+      </tbody>
+    </table>
+  </div>
+</div>
+
+<!-- Modal Backdrop -->
+@if (showModal) {
+  <div class="modal-backdrop-custom"></div>
+}
+
+<!-- Create/Edit Modal -->
+@if (showModal) {
+  <div class="modal fade show d-block" tabindex="-1" role="dialog" aria-modal="true">
+    <div class="modal-dialog modal-dialog-centered">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title">{{ editMode ? 'Edit Location Details' : 'Add Corporate Location' }}</h5>
+          <button type="button" class="btn-close" (click)="closeModal()" aria-label="Close"></button>
+        </div>
+        <form [formGroup]="locForm" (ngSubmit)="saveLocation()">
+          <div class="modal-body">
+            <div class="mb-3">
+              <label class="form-label">Tenant association <span class="text-danger">*</span></label>
+              <select class="form-select w-100" formControlName="tenantId">
+                @for (t of tenants; track t.tenantId) {
+                  <option [value]="t.tenantId">{{ t.tenantName }}</option>
+                }
+              </select>
+            </div>
+
+            <div class="mb-3">
+              <label class="form-label">Location Code <span class="text-danger">*</span></label>
+              <input type="text" class="form-control" formControlName="locationCode" [readonly]="editMode" placeholder="e.g., US-WEST" maxlength="50">
+              @if (submitted && f['locationCode'].errors) {
+                <div class="text-danger fs-8 mt-1">
+                  Location Code is required.
+                </div>
+              }
+            </div>
+
+            <div class="mb-3">
+              <label class="form-label">Location Name <span class="text-danger">*</span></label>
+              <input type="text" class="form-control" formControlName="locationName" placeholder="e.g., California Regional Office" maxlength="200">
+              @if (submitted && f['locationName'].errors) {
+                <div class="text-danger fs-8 mt-1">
+                  Location Name is required.
+                </div>
+              }
+            </div>
+
+            <div class="row">
+              <div class="col-6 mb-3">
+                <label class="form-label">Country Code</label>
+                <input type="text" class="form-control" formControlName="countryCode" placeholder="e.g., US, IN" maxlength="10">
+              </div>
+              <div class="col-6 mb-3">
+                <label class="form-label">State / Province Code</label>
+                <input type="text" class="form-control" formControlName="stateCode" placeholder="e.g., CA, MH" maxlength="50">
+              </div>
+            </div>
+
+            <div class="mb-3">
+              <label class="form-label">City</label>
+              <input type="text" class="form-control" formControlName="city" placeholder="e.g., Los Angeles" maxlength="100">
+            </div>
+
+            @if (errorMessage) {
+              <div class="alert alert-danger fs-8 p-2 my-2">
+                {{ errorMessage }}
+              </div>
+            }
+          </div>
+          <div class="modal-footer">
+            <button type="button" class="btn btn-outline" (click)="closeModal()">Cancel</button>
+            <button type="submit" class="btn btn-primary" [disabled]="saving">
+              {{ saving ? 'Saving...' : 'Save Location' }}
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+}
+
+<!-- Notification Toast -->
+@if (toastMessage) {
+  <div class="toast-custom bg-dark text-white p-3 rounded">
+    <i class="bi bi-info-circle-fill me-2 text-primary"></i> {{ toastMessage }}
+  </div>
+}

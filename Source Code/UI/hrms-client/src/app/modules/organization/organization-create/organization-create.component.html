@@ -1,0 +1,59 @@
+<div class="card mb-5">
+    <div class="card-header border-0 pt-6">
+        <div class="card-title">
+            <a routerLink="/organization" class="btn btn-icon btn-light-primary btn-sm me-3">
+                <i class="bi bi-arrow-left"></i>
+            </a>
+            <h3 class="fw-bold">Create Organization</h3>
+        </div>
+    </div>
+    <div class="card-body">
+        <form>
+            <div class="row mb-6">
+                <div class="col-lg-6 mb-4 mb-lg-0">
+                    <label class="form-label required">Organization Code</label>
+                    <input type="text" class="form-control form-control-solid form-control-lg" placeholder="e.g. ORG-001" maxlength="50" />
+                </div>
+                <div class="col-lg-6">
+                    <label class="form-label required">Organization Name</label>
+                    <input type="text" class="form-control form-control-solid form-control-lg" placeholder="e.g. Acme Corp" maxlength="200" />
+                </div>
+            </div>
+
+            <div class="row mb-6">
+                <div class="col-lg-6 mb-4 mb-lg-0">
+                    <label class="form-label">Industry</label>
+                    <select class="form-select form-control-solid form-control-lg">
+                        <option value="">Select Industry...</option>
+                        <option value="1">Technology</option>
+                        <option value="2">Manufacturing</option>
+                        <option value="3">Healthcare</option>
+                        <option value="4">Finance</option>
+                    </select>
+                </div>
+                <div class="col-lg-6">
+                    <label class="form-label">Website</label>
+                    <input type="url" class="form-control form-control-solid form-control-lg" placeholder="https://" maxlength="200" />
+                </div>
+            </div>
+
+            <div class="row mb-6">
+                <div class="col-lg-12">
+                    <label class="form-label">Logo Upload</label>
+                    <div class="dropzone-placeholder">
+                        <i class="bi bi-cloud-arrow-up-fill text-primary fs-3x mb-3"></i>
+                        <h5 class="fw-bold">Drop files here or click to upload</h5>
+                        <span class="text-muted fs-7">Maximum file size 5MB (PNG, JPG)</span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="d-flex justify-content-end mt-8">
+                <a routerLink="/organization" class="btn btn-light-primary me-3">Cancel</a>
+                <button type="button" class="btn btn-primary">
+                    <i class="bi bi-check-lg me-1"></i> Save Organization
+                </button>
+            </div>
+        </form>
+    </div>
+</div>

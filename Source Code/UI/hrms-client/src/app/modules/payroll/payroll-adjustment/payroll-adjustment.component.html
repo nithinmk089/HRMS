@@ -1,0 +1,139 @@
+<div class="page-toolbar">
+  <div>
+    <h1 class="page-title text-main">Payroll Adjustment</h1>
+    <div class="text-secondary mt-1">Manage all aspects of payroll and compensation flows.</div>
+  </div>
+  <div>
+    <button class="btn btn-primary btn-sm  " (click)="openCreateModal()">
+      <i class="bi bi-plus-lg me-1"></i>New Setup
+    </button>
+  </div>
+</div>
+
+<div class="card">
+    
+    <div class="table-responsive">
+      <table class="table-enterprise">
+        <thead>
+          <tr>
+            <th>Adjustment ID</th>
+            <th scope="col">Employee Name</th>
+            <th scope="col">Period</th>
+            <th scope="col">Type</th>
+            <th scope="col">Amount</th>
+            <th scope="col">Status</th>
+            <th class="text-end">Actions</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr *ngFor="let item of items">
+            <td class="px-4 fw-bold text-primary">ADJ-#{{ item.payrollAdjustmentID }}</td>
+            <td>{{ item.employeeName }}</td>
+            <td>{{ item.periodCode }}</td>
+            <td>{{ item.adjustmentType }}</td>
+            <td>{{ item.adjustmentAmount | currency:'USD':'symbol':'1.2-2' }}</td>
+            <td>
+              <span class="badge" [ngClass]="item.adjustmentStatus === 'Approved' ? 'badge-success' : 'badge-warning'">
+                {{ item.adjustmentStatus }}
+              </span>
+            </td>
+            <td class="text-end px-4">
+              <button class="btn btn-outline btn-sm p-1 me-2" title="View Details" (click)="viewItem(item)"><i class="bi bi-eye text-primary"></i></button>
+              <button class="btn btn-outline btn-sm p-1"><i class="bi bi-trash text-danger"></i></button>
+            </td>
+          </tr>
+          <tr *ngIf="items.length === 0">
+            <td colspan="7" class="text-center py-5 text-muted">
+              <i class="bi bi-inbox fs-2 d-block mb-2"></i>
+              No active records found. Click "New Setup" to begin.
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- Modal Form -->
+  @if (showModal) {
+  <div class="modal-backdrop-custom"></div>
+}
+<div class="modal fade show d-block" tabindex="-1" role="dialog" aria-modal="true" *ngIf="showModal" >
+    <div class="modal-dialog modal-dialog-centered">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title fw-bold">Add New Setup</h5>
+          <button type="button" class="btn-close" (click)="closeModal()"></button>
+        </div>
+        <div class="modal-body">
+          <form [formGroup]="form" (ngSubmit)="onSubmit()">
+            <div class="mb-3">
+              <label class="form-label fw-semibold">Reference Code</label>
+              <input type="text" class="form-control" formControlName="code" placeholder="e.g. CAL-2026">
+            </div>
+            <div class="mb-3">
+              <label class="form-label fw-semibold">Name / Description</label>
+              <input type="text" class="form-control" formControlName="name" placeholder="e.g. Standard Calendar">
+            </div>
+            <div class="mb-4">
+              <label class="form-label fw-semibold">Target Amount / Value</label>
+              <input type="number" class="form-control" formControlName="amount" placeholder="0">
+            </div>
+            <div class="d-flex justify-content-end gap-2">
+              <button type="button" class="btn btn-outline" (click)="closeModal()">Cancel</button>
+              <button type="submit" class="btn btn-primary" [disabled]="form.invalid">Submit</button>
+            </div>
+          </form>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- View Details Modal -->
+  @if (showViewModal) {
+    <div class="modal-backdrop-custom"></div>
+    <div class="modal fade show d-block" tabindex="-1" role="dialog" aria-modal="true">
+      <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+          <div class="modal-header">
+            <h5 class="modal-title fw-bold text-main">Payroll Adjustment Detail</h5>
+            <button type="button" class="btn-close" (click)="closeViewModal()"></button>
+          </div>
+          <div class="modal-body p-4">
+            <div class="row g-3">
+              <div class="col-6">
+                <label class="text-secondary small d-block">Adjustment ID</label>
+                <span class="fw-semibold text-main">ADJ-#{{ selectedItem?.payrollAdjustmentID }}</span>
+              </div>
+              <div class="col-6">
+                <label class="text-secondary small d-block">Employee Name</label>
+                <span class="fw-semibold text-main">{{ selectedItem?.employeeName }}</span>
+              </div>
+              <div class="col-6">
+                <label class="text-secondary small d-block">Period</label>
+                <span class="fw-semibold text-main">{{ selectedItem?.periodCode }}</span>
+              </div>
+              <div class="col-6">
+                <label class="text-secondary small d-block">Adjustment Type</label>
+                <span class="fw-semibold text-main">{{ selectedItem?.adjustmentType }}</span>
+              </div>
+              <div class="col-6">
+                <label class="text-secondary small d-block">Amount</label>
+                <span class="fw-semibold text-main">{{ selectedItem?.adjustmentAmount | currency }}</span>
+              </div>
+              <div class="col-6">
+                <label class="text-secondary small d-block">Status</label>
+                <span class="fw-semibold text-main">{{ selectedItem?.adjustmentStatus }}</span>
+              </div>
+              <div class="col-6">
+                <label class="text-secondary small d-block">Remarks</label>
+                <span class="fw-semibold text-main">{{ selectedItem?.remarks }}</span>
+              </div>
+            </div>
+            <div class="d-flex justify-content-end mt-4">
+              <button type="button" class="btn btn-outline" (click)="closeViewModal()">Close</button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  }

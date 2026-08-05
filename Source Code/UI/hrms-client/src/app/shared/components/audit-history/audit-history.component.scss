@@ -1,0 +1,33 @@
+// Audit History component styles
+.timeline-item {
+  position: relative;
+  padding-left: 2.5rem;
+  margin-bottom: 1.5rem;
+
+  &:last-child {
+    margin-bottom: 0;
+    .timeline-line {
+      display: none;
+    }
+  }
+}
+
+.timeline-line {
+  position: absolute;
+  left: 0.75rem;
+  top: 1.5rem;
+  bottom: -1.5rem;
+  width: 2px;
+  border-left: 2px dashed #e4e6ef;
+}
+
+.timeline-icon {
+  position: absolute;
+  left: 0.35rem;
+  top: 0.1rem;
+  background-color: #ffffff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1;
+}

@@ -1,0 +1,112 @@
+<div class="page-toolbar">
+  <div>
+    <h1 class="page-title text-main">Overtime Approvals</h1>
+    <div class="text-secondary mt-1">Review, approve, or reject employee overtime work hour requests</div>
+  </div>
+</div>
+
+<!-- Search/Filter Panel -->
+<div class="card p-4 mb-4 mt-2">
+  <div class="row g-3">
+    <div class="col-12 col-md-5">
+      <label class="form-label fs-8 text-secondary">Tenant Group <span class="text-danger">*</span></label>
+      <select class="form-select w-100" [(ngModel)]="selectedTenantId" (change)="onTenantChange()">
+        @for (t of tenants; track t.tenantId) {
+          <option [value]="t.tenantId">{{ t.tenantName }}</option>
+        }
+      </select>
+    </div>
+    <div class="col-12 col-md-4">
+      <label class="form-label fs-8 text-secondary">Status Filter</label>
+      <select class="form-select w-100" [(ngModel)]="statusFilter" (change)="loadOvertimeRequests()">
+        <option value="">All Statuses</option>
+        <option value="Pending">Pending</option>
+        <option value="Approved">Approved</option>
+        <option value="Rejected">Rejected</option>
+      </select>
+    </div>
+    <div class="col-12 col-md-3 d-flex gap-2 align-items-end">
+      <button class="btn btn-primary w-100" (click)="loadOvertimeRequests()">Refresh</button>
+    </div>
+  </div>
+</div>
+
+<!-- Data Grid -->
+<div class="card">
+  <div class="table-responsive">
+    <table class="table-enterprise">
+      <thead>
+        <tr>
+          <th>Employee</th>
+          <th>Date</th>
+          <th>Requested Hours</th>
+          <th>Status</th>
+          <th style="width: 150px; text-align: center;">Actions</th>
+        </tr>
+      </thead>
+      <tbody>
+        <!-- Loading Skeletons -->
+        @if (loading) {
+          @for (row of [1, 2, 3, 4, 5]; track $index) {
+            <tr>
+              @for (col of [1, 2, 3, 4, 5]; track $index) {
+                <td>
+                  <div class="skeleton-shimmer" style="height: 16px; border-radius: 4px; background: #EAEFF4; width: 80%;"></div>
+                </td>
+              }
+            </tr>
+          }
+        }
+
+        <!-- Empty State -->
+        @if (!loading && overtimeRequests.length === 0) {
+          <tr>
+            <td colspan="5" class="text-center py-5 text-secondary">
+              <i class="bi bi-folder-x fs-2 d-block mb-2 text-muted"></i>
+              No overtime requests found.
+            </td>
+          </tr>
+        }
+
+        <!-- Table Rows -->
+        @if (!loading) {
+          @for (o of overtimeRequests; track o.overtimeRequestId) {
+            <tr>
+              <td class="fw-bold">{{ o.employeeName }} <span class="text-secondary fs-9 d-block">{{ o.employeeCode }}</span></td>
+              <td>{{ o.overtimeDate | date:'dd-MMM-yyyy' }}</td>
+              <td>{{ o.requestedHours }} hrs</td>
+              <td>
+                <span class="badge" [ngClass]="{
+                  'badge-success': o.status === 'Approved',
+                  'badge-danger': o.status === 'Rejected',
+                  'badge-warning': o.status === 'Pending'
+                }">
+                  {{ o.status }}
+                </span>
+              </td>
+              <td class="text-center">
+                <div class="d-flex justify-content-center gap-2">
+                  @if (o.status === 'Pending') {
+                    <button class="btn btn-outline btn-sm p-1" title="Approve" (click)="approveRequest(o)">
+                      <i class="bi bi-check-circle text-success"></i>
+                    </button>
+                    <button class="btn btn-outline btn-sm p-1" title="Reject" (click)="rejectRequest(o)">
+                      <i class="bi bi-x-circle text-danger"></i>
+                    </button>
+                  }
+                </div>
+              </td>
+            </tr>
+          }
+        }
+      </tbody>
+    </table>
+  </div>
+</div>
+
+<!-- Notification Toast -->
+@if (toastMessage) {
+  <div class="toast-custom bg-dark text-white p-3 rounded">
+    <i class="bi bi-info-circle-fill me-2 text-primary"></i> {{ toastMessage }}
+  </div>
+}

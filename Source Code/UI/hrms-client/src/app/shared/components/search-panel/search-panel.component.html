@@ -1,0 +1,13 @@
+<div class="d-flex align-items-center position-relative my-1">
+  <span class="svg-icon svg-icon-1 position-absolute ms-6">
+    <i class="bi bi-search fs-3 text-gray-500"></i>
+  </span>
+  <input 
+    type="text" 
+    class="form-control form-control-solid w-250px ps-15 fs-7" 
+    [placeholder]="placeholder"
+    [value]="initialValue"
+    [delay]="delay"
+    appDebounce
+    (debouncedSearch)="onSearch($event)" />
+</div>

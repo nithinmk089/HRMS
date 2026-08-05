@@ -1,0 +1,53 @@
+// Standardized Design System SCSS definitions
+.modal-backdrop-custom {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  background: rgba(0, 0, 0, 0.4);
+  z-index: 1050;
+  backdrop-filter: blur(2px);
+}
+.modal {
+  z-index: 1060;
+  background: none;
+}
+.modal-content {
+  border: none;
+  border-radius: var(--border-radius);
+  box-shadow: 0 10px 30px rgba(0,0,0,0.15);
+}
+.btn-close {
+  background: none;
+  border: none;
+  font-size: 1.5rem;
+  cursor: pointer;
+  line-height: 1;
+  padding: 0;
+  color: var(--text-secondary);
+}
+.btn-close:after {
+  content: '×';
+}
+.toast-custom {
+  position: fixed;
+  bottom: 20px;
+  right: 20px;
+  z-index: 1100;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+  animation: fadeInUp 0.3s ease-in-out;
+}
+.skeleton-shimmer {
+  background: linear-gradient(90deg, #f0f2f5 25%, #e1e4ea 50%, #f0f2f5 75%);
+  background-size: 200% 100%;
+  animation: loading-shimmer 1.5s infinite;
+}
+@keyframes loading-shimmer {
+  0% { background-position: 200% 0; }
+  100% { background-position: -200% 0; }
+}
+@keyframes fadeInUp {
+  from { transform: translateY(20px); opacity: 0; }
+  to { transform: translateY(0); opacity: 1; }
+}

@@ -1,0 +1,81 @@
+@if (isOpen) {
+  <div class="modal-backdrop-custom"></div>
+  <div class="modal fade show d-block" tabindex="-1" role="dialog" aria-modal="true">
+    <div class="modal-dialog modal-dialog-centered">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title">{{ tenant ? 'Edit Tenant' : 'Create New Tenant' }}</h5>
+          <button type="button" class="btn-close" (click)="onClose()" aria-label="Close"></button>
+        </div>
+        <form [formGroup]="tenantForm" (ngSubmit)="onSubmit()">
+          <div class="modal-body">
+            <div class="mb-3">
+              <label class="form-label">Tenant Code <span class="text-danger">*</span></label>
+              <input type="text" class="form-control" formControlName="tenantCode" [readonly]="tenant !== null" placeholder="e.g., GLOBEX" maxlength="50">
+              @if (submitted && f['tenantCode'].errors) {
+                <div class="text-danger fs-8 mt-1">
+                  Tenant Code is required.
+                </div>
+              }
+            </div>
+
+            <div class="mb-3">
+              <label class="form-label">Tenant Name <span class="text-danger">*</span></label>
+              <input type="text" class="form-control" formControlName="tenantName" placeholder="Globex Corp" maxlength="200">
+              @if (submitted && f['tenantName'].errors) {
+                <div class="text-danger fs-8 mt-1">
+                  @if (f['tenantName'].errors['required']) {
+                    <span>Tenant Name is required.</span>
+                  }
+                  @if (f['tenantName'].errors['minlength']) {
+                    <span>Tenant Name must be at least 3 characters.</span>
+                  }
+                  @if (f['tenantName'].errors['maxlength']) {
+                    <span>Tenant Name cannot exceed 200 characters.</span>
+                  }
+                </div>
+              }
+            </div>
+
+            <div class="row">
+              <div class="col-6 mb-3">
+                <label class="form-label">Effective From <span class="text-danger">*</span></label>
+                <input type="date" class="form-control" formControlName="effectiveFrom">
+                @if (submitted && f['effectiveFrom'].errors) {
+                  <div class="text-danger fs-8 mt-1">
+                    Required.
+                  </div>
+                }
+              </div>
+              <div class="col-6 mb-3">
+                <label class="form-label">Effective To</label>
+                <input type="date" class="form-control" formControlName="effectiveTo">
+              </div>
+            </div>
+
+            <div class="mb-3">
+              <label class="form-label">Status</label>
+              <select class="form-select w-100" formControlName="status">
+                <option value="Active">Active</option>
+                <option value="Inactive">Inactive</option>
+                <option value="Suspended">Suspended</option>
+              </select>
+            </div>
+
+            @if (errorMessage) {
+              <div class="alert alert-danger fs-8 p-2 my-2">
+                {{ errorMessage }}
+              </div>
+            }
+          </div>
+          <div class="modal-footer">
+            <button type="button" class="btn btn-outline" (click)="onClose()">Cancel</button>
+            <button type="submit" class="btn btn-primary" [disabled]="saving">
+              {{ saving ? 'Saving...' : 'Save Tenant' }}
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+}

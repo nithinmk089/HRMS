@@ -1,0 +1,79 @@
+<div class="page-toolbar">
+  <div>
+    <h1 class="page-title text-main">Asset Category</h1>
+    <div class="text-secondary mt-1">Manage templates and settings for laptop, phones, furniture and vehicle categories.</div>
+  </div>
+  <div>
+    <button class="btn btn-primary btn-sm" (click)="openModal()"><i class="bi bi-plus-lg me-1"></i> Add Category</button>
+  </div>
+</div>
+
+<div class="card">
+    <div class="card-body p-0">
+      <table class="table-enterprise">
+        <thead>
+          <tr>
+            <th>Code</th>
+            <th>Category Name</th>
+            <th>Description</th>
+            <th>Depreciable</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr *ngFor="let cat of categories">
+            <td><span class="badge bg-secondary font-monospace">{{ cat.categoryCode }}</span></td>
+            <td class="fw-bold">{{ cat.categoryName }}</td>
+            <td class="text-muted">{{ cat.description || 'No description' }}</td>
+            <td>
+              <span class="badge" [ngClass]="cat.isDepreciable ? 'badge-success' : 'badge-danger'">
+                {{ cat.isDepreciable ? 'Yes' : 'No' }}
+              </span>
+            </td>
+          </tr>
+          <tr *ngIf="categories.length === 0 && !loading">
+            <td colspan="4" class="text-center text-muted py-4">No categories registered yet.</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- Create Modal -->
+  @if (showModal) {
+  <div class="modal-backdrop-custom"></div>
+}
+<div class="modal fade show d-block" tabindex="-1" role="dialog" aria-modal="true" *ngIf="showModal" >
+    <div class="modal-dialog">
+      <div class="modal-content" >
+        <div class="modal-header">
+          <h5 class="modal-title fw-bold">Add Asset Category</h5>
+          <button type="button" class="btn-close" (click)="closeModal()"></button>
+        </div>
+        <div class="modal-body">
+          <form [formGroup]="categoryForm">
+            <div class="mb-3">
+              <label class="form-label">Category Code</label>
+              <input type="text" class="form-control" formControlName="categoryCode" placeholder="e.g. LAPTOP">
+            </div>
+            <div class="mb-3">
+              <label class="form-label">Category Name</label>
+              <input type="text" class="form-control" formControlName="categoryName" placeholder="e.g. Laptops">
+            </div>
+            <div class="mb-3">
+              <label class="form-label">Description</label>
+              <textarea class="form-control" formControlName="description" rows="3"></textarea>
+            </div>
+            <div class="form-check form-switch mb-3">
+              <input class="form-check-input" type="checkbox" formControlName="isDepreciable">
+              <label class="form-check-label">Is Depreciable</label>
+            </div>
+            <div class="alert alert-danger" *ngIf="errorMessage">{{ errorMessage }}</div>
+          </form>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-outline" (click)="closeModal()">Cancel</button>
+          <button type="button" class="btn btn-primary" [disabled]="categoryForm.invalid || saving" (click)="saveCategory()">Save</button>
+        </div>
+      </div>
+    </div>
+  </div>

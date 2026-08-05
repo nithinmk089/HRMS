@@ -1,0 +1,135 @@
+<div class="page-toolbar">
+  <div>
+    <h1 class="page-title text-main">Bonus Management</h1>
+    <div class="text-secondary mt-1">Manage all aspects of payroll and compensation flows.</div>
+  </div>
+  <div>
+    <button class="btn btn-primary btn-sm  " (click)="openCreateModal()">
+      <i class="bi bi-plus-lg me-1"></i>New Setup
+    </button>
+  </div>
+</div>
+
+<div class="card">
+    
+    <div class="table-responsive">
+      <table class="table-enterprise">
+        <thead>
+          <tr>
+            <th>Bonus ID</th>
+            <th scope="col">Employee Name</th>
+            <th scope="col">Bonus Type</th>
+            <th scope="col">Bonus Amount</th>
+            <th scope="col">Bonus Period</th>
+            <th scope="col">Status</th>
+            <th class="text-end">Actions</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr *ngFor="let item of items">
+            <td class="px-4 fw-bold text-primary">BNS-#{{ item.bonusID }}</td>
+            <td>{{ item.employeeName }}</td>
+            <td>{{ item.bonusType }}</td>
+            <td>{{ item.bonusAmount | currency:'USD':'symbol':'1.2-2' }}</td>
+            <td>{{ item.bonusPeriod }}</td>
+            <td>
+              <span class="badge" [ngClass]="item.status === 'Approved' || item.status === 'Active' || item.status === '' ? 'badge-success' : 'badge-warning'">
+                {{ item.status || 'Approved' }}
+              </span>
+            </td>
+            <td class="text-end px-4">
+              <button class="btn btn-outline btn-sm p-1 me-2" title="View Details" (click)="viewItem(item)"><i class="bi bi-eye text-primary"></i></button>
+              <button class="btn btn-outline btn-sm p-1"><i class="bi bi-trash text-danger"></i></button>
+            </td>
+          </tr>
+          <tr *ngIf="items.length === 0">
+            <td colspan="7" class="text-center py-5 text-muted">
+              <i class="bi bi-inbox fs-2 d-block mb-2"></i>
+              No active records found. Click "New Setup" to begin.
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- Modal Form -->
+  @if (showModal) {
+  <div class="modal-backdrop-custom"></div>
+}
+<div class="modal fade show d-block" tabindex="-1" role="dialog" aria-modal="true" *ngIf="showModal" >
+    <div class="modal-dialog modal-dialog-centered">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title fw-bold">Add New Setup</h5>
+          <button type="button" class="btn-close" (click)="closeModal()"></button>
+        </div>
+        <div class="modal-body">
+          <form [formGroup]="form" (ngSubmit)="onSubmit()">
+            <div class="mb-3">
+              <label class="form-label fw-semibold">Reference Code</label>
+              <input type="text" class="form-control" formControlName="code" placeholder="e.g. CAL-2026">
+            </div>
+            <div class="mb-3">
+              <label class="form-label fw-semibold">Name / Description</label>
+              <input type="text" class="form-control" formControlName="name" placeholder="e.g. Standard Calendar">
+            </div>
+            <div class="mb-4">
+              <label class="form-label fw-semibold">Target Amount / Value</label>
+              <input type="number" class="form-control" formControlName="amount" placeholder="0">
+            </div>
+            <div class="d-flex justify-content-end gap-2">
+              <button type="button" class="btn btn-outline" (click)="closeModal()">Cancel</button>
+              <button type="submit" class="btn btn-primary" [disabled]="form.invalid">Submit</button>
+            </div>
+          </form>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- View Details Modal -->
+  @if (showViewModal) {
+    <div class="modal-backdrop-custom"></div>
+    <div class="modal fade show d-block" tabindex="-1" role="dialog" aria-modal="true">
+      <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+          <div class="modal-header">
+            <h5 class="modal-title fw-bold text-main">Bonus Record Detail</h5>
+            <button type="button" class="btn-close" (click)="closeViewModal()"></button>
+          </div>
+          <div class="modal-body p-4">
+            <div class="row g-3">
+              <div class="col-6">
+                <label class="text-secondary small d-block">Bonus ID</label>
+                <span class="fw-semibold text-main">BNS-#{{ selectedItem?.bonusID }}</span>
+              </div>
+              <div class="col-6">
+                <label class="text-secondary small d-block">Employee Name</label>
+                <span class="fw-semibold text-main">{{ selectedItem?.employeeName }}</span>
+              </div>
+              <div class="col-6">
+                <label class="text-secondary small d-block">Bonus Type</label>
+                <span class="fw-semibold text-main">{{ selectedItem?.bonusType }}</span>
+              </div>
+              <div class="col-6">
+                <label class="text-secondary small d-block">Bonus Amount</label>
+                <span class="fw-semibold text-main">{{ selectedItem?.bonusAmount | currency }}</span>
+              </div>
+              <div class="col-6">
+                <label class="text-secondary small d-block">Bonus Period</label>
+                <span class="fw-semibold text-main">{{ selectedItem?.bonusPeriod }}</span>
+              </div>
+              <div class="col-6">
+                <label class="text-secondary small d-block">Status</label>
+                <span class="fw-semibold text-main">{{ selectedItem?.status || 'Approved' }}</span>
+              </div>
+            </div>
+            <div class="d-flex justify-content-end mt-4">
+              <button type="button" class="btn btn-outline" (click)="closeViewModal()">Close</button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  }

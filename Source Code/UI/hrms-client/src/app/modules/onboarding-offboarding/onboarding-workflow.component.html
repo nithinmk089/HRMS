@@ -1,0 +1,244 @@
+<div class="page-toolbar">
+  <div>
+    <h1 class="page-title text-main">Employee Onboarding Dashboard</h1>
+    <div class="text-secondary mt-1">Track pre-boarding checklist completion, document collection, and provisioning tasks</div>
+  </div>
+  <div>
+    <button class="btn btn-primary btn-sm" (click)="showCreateModal = true">
+      <i class="bi bi-person-plus me-1"></i> Initiate Onboarding
+    </button>
+  </div>
+</div>
+
+<!-- KPI Summary Cards -->
+<div class="row g-3 mt-1 mb-4">
+  <div class="col-12 col-sm-4">
+    <div class="card p-3">
+      <div class="d-flex justify-content-between align-items-center">
+        <div>
+          <span class="fs-8 text-secondary fw-bold">Total Active</span>
+          <h2 class="text-main mt-1" style="font-size: 22px; font-weight: 600;">{{ statusReports.length }}</h2>
+        </div>
+        <i class="bi bi-people-fill fs-1 text-muted"></i>
+      </div>
+    </div>
+  </div>
+  <div class="col-12 col-sm-4">
+    <div class="card p-3">
+      <div class="d-flex justify-content-between align-items-center">
+        <div>
+          <span class="fs-8 text-secondary fw-bold">Completed Workflows</span>
+          <h2 class="text-main mt-1" style="font-size: 22px; font-weight: 600;">{{ getCompletedCount() }}</h2>
+        </div>
+        <i class="bi bi-patch-check-fill fs-1" style="color: var(--success-color);"></i>
+      </div>
+    </div>
+  </div>
+  <div class="col-12 col-sm-4">
+    <div class="card p-3">
+      <div class="d-flex justify-content-between align-items-center">
+        <div>
+          <span class="fs-8 text-secondary fw-bold">Pending Checklists</span>
+          <h2 class="text-main mt-1" style="font-size: 22px; font-weight: 600;">{{ pendingTasks.length }}</h2>
+        </div>
+        <i class="bi bi-clock-history fs-1" style="color: var(--warning-color);"></i>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Active Workflows Table -->
+<div class="card mb-4">
+  <div class="card-header">
+    <h4 class="card-title">
+      <i class="bi bi-arrow-right-circle me-2 text-primary"></i>Active Onboarding Workflows
+    </h4>
+  </div>
+  <div class="table-responsive">
+    <table class="table-enterprise">
+      <thead>
+        <tr>
+          <th>Employee</th>
+          <th>Workflow Details</th>
+          <th>Dates</th>
+          <th>Progress</th>
+          <th>Status</th>
+          <th style="width: 120px; text-align: center;">Actions</th>
+        </tr>
+      </thead>
+      <tbody>
+        <!-- Loading Skeletons -->
+        @if (isLoading) {
+          @for (row of [1, 2, 3]; track $index) {
+            <tr>
+              @for (col of [1, 2, 3, 4, 5, 6]; track $index) {
+                <td>
+                  <div class="skeleton-shimmer" style="height: 16px; border-radius: 4px; background: #EAEFF4; width: 80%;"></div>
+                </td>
+              }
+            </tr>
+          }
+        }
+
+        <!-- Empty State -->
+        @if (!isLoading && statusReports.length === 0) {
+          <tr>
+            <td colspan="6" class="text-center py-5 text-secondary">
+              <i class="bi bi-folder-x fs-2 d-block mb-2 text-muted"></i>
+              No onboarding workflows initiated.
+            </td>
+          </tr>
+        }
+
+        <!-- Table Rows -->
+        @if (!isLoading) {
+          @for (item of statusReports; track item.onboardingWorkflowID) {
+            <tr>
+              <td>
+                <div class="fw-bold">{{ item.employeeName }}</div>
+                <div class="text-secondary fs-9">{{ item.employeeCode }}</div>
+              </td>
+              <td>
+                <div class="fw-bold">{{ item.workflowName }}</div>
+                <div class="text-muted fs-9">{{ item.workflowCode }}</div>
+              </td>
+              <td>
+                <div class="fs-8">Start: {{ item.startDate | date:'dd-MMM-yyyy' }}</div>
+                <div class="fs-8" style="color: var(--warning-color);">Target: {{ item.targetCompletionDate | date:'dd-MMM-yyyy' }}</div>
+              </td>
+              <td>
+                <div class="d-flex align-items-center gap-2">
+                  <div style="flex-grow: 1; height: 6px; background: var(--border-color); border-radius: 3px; overflow: hidden;">
+                    <div style="height: 100%; background: var(--primary-color); border-radius: 3px; transition: width 0.3s ease;" [style.width.%]="item.completionPercentage"></div>
+                  </div>
+                  <span class="fw-bold fs-8 text-main" style="min-width: 32px;">{{ item.completionPercentage | number:'1.0-0' }}%</span>
+                </div>
+              </td>
+              <td>
+                <span class="badge" [ngClass]="{
+                  'badge-warning': item.workflowStatus === 'Pending',
+                  'badge-info': item.workflowStatus === 'In Progress',
+                  'badge-success': item.workflowStatus === 'Completed'
+                }">{{ item.workflowStatus }}</span>
+              </td>
+              <td class="text-center">
+                <div class="d-flex justify-content-center gap-2">
+                  @if (item.workflowStatus === 'Pending') {
+                    <button class="btn btn-outline btn-sm p-1" title="Start Workflow" (click)="startWorkflow(item.onboardingWorkflowID)">
+                      <i class="bi bi-play-circle text-primary"></i>
+                    </button>
+                  }
+                  @if (item.workflowStatus === 'In Progress' && item.completionPercentage === 100) {
+                    <button class="btn btn-outline btn-sm p-1" title="Complete Workflow" (click)="completeWorkflow(item.onboardingWorkflowID)">
+                      <i class="bi bi-check-circle text-success"></i>
+                    </button>
+                  }
+                  @if (item.workflowStatus === 'Completed') {
+                    <span class="text-muted fs-8"><i class="bi bi-check-lg text-success"></i> Done</span>
+                  }
+                </div>
+              </td>
+            </tr>
+          }
+        }
+      </tbody>
+    </table>
+  </div>
+</div>
+
+<!-- Pending Task Assignments Table -->
+<div class="card">
+  <div class="card-header">
+    <h4 class="card-title">
+      <i class="bi bi-list-check me-2 text-primary"></i>Pending Onboarding Checklist Tasks
+    </h4>
+  </div>
+  <div class="table-responsive">
+    <table class="table-enterprise">
+      <thead>
+        <tr>
+          <th>Employee</th>
+          <th>Task Description</th>
+          <th>Assigned Date</th>
+          <th>Due Date</th>
+          <th>Status</th>
+          <th style="width: 120px; text-align: center;">Action</th>
+        </tr>
+      </thead>
+      <tbody>
+        @if (pendingTasks.length === 0) {
+          <tr>
+            <td colspan="6" class="text-center py-5 text-secondary">
+              <i class="bi bi-folder-x fs-2 d-block mb-2 text-muted"></i>
+              No pending tasks for employee onboarding.
+            </td>
+          </tr>
+        }
+        @for (task of pendingTasks; track task.onboardingTaskAssignmentID) {
+          <tr>
+            <td class="fw-bold">{{ task.employeeName }}</td>
+            <td>
+              <div class="fw-bold">{{ task.taskName }}</div>
+              <div class="text-muted fs-9">{{ task.taskCode }}</div>
+            </td>
+            <td>{{ task.assignedDate | date:'dd-MMM-yyyy' }}</td>
+            <td style="color: var(--danger-color);">{{ task.dueDate | date:'dd-MMM-yyyy' }}</td>
+            <td><span class="badge badge-warning">{{ task.taskStatus }}</span></td>
+            <td class="text-center">
+              <button class="btn btn-outline btn-sm p-1" title="Complete Task" (click)="completeTask(task.onboardingTaskAssignmentID)">
+                <i class="bi bi-check-circle text-success"></i>
+              </button>
+            </td>
+          </tr>
+        }
+      </tbody>
+    </table>
+  </div>
+</div>
+
+<!-- Create Workflow Modal -->
+@if (showCreateModal) {
+  <div class="modal-backdrop-custom"></div>
+}
+@if (showCreateModal) {
+  <div class="modal fade show d-block" tabindex="-1" role="dialog" aria-modal="true">
+    <div class="modal-dialog modal-dialog-centered">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title">Initiate Employee Onboarding</h5>
+          <button type="button" class="btn-close" (click)="showCreateModal = false" aria-label="Close"></button>
+        </div>
+        <form [formGroup]="workflowForm" (ngSubmit)="onCreateWorkflow()">
+          <div class="modal-body">
+            <div class="mb-3">
+              <label class="form-label">Employee ID <span class="text-danger">*</span></label>
+              <input type="number" class="form-control" formControlName="employeeID" placeholder="Enter Employee ID">
+            </div>
+            <div class="mb-3">
+              <label class="form-label">Workflow Code <span class="text-danger">*</span></label>
+              <input type="text" class="form-control" formControlName="workflowCode" placeholder="e.g. WF_STD_2026">
+            </div>
+            <div class="mb-3">
+              <label class="form-label">Workflow Name <span class="text-danger">*</span></label>
+              <input type="text" class="form-control" formControlName="workflowName" placeholder="e.g. Executive Onboarding Plan">
+            </div>
+            <div class="row">
+              <div class="col-6 mb-3">
+                <label class="form-label">Start Date <span class="text-danger">*</span></label>
+                <input type="date" class="form-control" formControlName="startDate">
+              </div>
+              <div class="col-6 mb-3">
+                <label class="form-label">Target Date <span class="text-danger">*</span></label>
+                <input type="date" class="form-control" formControlName="targetCompletionDate">
+              </div>
+            </div>
+          </div>
+          <div class="modal-footer">
+            <button type="button" class="btn btn-outline" (click)="showCreateModal = false">Cancel</button>
+            <button type="submit" class="btn btn-primary" [disabled]="workflowForm.invalid">Initiate</button>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+}

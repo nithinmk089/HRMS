@@ -1,0 +1,168 @@
+<div class="setup-container">
+  <div class="setup-card">
+    <div class="setup-header">
+      <div class="brand">
+        <i class="bi bi-cpu-fill me-2 text-primary"></i>
+        <span>Enterprise HRMS Setup</span>
+      </div>
+      <h2 class="title">First-Time System Initialization</h2>
+      <p class="subtitle">No system administrator account detected. Configure tenant, primary company, and initial admin details to start.</p>
+    </div>
+
+    <!-- Stepper indicator -->
+    <div class="stepper">
+      <div class="step-item" [ngClass]="{active: currentStep >= 1, completed: currentStep > 1}">
+        <span class="step-badge">1</span>
+        <span class="step-text">Tenant</span>
+      </div>
+      <div class="step-line" [ngClass]="{active: currentStep > 1}"></div>
+      <div class="step-item" [ngClass]="{active: currentStep >= 2, completed: currentStep > 2}">
+        <span class="step-badge">2</span>
+        <span class="step-text">Company</span>
+      </div>
+      <div class="step-line" [ngClass]="{active: currentStep > 2}"></div>
+      <div class="step-item" [ngClass]="{active: currentStep >= 3}">
+        <span class="step-badge">3</span>
+        <span class="step-text">Admin Account</span>
+      </div>
+    </div>
+
+    @if (errorMessage) {
+      <div class="alert alert-danger mb-4">
+        <i class="bi bi-exclamation-triangle-fill me-2"></i> {{ errorMessage }}
+      </div>
+    }
+
+    <form [formGroup]="setupForm" (ngSubmit)="onSubmit()">
+      <!-- Step 1: Tenant Information -->
+      @if (currentStep === 1) {
+        <div class="step-content">
+          <h4 class="step-title"><i class="bi bi-globe me-2 text-primary"></i> Step 1: Organization Tenant</h4>
+          <div class="mb-3">
+            <label class="form-label">Tenant Code / Identifier <span class="text-danger">*</span></label>
+            <input type="text" class="form-control" [ngClass]="{'is-invalid': setupForm.get('tenantCode')?.invalid && setupForm.get('tenantCode')?.touched}" formControlName="tenantCode" placeholder="e.g. TEN-ACME-001 or Soccomo-corp">
+            @if (setupForm.get('tenantCode')?.invalid && setupForm.get('tenantCode')?.touched) {
+              <div class="invalid-feedback">Tenant Code is required (alphanumeric, hyphens, min 3 characters).</div>
+            }
+            <small class="text-muted d-block mt-1">Unique organization key used for data isolation.</small>
+          </div>
+          <div class="mb-3">
+            <label class="form-label">Tenant Organization Name <span class="text-danger">*</span></label>
+            <input type="text" class="form-control" [ngClass]="{'is-invalid': setupForm.get('tenantName')?.invalid && setupForm.get('tenantName')?.touched}" formControlName="tenantName" placeholder="e.g. Acme Enterprise Group">
+            @if (setupForm.get('tenantName')?.invalid && setupForm.get('tenantName')?.touched) {
+              <div class="invalid-feedback">Tenant Organization Name is required.</div>
+            }
+          </div>
+          <div class="d-flex justify-content-end mt-4">
+            <button type="button" class="btn btn-primary" (click)="nextStep()">
+              Continue to Company <i class="bi bi-arrow-right ms-1"></i>
+            </button>
+          </div>
+        </div>
+      }
+
+      <!-- Step 2: Primary Company Information -->
+      @if (currentStep === 2) {
+        <div class="step-content">
+          <h4 class="step-title"><i class="bi bi-buildings-fill me-2 text-primary"></i> Step 2: Primary Operating Company</h4>
+          <div class="row">
+            <div class="col-md-6 mb-3">
+              <label class="form-label">Company Code <span class="text-danger">*</span></label>
+              <input type="text" class="form-control" [ngClass]="{'is-invalid': setupForm.get('companyCode')?.invalid && setupForm.get('companyCode')?.touched}" formControlName="companyCode" placeholder="e.g. COMP-ACME-TECH">
+              @if (setupForm.get('companyCode')?.invalid && setupForm.get('companyCode')?.touched) {
+                <div class="invalid-feedback">Company Code is required.</div>
+              }
+            </div>
+            <div class="col-md-6 mb-3">
+              <label class="form-label">Company Name <span class="text-danger">*</span></label>
+              <input type="text" class="form-control" [ngClass]="{'is-invalid': setupForm.get('companyName')?.invalid && setupForm.get('companyName')?.touched}" formControlName="companyName" placeholder="e.g. Acme Technology Corp">
+              @if (setupForm.get('companyName')?.invalid && setupForm.get('companyName')?.touched) {
+                <div class="invalid-feedback">Company Name is required.</div>
+              }
+            </div>
+          </div>
+          <div class="row">
+            <div class="col-md-6 mb-3">
+              <label class="form-label">Legal Name</label>
+              <input type="text" class="form-control" formControlName="legalName" placeholder="e.g. Acme Technology Corp LLC">
+            </div>
+            <div class="col-md-6 mb-3">
+              <label class="form-label">Tax / Registration Number</label>
+              <input type="text" class="form-control" formControlName="taxNumber" placeholder="e.g. TAX-US-9988001">
+            </div>
+          </div>
+          <div class="row">
+            <div class="col-md-6 mb-3">
+              <label class="form-label">Corporate Email</label>
+              <input type="email" class="form-control" formControlName="companyEmail" placeholder="contact@acmetech.com">
+            </div>
+            <div class="col-md-6 mb-3">
+              <label class="form-label">Corporate Phone</label>
+              <input type="text" class="form-control" formControlName="companyPhone" placeholder="+1-555-0101">
+            </div>
+          </div>
+          <div class="d-flex justify-content-between mt-4">
+            <button type="button" class="btn btn-outline-secondary" (click)="prevStep()">
+              <i class="bi bi-arrow-left me-1"></i> Back
+            </button>
+            <button type="button" class="btn btn-primary" (click)="nextStep()">
+              Continue to Admin Account <i class="bi bi-arrow-right ms-1"></i>
+            </button>
+          </div>
+        </div>
+      }
+
+      <!-- Step 3: Admin Employee & User Account -->
+      @if (currentStep === 3) {
+        <div class="step-content">
+          <h4 class="step-title"><i class="bi bi-person-badge-fill me-2 text-primary"></i> Step 3: Initial System Admin & Employee</h4>
+          <p class="text-muted small">The administrator account will automatically generate an Employee record and be granted full SYSADMIN access.</p>
+          
+          <div class="row">
+            <div class="col-md-4 mb-3">
+              <label class="form-label">Employee Code <span class="text-danger">*</span></label>
+              <input type="text" class="form-control" [ngClass]="{'is-invalid': setupForm.get('employeeCode')?.invalid && setupForm.get('employeeCode')?.touched}" formControlName="employeeCode" placeholder="e.g. EMP-001">
+            </div>
+            <div class="col-md-4 mb-3">
+              <label class="form-label">First Name <span class="text-danger">*</span></label>
+              <input type="text" class="form-control" [ngClass]="{'is-invalid': setupForm.get('firstName')?.invalid && setupForm.get('firstName')?.touched}" formControlName="firstName" placeholder="System">
+            </div>
+            <div class="col-md-4 mb-3">
+              <label class="form-label">Last Name <span class="text-danger">*</span></label>
+              <input type="text" class="form-control" [ngClass]="{'is-invalid': setupForm.get('lastName')?.invalid && setupForm.get('lastName')?.touched}" formControlName="lastName" placeholder="Administrator">
+            </div>
+          </div>
+
+          <div class="row">
+            <div class="col-md-6 mb-3">
+              <label class="form-label">Admin Work Email <span class="text-danger">*</span></label>
+              <input type="email" class="form-control" [ngClass]="{'is-invalid': setupForm.get('adminEmail')?.invalid && setupForm.get('adminEmail')?.touched}" formControlName="adminEmail" placeholder="admin@hrms.com">
+            </div>
+            <div class="col-md-6 mb-3">
+              <label class="form-label">Admin Password <span class="text-danger">*</span></label>
+              <input type="password" class="form-control" [ngClass]="{'is-invalid': setupForm.get('password')?.invalid && setupForm.get('password')?.touched}" formControlName="password" placeholder="Min 6 chars (e.g. admin123)">
+            </div>
+          </div>
+
+          <div class="mb-3">
+            <label class="form-label">Mobile Phone</label>
+            <input type="text" class="form-control" formControlName="mobileNumber" placeholder="+1-555-0199">
+          </div>
+
+          <div class="d-flex justify-content-between mt-4">
+            <button type="button" class="btn btn-outline-secondary" (click)="prevStep()" [disabled]="isLoading">
+              <i class="bi bi-arrow-left me-1"></i> Back
+            </button>
+            <button type="submit" class="btn btn-success px-4" [disabled]="isLoading">
+              @if (isLoading) {
+                <span class="spinner-border spinner-border-sm me-2" role="status"></span> Creating Setup...
+              } @else {
+                <i class="bi bi-check-circle-fill me-1"></i> Complete Setup & Launch
+              }
+            </button>
+          </div>
+        </div>
+      }
+    </form>
+  </div>
+</div>

@@ -1,0 +1,97 @@
+<div class="page-toolbar">
+  <div>
+    <h1 class="page-title text-main">Asset Disposal</h1>
+    <div class="text-secondary mt-1">Retire devices, handle scrap sale write-offs, log donations, and record approvals.</div>
+  </div>
+  <div>
+    <button class="btn btn-primary btn-sm" (click)="openModal()"><i class="bi bi-plus-lg me-1"></i> Request Disposal</button>
+  </div>
+</div>
+
+<div class="card">
+    <div class="card-body p-0">
+      <table class="table-enterprise">
+        <thead>
+          <tr>
+            <th>Disposal ID</th>
+            <th>Disposal Date</th>
+            <th>Method</th>
+            <th>Residual Value</th>
+            <th>Status</th>
+            <th>Action</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr *ngFor="let d of disposals">
+            <td>{{ d.assetDisposalID }}</td>
+            <td>{{ d.disposalDate | date:'mediumDate' }}</td>
+            <td class="fw-bold">{{ d.disposalMethod }}</td>
+            <td>{{ d.disposalValue | currency }}</td>
+            <td>
+              <span class="badge" [ngClass]="{
+                'badge-warning': d.disposalStatus === 'Pending',
+                'badge-info': d.disposalStatus === 'Approved',
+                'badge-success': d.disposalStatus === 'Closed'
+              }">
+                {{ d.disposalStatus }}
+              </span>
+            </td>
+            <td>
+              <button class="btn btn-sm btn-outline-success me-2" *ngIf="d.disposalStatus === 'Pending'" (click)="approve(d)">
+                Approve
+              </button>
+              <button class="btn btn-sm btn-success" *ngIf="d.disposalStatus === 'Approved'" (click)="closeDisposal(d)">
+                Close & Retire
+              </button>
+            </td>
+          </tr>
+          <tr *ngIf="disposals.length === 0 && !loading">
+            <td colspan="6" class="text-center text-muted py-4">No disposals logged yet.</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- Create Modal -->
+  @if (showModal) {
+  <div class="modal-backdrop-custom"></div>
+}
+<div class="modal fade show d-block" tabindex="-1" role="dialog" aria-modal="true" *ngIf="showModal" >
+    <div class="modal-dialog">
+      <div class="modal-content" >
+        <div class="modal-header">
+          <h5 class="modal-title fw-bold">Request Asset Disposal</h5>
+          <button type="button" class="btn-close" (click)="closeModal()"></button>
+        </div>
+        <div class="modal-body">
+          <form [formGroup]="disposalForm">
+            <div class="mb-3">
+              <label class="form-label">Asset to Retire</label>
+              <select class="form-select" formControlName="assetID">
+                <option value="">Select Asset</option>
+                <option *ngFor="let ast of assets" [value]="ast.assetID">{{ ast.assetName }} ({{ ast.assetCode }})</option>
+              </select>
+            </div>
+            <div class="mb-3">
+              <label class="form-label">Disposal Date</label>
+              <input type="date" class="form-control" formControlName="disposalDate">
+            </div>
+            <div class="mb-3">
+              <label class="form-label">Disposal Method</label>
+              <input type="text" class="form-control" formControlName="disposalMethod" placeholder="e.g. Scrapped, Sold, Donated">
+            </div>
+            <div class="mb-3">
+              <label class="form-label">Residual / Scrap Value</label>
+              <input type="number" class="form-control" formControlName="disposalValue">
+            </div>
+            <div class="alert alert-danger" *ngIf="errorMessage">{{ errorMessage }}</div>
+          </form>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-outline" (click)="closeModal()">Cancel</button>
+          <button type="button" class="btn btn-primary" [disabled]="disposalForm.invalid || saving" (click)="saveDisposal()">Submit</button>
+        </div>
+      </div>
+    </div>
+  </div>

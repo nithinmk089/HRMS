@@ -1,0 +1,303 @@
+<div class="page-toolbar">
+  <div>
+    <h1 class="page-title text-main">Employee Master Directory</h1>
+    <div class="text-secondary mt-1">Manage corporate headcount, search employee directories, and update profile lifecycles</div>
+  </div>
+  <div class="d-flex gap-2">
+    <a routerLink="/data-import" class="btn btn-outline-success btn-sm me-2">
+      <i class="bi bi-file-earmark-spreadsheet me-1"></i> Bulk Import Excel/CSV
+    </a>
+    <button class="btn btn-primary btn-sm" (click)="openCreateModal()">
+      <i class="bi bi-person-plus me-1"></i> Add Employee
+    </button>
+  </div>
+</div>
+
+<!-- KPI Dashboard Grid -->
+<div class="row g-3 mb-4">
+  <div class="col-12 col-sm-6 col-md-3">
+    <div class="kpi-card bg-primary-gradient text-white p-3 rounded">
+      <div class="d-flex justify-content-between align-items-center">
+        <div>
+          <span class="fs-8 text-white-50 uppercase fw-bold">Total Headcount</span>
+          <h2 class="kpi-value text-white mt-1">{{ totalCount }}</h2>
+        </div>
+        <i class="bi bi-people fs-1 text-white-20"></i>
+      </div>
+    </div>
+  </div>
+  <div class="col-12 col-sm-6 col-md-3">
+    <div class="kpi-card bg-success-gradient text-white p-3 rounded">
+      <div class="d-flex justify-content-between align-items-center">
+        <div>
+          <span class="fs-8 text-white-50 uppercase fw-bold">Active Staff</span>
+          <h2 class="kpi-value text-white mt-1">{{ activeCount }}</h2>
+        </div>
+        <i class="bi bi-person-check fs-1 text-white-20"></i>
+      </div>
+    </div>
+  </div>
+  <div class="col-12 col-sm-6 col-md-3">
+    <div class="kpi-card bg-warning-gradient text-white p-3 rounded">
+      <div class="d-flex justify-content-between align-items-center">
+        <div>
+          <span class="fs-8 text-white-50 uppercase fw-bold">Suspended Staff</span>
+          <h2 class="kpi-value text-white mt-1">{{ suspendedCount }}</h2>
+        </div>
+        <i class="bi bi-person-dash fs-1 text-white-20"></i>
+      </div>
+    </div>
+  </div>
+  <div class="col-12 col-sm-6 col-md-3">
+    <div class="kpi-card bg-danger-gradient text-white p-3 rounded">
+      <div class="d-flex justify-content-between align-items-center">
+        <div>
+          <span class="fs-8 text-white-50 uppercase fw-bold">Terminated Staff</span>
+          <h2 class="kpi-value text-white mt-1">{{ terminatedCount }}</h2>
+        </div>
+        <i class="bi bi-person-x fs-1 text-white-20"></i>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Search & Filtering -->
+<div class="card p-3 mb-4 mt-2">
+  <div class="row g-3">
+    <div class="col-12 col-md-3">
+      <label class="form-label fs-8 text-secondary">Tenant Group</label>
+      <select class="form-select w-100" [(ngModel)]="tenantIdFilter" (change)="onTenantChange()">
+        @for (tenant of tenants; track tenant.tenantId) {
+          <option [value]="tenant.tenantId">{{ tenant.tenantName }}</option>
+        }
+      </select>
+    </div>
+    <div class="col-12 col-md-3">
+      <label class="form-label fs-8 text-secondary">Search Employees</label>
+      <div class="search-input-group w-100">
+        <i class="bi bi-search"></i>
+        <input type="text" class="form-control" placeholder="Search code, name, email..." [(ngModel)]="searchText" (keyup.enter)="loadEmployees()">
+      </div>
+    </div>
+    <div class="col-12 col-md-3">
+      <label class="form-label fs-8 text-secondary">Status Filter</label>
+      <select class="form-select w-100" [(ngModel)]="statusFilter" (change)="loadEmployees()">
+        <option value="">All Statuses</option>
+        <option value="Active">Active</option>
+        <option value="Suspended">Suspended</option>
+        <option value="Terminated">Terminated</option>
+      </select>
+    </div>
+    <div class="col-12 col-md-3 d-flex gap-2 align-items-end">
+      <button class="btn btn-outline w-50" (click)="resetFilters()">Reset</button>
+      <button class="btn btn-primary w-50" (click)="loadEmployees()">Search</button>
+    </div>
+  </div>
+</div>
+
+<!-- Employees Table -->
+<div class="card">
+  <div class="table-responsive">
+    <table class="table-enterprise">
+      <thead>
+        <tr>
+          <th>Employee Code</th>
+          <th>Employee Name</th>
+          <th>Personal Email</th>
+          <th>Mobile Number</th>
+          <th>Department</th>
+          <th>Designation</th>
+          <th>Location</th>
+          <th>Date of Join</th>
+          <th>Status</th>
+          <th style="width: 150px; text-align: center;">Actions</th>
+        </tr>
+      </thead>
+      <tbody>
+        <!-- Loading skeletons -->
+        @if (isLoading) {
+          @for (row of [1, 2, 3, 4, 5]; track $index) {
+            <tr>
+              @for (col of [1, 2, 3, 4, 5, 6, 7, 8, 9, 10]; track $index) {
+                <td>
+                  <div class="skeleton-shimmer" style="height: 16px; border-radius: 4px; background: #EAEFF4; width: 80%;"></div>
+                </td>
+              }
+            </tr>
+          }
+        }
+
+        <!-- Empty state -->
+        @if (!isLoading && employees.length === 0) {
+          <tr>
+            <td colspan="10" class="text-center py-5 text-secondary">
+              <i class="bi bi-emoji-neutral fs-2 d-block mb-2 text-muted"></i>
+              No employees found in directory.
+            </td>
+          </tr>
+        }
+
+        <!-- Rows -->
+        @if (!isLoading) {
+          @for (emp of employees; track emp.employeeID) {
+            <tr class="clickable-row" (click)="viewDetail(emp.employeeID)">
+              <td class="fw-bold text-primary">{{ emp.employeeCode }}</td>
+              <td>{{ emp.firstName }} {{ emp.lastName }}</td>
+              <td>{{ emp.personalEmail || '-' }}</td>
+              <td>{{ emp.mobileNumber || '-' }}</td>
+              <td>{{ emp.departmentName || '-' }}</td>
+              <td>{{ emp.designationName || '-' }}</td>
+              <td>{{ emp.locationName || '-' }}</td>
+              <td>{{ emp.joiningDate ? (emp.joiningDate | date:'mediumDate') : '-' }}</td>
+              <td>
+                <span class="badge" [ngClass]="{
+                  'badge-success': emp.status.toLowerCase() === 'active',
+                  'badge-warning': emp.status.toLowerCase() === 'suspended',
+                  'badge-danger': emp.status.toLowerCase() === 'terminated'
+                }">{{ emp.status }}</span>
+              </td>
+              <td class="text-center">
+                <div class="d-flex justify-content-center gap-2">
+                  <button class="btn btn-outline btn-sm p-1" title="Edit Core Profile" (click)="openEditModal(emp, $event)">
+                    <i class="bi bi-pencil-square text-primary"></i>
+                  </button>
+                  <button class="btn btn-outline btn-sm p-1" title="Delete Profile" (click)="deleteEmployee(emp, $event)">
+                    <i class="bi bi-trash text-danger"></i>
+                  </button>
+                </div>
+              </td>
+            </tr>
+          }
+        }
+      </tbody>
+    </table>
+  </div>
+</div>
+
+<!-- Modal Dialog -->
+@if (showModal) {
+  <div class="modal-backdrop">
+    <div class="modal-container modal-lg">
+      <div class="modal-header">
+        <h4 class="card-title text-main">
+          <i class="bi bi-person me-2 text-primary"></i> {{ editMode ? 'Edit Employee Core Profile' : 'Add New Employee' }}
+        </h4>
+        <button type="button" class="btn-close" (click)="closeModal()" aria-label="Close"></button>
+      </div>
+      <div class="modal-body overflow-y-auto" style="max-height: 70vh;">
+        @if (errorMessage) {
+          <div class="alert alert-danger mb-3 p-3 rounded">{{ errorMessage }}</div>
+        }
+        <form [formGroup]="empForm" (ngSubmit)="saveEmployee()">
+          <div class="row g-3">
+            <div class="col-12 col-md-6">
+              <label class="form-label">Employee Code*</label>
+              <input type="text" class="form-control" formControlName="employeeCode" placeholder="e.g. EMP-101">
+              @if (submitted && f['employeeCode'].errors) {
+                <div class="text-danger fs-8 mt-1">Code is required, max 50 chars, alphanumeric/dashes only.</div>
+              }
+            </div>
+            <div class="col-12 col-md-6">
+              <label class="form-label">Employee Number (Biometric/ID)*</label>
+              <input type="text" class="form-control" formControlName="employeeNumber" placeholder="e.g. 98273">
+              @if (submitted && f['employeeNumber'].errors) {
+                <div class="text-danger fs-8 mt-1">Employee number is required (max 50 chars).</div>
+              }
+            </div>
+
+            <div class="col-12 col-md-4">
+              <label class="form-label">First Name*</label>
+              <input type="text" class="form-control" formControlName="firstName">
+              @if (submitted && f['firstName'].errors) {
+                <div class="text-danger fs-8 mt-1">First Name is required.</div>
+              }
+            </div>
+            <div class="col-12 col-md-4">
+              <label class="form-label">Middle Name</label>
+              <input type="text" class="form-control" formControlName="middleName">
+            </div>
+            <div class="col-12 col-md-4">
+              <label class="form-label">Last Name*</label>
+              <input type="text" class="form-control" formControlName="lastName">
+              @if (submitted && f['lastName'].errors) {
+                <div class="text-danger fs-8 mt-1">Last Name is required.</div>
+              }
+            </div>
+
+            <div class="col-12 col-md-6">
+              <label class="form-label">Preferred Name</label>
+              <input type="text" class="form-control" formControlName="preferredName">
+            </div>
+            <div class="col-12 col-md-6">
+              <label class="form-label">Gender</label>
+              <select class="form-select w-100" formControlName="gender">
+                <option value="Male">Male</option>
+                <option value="Female">Female</option>
+                <option value="Other">Other</option>
+              </select>
+            </div>
+
+            <div class="col-12 col-md-6">
+              <label class="form-label">Date of Birth</label>
+              <input type="date" class="form-control" formControlName="dateOfBirth">
+              @if (submitted && f['dateOfBirth'].errors) {
+                <div class="text-danger fs-8 mt-1">Employee must be at least 15 years old.</div>
+              }
+            </div>
+            <div class="col-12 col-md-6">
+              <label class="form-label">Marital Status</label>
+              <select class="form-select w-100" formControlName="maritalStatus">
+                <option value="Single">Single</option>
+                <option value="Married">Married</option>
+                <option value="Divorced">Divorced</option>
+                <option value="Widowed">Widowed</option>
+              </select>
+            </div>
+
+            <div class="col-12 col-md-6">
+              <label class="form-label">Nationality</label>
+              <input type="text" class="form-control" formControlName="nationality">
+            </div>
+            <div class="col-12 col-md-6">
+              <label class="form-label">Status</label>
+              <select class="form-select w-100" formControlName="status">
+                <option value="Active">Active</option>
+                <option value="Suspended">Suspended</option>
+                <option value="Terminated">Terminated</option>
+              </select>
+            </div>
+
+            <div class="col-12 col-md-6">
+              <label class="form-label">Personal Email</label>
+              <input type="email" class="form-control" formControlName="personalEmail">
+              @if (submitted && f['personalEmail'].errors) {
+                <div class="text-danger fs-8 mt-1">Please enter a valid email.</div>
+              }
+            </div>
+            <div class="col-12 col-md-6">
+              <label class="form-label">Mobile Number</label>
+              <input type="text" class="form-control" formControlName="mobileNumber">
+            </div>
+          </div>
+
+          <div class="d-flex justify-content-end gap-2 mt-4">
+            <button type="button" class="btn btn-outline" (click)="closeModal()">Cancel</button>
+            <button type="submit" class="btn btn-primary" [disabled]="saving">
+              @if (saving) {
+                <span class="spinner-border spinner-border-sm me-1"></span>
+              }
+              Save Profile
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+}
+
+<!-- Notification Toast -->
+@if (toastMessage) {
+  <div class="toast-custom bg-dark text-white p-3 rounded">
+    <i class="bi bi-info-circle-fill me-2 text-primary"></i> {{ toastMessage }}
+  </div>
+}
