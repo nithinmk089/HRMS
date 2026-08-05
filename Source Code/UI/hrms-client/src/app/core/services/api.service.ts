@@ -248,6 +248,11 @@ export class ApiService {
     return this.http.get<ApiResponse<Role[]>>(`${this.baseUrl}/roles`, { params });
   }
 
+  getRoleUserIds(roleId: number, tenantId: number): Observable<ApiResponse<number[]>> {
+    const params = new HttpParams().set('tenantId', tenantId.toString());
+    return this.http.get<ApiResponse<number[]>>(`${this.baseUrl}/roles/${roleId}/users`, { params });
+  }
+
   createRole(role: Partial<Role>): Observable<ApiResponse<number>> {
     return this.http.post<ApiResponse<number>>(`${this.baseUrl}/roles`, role);
   }

@@ -5,11 +5,12 @@ import { Subscription } from 'rxjs';
 import { AuthService } from '../../core/services/auth.service';
 import { SignalRService, LiveNotificationPayload } from '../../core/services/signalr.service';
 import { ApiService } from '../../core/services/api.service';
+import { PermissionDirective } from '../../shared/directives/permission.directive';
 
 @Component({
   selector: 'app-dashboard',
   standalone: true,
-  imports: [CommonModule, RouterModule],
+  imports: [CommonModule, RouterModule, PermissionDirective],
   templateUrl: './dashboard.component.html',
   styleUrl: './dashboard.component.scss'
 })
@@ -25,6 +26,32 @@ export class DashboardComponent implements OnInit, OnDestroy {
 
   private sub!: Subscription;
   private countSub!: Subscription;
+
+  get currentUser() {
+    return this.authService.currentUserValue;
+  }
+
+  get userRoles(): string {
+    const rolesStr = localStorage.getItem('roles');
+    if (!rolesStr) return 'User';
+    try {
+      const roles: string[] = JSON.parse(rolesStr);
+      return roles.join(', ') || 'User';
+    } catch {
+      return 'User';
+    }
+  }
+
+  get userInitials(): string {
+    const user = this.currentUser;
+    if (!user) return 'U';
+    const first = user.firstName ? user.firstName.charAt(0) : '';
+    const last = user.lastName ? user.lastName.charAt(0) : '';
+    const initials = (first + last).toUpperCase();
+    if (initials) return initials;
+    if (user.email) return user.email.charAt(0).toUpperCase();
+    return 'U';
+  }
 
   ngOnInit() {
     this.signalRService.startConnection();

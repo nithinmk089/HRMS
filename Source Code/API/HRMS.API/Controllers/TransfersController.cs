@@ -20,7 +20,7 @@ namespace HRMS.API.Controllers
         }
 
         [HttpPost]
-        [Authorize(Roles = "ADMIN,SYSADMIN")]
+        [Authorize(Roles = "ADMIN,SYSADMIN,HRADMIN")]
         public async Task<IActionResult> Create([FromBody] CreateEmployeeTransferRequest r)
         {
             r.CreatedBy = 1;
@@ -29,7 +29,7 @@ namespace HRMS.API.Controllers
         }
 
         [HttpPut("{id}/approve")]
-        [Authorize(Roles = "ADMIN,SYSADMIN")]
+        [Authorize(Roles = "ADMIN,SYSADMIN,HRADMIN")]
         public async Task<IActionResult> Approve(long id, [FromQuery] long tenantId)
         {
             var ok = await _transferRepository.ApproveAsync(id, tenantId, 1);
@@ -37,7 +37,7 @@ namespace HRMS.API.Controllers
         }
 
         [HttpPut("{id}/complete")]
-        [Authorize(Roles = "ADMIN,SYSADMIN")]
+        [Authorize(Roles = "ADMIN,SYSADMIN,HRADMIN")]
         public async Task<IActionResult> Complete(long id, [FromQuery] long tenantId)
         {
             var ok = await _transferRepository.CompleteAsync(id, tenantId, 1);

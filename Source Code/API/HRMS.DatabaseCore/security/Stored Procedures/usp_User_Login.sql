@@ -1,11 +1,18 @@
-﻿
-CREATE   PROCEDURE security.usp_User_Login
+
+SET ANSI_NULLS ON;
+GO
+SET QUOTED_IDENTIFIER ON;
+GO
+
+CREATE OR ALTER PROCEDURE security.usp_User_Login
     @Email VARCHAR(200),
     @IPAddress VARCHAR(50),
     @BrowserInfo VARCHAR(500)
 AS
 BEGIN
     SET NOCOUNT ON;
+    SET ANSI_NULLS ON;
+    SET QUOTED_IDENTIFIER ON;
     DECLARE @UserID BIGINT;
     DECLARE @TenantID BIGINT;
     DECLARE @IsLocked BIT;
@@ -41,13 +48,14 @@ BEGIN
         u.UserID,
         u.Email,
         u.UserName,
-        'Admin' AS FirstName,
-        'Operator' AS LastName,
+        ISNULL(NULLIF(e.FirstName, ''), ISNULL(NULLIF(u.UserName, ''), 'User')) AS FirstName,
+        ISNULL(e.LastName, '') AS LastName,
         1 AS OrganizationID,
         u.TenantID,
         u.PasswordHash,
         u.PasswordSalt
     FROM security.[User] u
+    LEFT JOIN hr.Employee e ON e.EmployeeID = u.EmployeeID AND e.IsDeleted = 0
     WHERE u.UserID = @UserID;
 
     -- Return roles

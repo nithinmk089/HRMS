@@ -25,7 +25,7 @@ namespace HRMS.UnitTests.Controllers
             // Arrange
             var userId = 1L;
             var tenantId = 1L;
-            var userDto = new ApplicationUserDto { UserID = userId, UserName = "testuser", Email = "test@hrms.com", IsLocked = false };
+            var userDto = new ApplicationUserDto { UserId = userId, UserName = "testuser", Email = "test@hrms.com", IsLocked = false };
             _userRepoMock.Setup(repo => repo.GetByIdAsync(userId, tenantId)).ReturnsAsync(userDto);
 
             // Act

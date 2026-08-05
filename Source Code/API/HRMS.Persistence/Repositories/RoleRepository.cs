@@ -65,6 +65,13 @@ namespace HRMS.Persistence.Repositories
             return await multi.ReadAsync<ApplicationRoleDto>();
         }
 
+        public async Task<IEnumerable<long>> GetUserIdsForRoleAsync(long roleId, long tenantId)
+        {
+            using var conn = new SqlConnection(_connectionString);
+            const string sql = "SELECT UserID FROM security.vw_UserRoles WHERE RoleID = @RoleID AND TenantID = @TenantID;";
+            return await conn.QueryAsync<long>(sql, new { RoleID = roleId, TenantID = tenantId });
+        }
+
         public async Task<bool> AssignToUserAsync(long tenantId, long userId, long roleId, long createdBy)
         {
             using var conn = new SqlConnection(_connectionString);

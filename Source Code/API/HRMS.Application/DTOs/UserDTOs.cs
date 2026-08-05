@@ -1,4 +1,5 @@
 using System;
+using System.Text.Json.Serialization;
 
 namespace HRMS.Application.DTOs
 {
@@ -13,11 +14,6 @@ namespace HRMS.Application.DTOs
         public bool IsLocked { get; set; }
         public DateTime? LastLoginDate { get; set; }
         public long VersionNo { get; set; }
-
-        // Backward-compatibility aliases for Dapper/Serialization
-        public long UserID { get => UserId; set => UserId = value; }
-        public long TenantID { get => TenantId; set => TenantId = value; }
-        public long? EmployeeID { get => EmployeeId; set => EmployeeId = value; }
     }
 
     public class CreateUserRequest

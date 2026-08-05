@@ -14,25 +14,28 @@
             </li>
             
             <!-- System Administration Section -->
+            <ng-container *appPermission="['CONF_MANAGE', 'TENANT_MANAGE']">
             <li class="sidebar-section-label">Platform Control</li>
             
-            <li>
+            <li *appPermission="'CONF_MANAGE'">
                 <a routerLink="/data-import" routerLinkActive="active" class="nav-link-item">
                     <i class="bi bi-file-earmark-spreadsheet-fill"></i> Data Import Hub
                 </a>
             </li>
-            <li>
+            <li *appPermission="'TENANT_MANAGE'">
                 <a routerLink="/tenants" routerLinkActive="active" class="nav-link-item">
                     <i class="bi bi-globe"></i> Tenants Registry
                 </a>
             </li>
-            <li>
+            <li *appPermission="'CONF_MANAGE'">
                 <a routerLink="/configurations" routerLinkActive="active" class="nav-link-item">
                     <i class="bi bi-sliders"></i> Configurations
                 </a>
             </li>
+            </ng-container>
 
             <!-- Organization Structure Section -->
+            <ng-container *appPermission="'ORG_MANAGE'">
             <li class="sidebar-section-label">Organization Design</li>
             
             <li>
@@ -65,36 +68,37 @@
                     <i class="bi bi-cash-stack"></i> Cost Centers
                 </a>
             </li>
+            </ng-container>
 
             <!-- Core Human Resources Section -->
             <li class="sidebar-section-label">Core HR Lifecycle</li>
             
-            <li>
+            <li *appPermission="'EMP_MANAGE'">
                 <a routerLink="/hr/employees" routerLinkActive="active" class="nav-link-item">
                     <i class="bi bi-people-fill"></i> Employee Master
                 </a>
             </li>
-            <li>
+            <li *appPermission="'CONF_MANAGE'">
                 <a routerLink="/data-import" routerLinkActive="active" class="nav-link-item">
                     <i class="bi bi-file-earmark-spreadsheet-fill"></i> Data Import Hub
                 </a>
             </li>
-            <li>
+            <li *appPermission="'TRANSFER_MANAGE'">
                 <a routerLink="/hr/transfers" routerLinkActive="active" class="nav-link-item">
                     <i class="bi bi-arrow-left-right"></i> Transfers Workflow
                 </a>
             </li>
-            <li>
+            <li *appPermission="'PROMOTION_MANAGE'">
                 <a routerLink="/hr/promotions" routerLinkActive="active" class="nav-link-item">
                     <i class="bi bi-graph-up"></i> Promotions Workflow
                 </a>
             </li>
-            <li>
+            <li *appPermission="'ONBOARD_MANAGE'">
                 <a routerLink="/onboarding" routerLinkActive="active" class="nav-link-item">
                     <i class="bi bi-person-plus-fill"></i> Onboarding Dashboard
                 </a>
             </li>
-            <li>
+            <li *appPermission="'OFFBOARD_MANAGE'">
                 <a routerLink="/offboarding" routerLinkActive="active" class="nav-link-item">
                     <i class="bi bi-box-arrow-right"></i> Offboarding Dashboard
                 </a>
@@ -108,22 +112,22 @@
             <!-- Time & Attendance Section -->
             <li class="sidebar-section-label">Time & Attendance</li>
             
-            <li>
+            <li *appPermission="'ATT_MANAGE'">
                 <a routerLink="/time/shifts" routerLinkActive="active" class="nav-link-item">
                     <i class="bi bi-clock-fill"></i> Shift Rotations
                 </a>
             </li>
-            <li>
+            <li *appPermission="'ATT_VIEW'">
                 <a routerLink="/time/attendance" routerLinkActive="active" class="nav-link-item">
                     <i class="bi bi-calendar-check-fill"></i> Daily Logs
                 </a>
             </li>
-            <li>
+            <li *appPermission="'LEAVE_MANAGE'">
                 <a routerLink="/time/leaves" routerLinkActive="active" class="nav-link-item">
                     <i class="bi bi-airplane-fill"></i> Leave Manager
                 </a>
             </li>
-            <li>
+            <li *appPermission="'OVERTIME_MANAGE'">
                 <a routerLink="/time/overtime" routerLinkActive="active" class="nav-link-item">
                     <i class="bi bi-alarm-fill"></i> Overtime Queue
                 </a>
@@ -135,25 +139,28 @@
             </li>
 
             <!-- Access Security Section -->
+            <ng-container *appPermission="['USER_MANAGE', 'ROLE_MANAGE', 'PERM_MANAGE']">
             <li class="sidebar-section-label">Security & Identity</li>
             
-            <li>
+            <li *appPermission="'USER_MANAGE'">
                 <a routerLink="/users" routerLinkActive="active" class="nav-link-item">
                     <i class="bi bi-people-fill"></i> User Accounts
                 </a>
             </li>
-            <li>
+            <li *appPermission="'ROLE_MANAGE'">
                 <a routerLink="/roles" routerLinkActive="active" class="nav-link-item">
                     <i class="bi bi-shield-lock-fill"></i> Security Roles
                 </a>
             </li>
-            <li>
+            <li *appPermission="'PERM_MANAGE'">
                 <a routerLink="/permissions" routerLinkActive="active" class="nav-link-item">
                     <i class="bi bi-grid-3x3-gap-fill"></i> Access Matrix
                 </a>
             </li>
+            </ng-container>
 
             <!-- Communications Section -->
+            <ng-container *appPermission="'NOTIF_MANAGE'">
             <li class="sidebar-section-label">Communications Control</li>
             
             <li>
@@ -176,54 +183,60 @@
                     <i class="bi bi-bell-fill"></i> Alert Preferences
                 </a>
             </li>
+            </ng-container>
 
             <!-- Payroll & Tax Section -->
+            <ng-container *appPermission="['PAYROLL_MANAGE', 'PAYROLL_VIEW', 'TAX_MANAGE']">
             <li class="sidebar-section-label">Payroll & Tax</li>
-            <li>
+            <li *appPermission="'PAYROLL_MANAGE'">
                 <a routerLink="/payroll/dashboard" routerLinkActive="active" class="nav-link-item">
                     <i class="bi bi-currency-dollar"></i> Payroll Dashboard
                 </a>
             </li>
-            <li>
+            <li *appPermission="'PAYROLL_MANAGE'">
                 <a routerLink="/payroll/runs" routerLinkActive="active" class="nav-link-item">
                     <i class="bi bi-play-circle-fill"></i> Process Payroll Run
                 </a>
             </li>
-            <li>
+            <li *appPermission="'TAX_MANAGE'">
                 <a routerLink="/payroll/tax" routerLinkActive="active" class="nav-link-item">
                     <i class="bi bi-percent"></i> Tax Regimes & Slabs
                 </a>
             </li>
-            <li>
+            <li *appPermission="['PAYROLL_MANAGE', 'PAYROLL_VIEW']">
                 <a routerLink="/payroll/payslips" routerLinkActive="active" class="nav-link-item">
                     <i class="bi bi-file-earmark-pdf-fill"></i> Employee Payslips
                 </a>
             </li>
+            </ng-container>
 
             <!-- Performance Management Section -->
+            <ng-container *appPermission="['PERF_MANAGE', 'PERF_VIEW', 'GOAL_MANAGE']">
             <li class="sidebar-section-label">Performance (PMS)</li>
-            <li>
+            <li *appPermission="'PERF_VIEW'">
                 <a routerLink="/performance/dashboard" routerLinkActive="active" class="nav-link-item">
                     <i class="bi bi-speedometer2"></i> PMS Dashboard
                 </a>
             </li>
-            <li>
+            <li *appPermission="['GOAL_MANAGE', 'PERF_VIEW']">
                 <a routerLink="/performance/goals" routerLinkActive="active" class="nav-link-item">
                     <i class="bi bi-target"></i> Goal Management
                 </a>
             </li>
-            <li>
+            <li *appPermission="'PERF_VIEW'">
                 <a routerLink="/performance/feedback" routerLinkActive="active" class="nav-link-item">
                     <i class="bi bi-chat-left-text-fill"></i> 360 Feedback
                 </a>
             </li>
-            <li>
+            <li *appPermission="'PERF_VIEW'">
                 <a routerLink="/performance/self-assessments" routerLinkActive="active" class="nav-link-item">
                     <i class="bi bi-card-checklist"></i> Appraisals & Self-Assmt
                 </a>
             </li>
+            </ng-container>
 
             <!-- Learning & Compliance Section -->
+            <ng-container *appPermission="['LMS_MANAGE', 'LMS_VIEW']">
             <li class="sidebar-section-label">Learning & Compliance</li>
             <li>
                 <a routerLink="/learning/dashboard" routerLinkActive="active" class="nav-link-item">
@@ -245,6 +258,7 @@
                     <i class="bi bi-shield-check"></i> Compliance Programs
                 </a>
             </li>
+            </ng-container>
         </ul>
     </aside>
 
@@ -299,11 +313,11 @@
                 </div>
 
                 <div class="d-flex flex-column align-items-end">
-                  <span class="text-secondary fw-semibold fs-8">Admin Operator</span>
-                  <span class="text-muted fs-9">SYSADMIN</span>
+                  <span class="text-secondary fw-semibold fs-8">{{ currentUser?.firstName }} {{ currentUser?.lastName }}</span>
+                  <span class="text-muted fs-9">{{ userRoles }}</span>
                 </div>
                 <div class="user-avatar">
-                    OP
+                    {{ userInitials }}
                 </div>
                 <!-- Sign Out -->
                 <button (click)="logout()" class="btn btn-outline btn-sm py-1 px-2 border-0" title="Logout Session" style="height: 32px; width: 32px;">

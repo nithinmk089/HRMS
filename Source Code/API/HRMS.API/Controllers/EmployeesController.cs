@@ -45,7 +45,7 @@ namespace HRMS.API.Controllers
         // --- Core Employee CRUD ---
 
         [HttpPost]
-        [Authorize(Roles = "ADMIN,SYSADMIN")]
+        [Authorize(Roles = "ADMIN,SYSADMIN,HRADMIN")]
         public async Task<IActionResult> Create([FromBody] CreateEmployeeRequest r)
         {
             r.CreatedBy = 1;
@@ -54,7 +54,7 @@ namespace HRMS.API.Controllers
         }
 
         [HttpPut("{id}")]
-        [Authorize(Roles = "ADMIN,SYSADMIN")]
+        [Authorize(Roles = "ADMIN,SYSADMIN,HRADMIN")]
         public async Task<IActionResult> Update(long id, [FromBody] UpdateEmployeeRequest r)
         {
             r.EmployeeId = id;
@@ -64,7 +64,7 @@ namespace HRMS.API.Controllers
         }
 
         [HttpDelete("{id}")]
-        [Authorize(Roles = "ADMIN,SYSADMIN")]
+        [Authorize(Roles = "ADMIN,SYSADMIN,HRADMIN")]
         public async Task<IActionResult> Delete(long id, [FromQuery] long tenantId)
         {
             var ok = await _employeeRepository.DeleteAsync(id, tenantId, 1);
@@ -89,7 +89,7 @@ namespace HRMS.API.Controllers
         // --- Lifecycle Actions ---
 
         [HttpPut("{id}/activate")]
-        [Authorize(Roles = "ADMIN,SYSADMIN")]
+        [Authorize(Roles = "ADMIN,SYSADMIN,HRADMIN")]
         public async Task<IActionResult> Activate(long id, [FromQuery] long tenantId)
         {
             var ok = await _employeeRepository.ActivateAsync(id, tenantId, 1);
@@ -97,7 +97,7 @@ namespace HRMS.API.Controllers
         }
 
         [HttpPut("{id}/suspend")]
-        [Authorize(Roles = "ADMIN,SYSADMIN")]
+        [Authorize(Roles = "ADMIN,SYSADMIN,HRADMIN")]
         public async Task<IActionResult> Suspend(long id, [FromQuery] long tenantId, [FromQuery] string? reason)
         {
             var ok = await _employeeRepository.SuspendAsync(id, tenantId, reason, 1);
@@ -105,7 +105,7 @@ namespace HRMS.API.Controllers
         }
 
         [HttpPut("{id}/terminate")]
-        [Authorize(Roles = "ADMIN,SYSADMIN")]
+        [Authorize(Roles = "ADMIN,SYSADMIN,HRADMIN")]
         public async Task<IActionResult> Terminate(long id, [FromQuery] long tenantId, [FromQuery] string? reason)
         {
             var ok = await _employeeRepository.TerminateAsync(id, tenantId, reason, 1);
@@ -113,7 +113,7 @@ namespace HRMS.API.Controllers
         }
 
         [HttpPut("{id}/rehire")]
-        [Authorize(Roles = "ADMIN,SYSADMIN")]
+        [Authorize(Roles = "ADMIN,SYSADMIN,HRADMIN")]
         public async Task<IActionResult> Rehire(long id, [FromQuery] long tenantId, [FromQuery] string? reason)
         {
             var ok = await _employeeRepository.RehireAsync(id, tenantId, reason, 1);
@@ -144,7 +144,7 @@ namespace HRMS.API.Controllers
         }
 
         [HttpPost("{employeeId}/addresses")]
-        [Authorize(Roles = "ADMIN,SYSADMIN")]
+        [Authorize(Roles = "ADMIN,SYSADMIN,HRADMIN")]
         public async Task<IActionResult> CreateAddress(long employeeId, [FromBody] CreateEmployeeAddressRequest r)
         {
             r.EmployeeId = employeeId;
@@ -154,7 +154,7 @@ namespace HRMS.API.Controllers
         }
 
         [HttpPut("{employeeId}/addresses/{addressId}")]
-        [Authorize(Roles = "ADMIN,SYSADMIN")]
+        [Authorize(Roles = "ADMIN,SYSADMIN,HRADMIN")]
         public async Task<IActionResult> UpdateAddress(long employeeId, long addressId, [FromBody] UpdateEmployeeAddressRequest r)
         {
             r.EmployeeAddressId = addressId;
@@ -164,7 +164,7 @@ namespace HRMS.API.Controllers
         }
 
         [HttpDelete("{employeeId}/addresses/{addressId}")]
-        [Authorize(Roles = "ADMIN,SYSADMIN")]
+        [Authorize(Roles = "ADMIN,SYSADMIN,HRADMIN")]
         public async Task<IActionResult> DeleteAddress(long employeeId, long addressId, [FromQuery] long tenantId)
         {
             var ok = await _addressRepository.DeleteAsync(addressId, tenantId, 1);
@@ -181,7 +181,7 @@ namespace HRMS.API.Controllers
         }
 
         [HttpPost("{employeeId}/contacts")]
-        [Authorize(Roles = "ADMIN,SYSADMIN")]
+        [Authorize(Roles = "ADMIN,SYSADMIN,HRADMIN")]
         public async Task<IActionResult> CreateContact(long employeeId, [FromBody] CreateEmployeeContactRequest r)
         {
             r.EmployeeId = employeeId;
@@ -191,7 +191,7 @@ namespace HRMS.API.Controllers
         }
 
         [HttpPut("{employeeId}/contacts/{contactId}")]
-        [Authorize(Roles = "ADMIN,SYSADMIN")]
+        [Authorize(Roles = "ADMIN,SYSADMIN,HRADMIN")]
         public async Task<IActionResult> UpdateContact(long employeeId, long contactId, [FromBody] UpdateEmployeeContactRequest r)
         {
             r.EmployeeContactId = contactId;
@@ -201,7 +201,7 @@ namespace HRMS.API.Controllers
         }
 
         [HttpDelete("{employeeId}/contacts/{contactId}")]
-        [Authorize(Roles = "ADMIN,SYSADMIN")]
+        [Authorize(Roles = "ADMIN,SYSADMIN,HRADMIN")]
         public async Task<IActionResult> DeleteContact(long employeeId, long contactId, [FromQuery] long tenantId)
         {
             var ok = await _contactRepository.DeleteAsync(contactId, tenantId, 1);
@@ -218,7 +218,7 @@ namespace HRMS.API.Controllers
         }
 
         [HttpPost("{employeeId}/emergency-contacts")]
-        [Authorize(Roles = "ADMIN,SYSADMIN")]
+        [Authorize(Roles = "ADMIN,SYSADMIN,HRADMIN")]
         public async Task<IActionResult> CreateEmergencyContact(long employeeId, [FromBody] CreateEmployeeEmergencyContactRequest r)
         {
             r.EmployeeId = employeeId;
@@ -228,7 +228,7 @@ namespace HRMS.API.Controllers
         }
 
         [HttpPut("{employeeId}/emergency-contacts/{contactId}")]
-        [Authorize(Roles = "ADMIN,SYSADMIN")]
+        [Authorize(Roles = "ADMIN,SYSADMIN,HRADMIN")]
         public async Task<IActionResult> UpdateEmergencyContact(long employeeId, long contactId, [FromBody] UpdateEmployeeEmergencyContactRequest r)
         {
             r.EmployeeEmergencyContactId = contactId;
@@ -238,7 +238,7 @@ namespace HRMS.API.Controllers
         }
 
         [HttpDelete("{employeeId}/emergency-contacts/{contactId}")]
-        [Authorize(Roles = "ADMIN,SYSADMIN")]
+        [Authorize(Roles = "ADMIN,SYSADMIN,HRADMIN")]
         public async Task<IActionResult> DeleteEmergencyContact(long employeeId, long contactId, [FromQuery] long tenantId)
         {
             var ok = await _emergencyContactRepository.DeleteAsync(contactId, tenantId, 1);
@@ -255,7 +255,7 @@ namespace HRMS.API.Controllers
         }
 
         [HttpPost("{employeeId}/qualifications")]
-        [Authorize(Roles = "ADMIN,SYSADMIN")]
+        [Authorize(Roles = "ADMIN,SYSADMIN,HRADMIN")]
         public async Task<IActionResult> CreateQualification(long employeeId, [FromBody] CreateEmployeeQualificationRequest r)
         {
             r.EmployeeId = employeeId;
@@ -265,7 +265,7 @@ namespace HRMS.API.Controllers
         }
 
         [HttpPut("{employeeId}/qualifications/{qualificationId}")]
-        [Authorize(Roles = "ADMIN,SYSADMIN")]
+        [Authorize(Roles = "ADMIN,SYSADMIN,HRADMIN")]
         public async Task<IActionResult> UpdateQualification(long employeeId, long qualificationId, [FromBody] UpdateEmployeeQualificationRequest r)
         {
             r.EmployeeQualificationId = qualificationId;
@@ -275,7 +275,7 @@ namespace HRMS.API.Controllers
         }
 
         [HttpDelete("{employeeId}/qualifications/{qualificationId}")]
-        [Authorize(Roles = "ADMIN,SYSADMIN")]
+        [Authorize(Roles = "ADMIN,SYSADMIN,HRADMIN")]
         public async Task<IActionResult> DeleteQualification(long employeeId, long qualificationId, [FromQuery] long tenantId)
         {
             var ok = await _qualificationRepository.DeleteAsync(qualificationId, tenantId, 1);
@@ -292,7 +292,7 @@ namespace HRMS.API.Controllers
         }
 
         [HttpPost("{employeeId}/certifications")]
-        [Authorize(Roles = "ADMIN,SYSADMIN")]
+        [Authorize(Roles = "ADMIN,SYSADMIN,HRADMIN")]
         public async Task<IActionResult> CreateCertification(long employeeId, [FromBody] CreateEmployeeCertificationRequest r)
         {
             r.EmployeeId = employeeId;
@@ -302,7 +302,7 @@ namespace HRMS.API.Controllers
         }
 
         [HttpPut("{employeeId}/certifications/{certificationId}")]
-        [Authorize(Roles = "ADMIN,SYSADMIN")]
+        [Authorize(Roles = "ADMIN,SYSADMIN,HRADMIN")]
         public async Task<IActionResult> UpdateCertification(long employeeId, long certificationId, [FromBody] UpdateEmployeeCertificationRequest r)
         {
             r.EmployeeCertificationId = certificationId;
@@ -312,7 +312,7 @@ namespace HRMS.API.Controllers
         }
 
         [HttpDelete("{employeeId}/certifications/{certificationId}")]
-        [Authorize(Roles = "ADMIN,SYSADMIN")]
+        [Authorize(Roles = "ADMIN,SYSADMIN,HRADMIN")]
         public async Task<IActionResult> DeleteCertification(long employeeId, long certificationId, [FromQuery] long tenantId)
         {
             var ok = await _certificationRepository.DeleteAsync(certificationId, tenantId, 1);
@@ -347,7 +347,7 @@ namespace HRMS.API.Controllers
         }
 
         [HttpDelete("{employeeId}/documents/{docId}")]
-        [Authorize(Roles = "ADMIN,SYSADMIN")]
+        [Authorize(Roles = "ADMIN,SYSADMIN,HRADMIN")]
         public async Task<IActionResult> DeleteDocument(long employeeId, long docId, [FromQuery] long tenantId)
         {
             var ok = await _documentRepository.DeleteAsync(docId, tenantId, 1);
@@ -362,7 +362,7 @@ namespace HRMS.API.Controllers
         }
 
         [HttpPut("{employeeId}/documents/{docId}/versions/{versionNumber}/restore")]
-        [Authorize(Roles = "ADMIN,SYSADMIN")]
+        [Authorize(Roles = "ADMIN,SYSADMIN,HRADMIN")]
         public async Task<IActionResult> RestoreDocumentVersion(long employeeId, long docId, int versionNumber, [FromQuery] long tenantId)
         {
             var ok = await _documentRepository.RestoreVersionAsync(docId, tenantId, versionNumber, 1);
@@ -379,7 +379,7 @@ namespace HRMS.API.Controllers
         }
 
         [HttpPost("{employeeId}/managers")]
-        [Authorize(Roles = "ADMIN,SYSADMIN")]
+        [Authorize(Roles = "ADMIN,SYSADMIN,HRADMIN")]
         public async Task<IActionResult> AssignManager(long employeeId, [FromBody] AssignManagerRequest r)
         {
             r.EmployeeId = employeeId;
@@ -389,7 +389,7 @@ namespace HRMS.API.Controllers
         }
 
         [HttpDelete("{employeeId}/managers/{managerId}")]
-        [Authorize(Roles = "ADMIN,SYSADMIN")]
+        [Authorize(Roles = "ADMIN,SYSADMIN,HRADMIN")]
         public async Task<IActionResult> RemoveManager(long employeeId, long managerId, [FromQuery] long tenantId)
         {
             var ok = await _managerRepository.RemoveAsync(employeeId, managerId, tenantId, 1);
@@ -420,7 +420,7 @@ namespace HRMS.API.Controllers
         }
 
         [HttpGet("certification-expiry")]
-        [Authorize(Roles = "ADMIN,SYSADMIN")]
+        [Authorize(Roles = "ADMIN,SYSADMIN,HRADMIN")]
         public async Task<IActionResult> GetCertificationExpiry([FromQuery] long tenantId, [FromQuery] int withinDays = 30)
         {
             var expiryReport = await _certificationRepository.GetCertificationExpiryReportAsync(tenantId, withinDays);

@@ -42,7 +42,7 @@ namespace HRMS.IntegrationTests
         public async Task GetUserById_ReturnsSuccessWrapper_WhenExists()
         {
             // Arrange
-            var userDto = new ApplicationUserDto { UserID = 1L, UserName = "integrationuser", Email = "integration@hrms.com", IsLocked = false };
+            var userDto = new ApplicationUserDto { UserId = 1L, UserName = "integrationuser", Email = "integration@hrms.com", IsLocked = false };
             _userRepoMock.Setup(repo => repo.GetByIdAsync(1L, 1L)).ReturnsAsync(userDto);
             
             var client = _factory.CreateClient();

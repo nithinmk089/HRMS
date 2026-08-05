@@ -8,13 +8,14 @@ namespace HRMS.API.Controllers
 {
     [Route("api/v1/tenants")]
     [ApiController]
-    [Authorize(Roles = "SYSADMIN")]
+    [Authorize]
     public class TenantsController : ControllerBase
     {
         private readonly ITenantRepository _tenantRepository;
         public TenantsController(ITenantRepository tenantRepository) => _tenantRepository = tenantRepository;
 
         [HttpPost]
+        [Authorize(Roles = "SYSADMIN")]
         public async Task<IActionResult> Create([FromBody] CreateTenantRequest r)
         {
             r.CreatedBy = 1;
@@ -23,6 +24,7 @@ namespace HRMS.API.Controllers
         }
 
         [HttpPut("{id}")]
+        [Authorize(Roles = "SYSADMIN")]
         public async Task<IActionResult> Update(long id, [FromBody] UpdateTenantRequest r)
         {
             r.TenantId = id;
@@ -32,6 +34,7 @@ namespace HRMS.API.Controllers
         }
 
         [HttpDelete("{id}")]
+        [Authorize(Roles = "SYSADMIN")]
         public async Task<IActionResult> Delete(long id)
         {
             var ok = await _tenantRepository.DeleteAsync(id, 1);
@@ -54,6 +57,7 @@ namespace HRMS.API.Controllers
         }
 
         [HttpPost("{id}/activate")]
+        [Authorize(Roles = "SYSADMIN")]
         public async Task<IActionResult> Activate(long id)
         {
             var ok = await _tenantRepository.ActivateAsync(id, 1);
@@ -61,6 +65,7 @@ namespace HRMS.API.Controllers
         }
 
         [HttpPost("{id}/deactivate")]
+        [Authorize(Roles = "SYSADMIN")]
         public async Task<IActionResult> Deactivate(long id)
         {
             var ok = await _tenantRepository.DeactivateAsync(id, 1);

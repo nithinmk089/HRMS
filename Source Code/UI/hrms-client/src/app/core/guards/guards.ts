@@ -17,8 +17,9 @@ export const permissionGuard: CanActivateFn = (route, state) => {
   const requiredPermission = route.data['permission'] as string;
   if (!requiredPermission) return true;
 
-  const permissions = JSON.parse(localStorage.getItem('permissions') || '[]');
-  const hasPermission = permissions.includes(requiredPermission) || permissions.includes('USER_MANAGE') || permissions.includes('SYSADMIN');
+  const permissions: string[] = JSON.parse(localStorage.getItem('permissions') || '[]');
+  const isSysAdmin = permissions.includes('SYSADMIN');
+  const hasPermission = isSysAdmin || permissions.includes(requiredPermission);
   if (!hasPermission) {
     router.navigate(['/dashboard']);
     return false;

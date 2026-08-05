@@ -8,7 +8,7 @@ namespace HRMS.API.Controllers
 {
     [Route("api/v1/companies")]
     [ApiController]
-    [Authorize(Roles = "ADMIN,SYSADMIN")]
+    [Authorize(Roles = "ADMIN,SYSADMIN,HRADMIN")]
     public class CompaniesController : ControllerBase
     {
         private readonly ICompanyRepository _companyRepository;

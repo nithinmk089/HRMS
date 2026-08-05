@@ -15,7 +15,7 @@ namespace HRMS.API.Controllers
         public BusinessUnitsController(IBusinessUnitRepository businessUnitRepository) => _businessUnitRepository = businessUnitRepository;
 
         [HttpPost]
-        [Authorize(Roles = "ADMIN,SYSADMIN")]
+        [Authorize(Roles = "ADMIN,SYSADMIN,HRADMIN")]
         public async Task<IActionResult> Create([FromBody] CreateBusinessUnitRequest r)
         {
             r.CreatedBy = 1;
@@ -24,7 +24,7 @@ namespace HRMS.API.Controllers
         }
 
         [HttpPut("{id}")]
-        [Authorize(Roles = "ADMIN,SYSADMIN")]
+        [Authorize(Roles = "ADMIN,SYSADMIN,HRADMIN")]
         public async Task<IActionResult> Update(long id, [FromBody] UpdateBusinessUnitRequest r)
         {
             r.BusinessUnitId = id;
@@ -34,7 +34,7 @@ namespace HRMS.API.Controllers
         }
 
         [HttpDelete("{id}")]
-        [Authorize(Roles = "ADMIN,SYSADMIN")]
+        [Authorize(Roles = "ADMIN,SYSADMIN,HRADMIN")]
         public async Task<IActionResult> Delete(long id, [FromQuery] long tenantId)
         {
             var ok = await _businessUnitRepository.DeleteAsync(id, tenantId, 1);

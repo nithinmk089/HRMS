@@ -1,6 +1,7 @@
 import { Component, Input, Output, EventEmitter, OnChanges, SimpleChanges, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
+import { forkJoin } from 'rxjs';
 import { ApiService } from '../../../../core/services/api.service';
 import { Role, User } from '../../../../core/models/phase01.models';
 
@@ -37,18 +38,20 @@ export class RoleAssignmentModalComponent implements OnChanges {
     this.isLoading = true;
     this.userSearchText = '';
     
-    this.api.getUsers(this.role.tenantId).subscribe({
+    forkJoin({
+      users: this.api.getUsers(this.role.tenantId),
+      assignedUserIds: this.api.getRoleUserIds(this.role.roleId, this.role.tenantId)
+    }).subscribe({
       next: (res) => {
-        this.allUsers = res.data || [];
+        this.allUsers = res.users.data || [];
         this.filteredUsers = [...this.allUsers];
-        // Note: For now, in mock API, we can fetch role assignments or start with empty assignment array
-        this.assignedUserIds = [];
+        this.assignedUserIds = res.assignedUserIds.data || [];
         this.isLoading = false;
       },
       error: (err) => {
         console.error(err);
         this.isLoading = false;
-        this.notify.emit('Failed to load users.');
+        this.notify.emit('Failed to load users and role assignments.');
       }
     });
   }

@@ -45,6 +45,13 @@ namespace HRMS.API.Controllers
             return Ok(ApiResponse<System.Collections.Generic.IEnumerable<ApplicationRoleDto>>.SuccessResult(roles));
         }
 
+        [HttpGet("{id}/users")]
+        public async Task<IActionResult> GetRoleUsers(long id, [FromQuery] long tenantId)
+        {
+            var userIds = await _roleRepository.GetUserIdsForRoleAsync(id, tenantId);
+            return Ok(ApiResponse<System.Collections.Generic.IEnumerable<long>>.SuccessResult(userIds));
+        }
+
         [HttpPost("{id}/assign-user")]
         public async Task<IActionResult> AssignUser(long id, [FromQuery] long userId, [FromQuery] long tenantId)
         {

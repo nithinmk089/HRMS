@@ -304,9 +304,6 @@ namespace HRMS.Persistence.Repositories
             var permissions = (await multi.ReadAsync<string>()).ToList();
             var companies = (await multi.ReadAsync<CompanyDto>()).ToList();
 
-            if (!roles.Contains("SYSADMIN")) roles.Add("SYSADMIN");
-            if (!permissions.Contains("SYSADMIN")) permissions.Add("SYSADMIN");
-
             return new AuthResponse
             {
                 Success = true,

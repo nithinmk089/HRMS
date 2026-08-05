@@ -2,11 +2,12 @@ import { Component, OnInit, inject } from '@angular/core';
 import { RouterModule } from '@angular/router';
 import { ApiService } from '../../core/services/api.service';
 import { forkJoin } from 'rxjs';
+import { PermissionDirective } from '../../shared/directives/permission.directive';
 
 @Component({
   selector: 'app-dashboard-overview',
   standalone: true,
-  imports: [RouterModule],
+  imports: [RouterModule, PermissionDirective],
   templateUrl: './dashboard-overview.component.html',
   styleUrl: './dashboard-overview.component.scss'
 })
