@@ -13,6 +13,7 @@ export interface UserDto {
   lastName: string;
   organizationId: number;
   tenantId?: number;
+  employeeId?: number;
 }
 
 export interface CompanyDto {
@@ -31,6 +32,23 @@ export interface AuthResponse {
   roles?: string[];
   permissions?: string[];
   companies?: CompanyDto[];
+}
+
+export function parseJwt(token: string): any {
+  try {
+    const base64Url = token.split('.')[1];
+    if (!base64Url) return null;
+    const base64 = base64Url.replace(/-/g, '+').replace(/_/g, '/');
+    const jsonPayload = decodeURIComponent(
+      atob(base64)
+        .split('')
+        .map(c => '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2))
+        .join('')
+    );
+    return JSON.parse(jsonPayload);
+  } catch (e) {
+    return null;
+  }
 }
 
 @Injectable({
@@ -63,6 +81,60 @@ export class AuthService {
 
   public getToken(): string | null {
     return localStorage.getItem('accessToken');
+  }
+
+  public getDecodedToken(): any {
+    const token = this.getToken();
+    return token ? parseJwt(token) : null;
+  }
+
+  public isTokenExpired(): boolean {
+    const decoded = this.getDecodedToken();
+    if (!decoded || !decoded.exp) return true;
+    return Date.now() >= decoded.exp * 1000;
+  }
+
+  public getRolesFromToken(): string[] {
+    const decoded = this.getDecodedToken();
+    if (!decoded) return [];
+    const roles = decoded['http://schemas.microsoft.com/ws/2008/06/identity/claims/role'] || decoded['role'] || [];
+    return Array.isArray(roles) ? roles : [roles];
+  }
+
+  public getPermissionsFromToken(): string[] {
+    const decoded = this.getDecodedToken();
+    if (!decoded) return [];
+    const perms = decoded['permission'] || [];
+    return Array.isArray(perms) ? perms : [perms];
+  }
+
+  public hasPermission(requiredPermission: string): boolean {
+    const roles = this.getRolesFromToken();
+    if (roles.includes('SYSADMIN') || roles.includes('ADMIN')) return true;
+    const perms = this.getPermissionsFromToken();
+    return perms.includes(requiredPermission);
+  }
+
+  public hasRole(requiredRole: string): boolean {
+    const roles = this.getRolesFromToken();
+    return roles.includes('SYSADMIN') || roles.includes(requiredRole);
+  }
+
+  public getTenantId(): number {
+    const decoded = this.getDecodedToken();
+    if (decoded && decoded['tenantId']) {
+      return Number(decoded['tenantId']);
+    }
+    const storedTenant = localStorage.getItem('tenantId');
+    return storedTenant ? Number(storedTenant) : 1;
+  }
+
+  public getEmployeeId(): number | null {
+    const decoded = this.getDecodedToken();
+    if (decoded && decoded['employeeId']) {
+      return Number(decoded['employeeId']);
+    }
+    return this.currentUserValue?.employeeId ?? null;
   }
 
   checkSetupStatus(): Observable<ApiResponse<any>> {

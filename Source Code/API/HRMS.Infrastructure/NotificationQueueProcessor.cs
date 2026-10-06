@@ -67,12 +67,6 @@ namespace HRMS.Infrastructure
 
                 try
                 {
-                    // Simulated error check for testing failure scenarios
-                    if (notif.Recipient.Contains("fail", StringComparison.OrdinalIgnoreCase))
-                    {
-                        throw new Exception("Simulated connection timeout during delivery.");
-                    }
-
                     // Route based on channel
                     switch (notif.Channel?.Trim())
                     {
@@ -147,7 +141,7 @@ namespace HRMS.Infrastructure
                 else
                 {
                     int nextRetry = notif.RetryCount + 1;
-                    string nextStatus = nextRetry >= notif.MaxRetries ? "Failed" : "Failed";
+                    string nextStatus = nextRetry >= notif.MaxRetries ? "Failed" : "Retry";
 
                     DateTime nextRun = DateTime.UtcNow.AddSeconds(Math.Pow(2, nextRetry) * 10);
 

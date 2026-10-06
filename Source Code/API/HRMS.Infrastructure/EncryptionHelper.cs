@@ -7,11 +7,10 @@ namespace HRMS.Infrastructure
 {
     public static class EncryptionHelper
     {
-        // Must be exactly 32 bytes for AES-256
+        // 32-byte key for AES-256
         private static readonly byte[] Key = Encoding.UTF8.GetBytes("HRMSNotificationPayloadSecretKey"); 
-        // Must be exactly 16 bytes for AES block size
-        private static readonly byte[] Iv = Encoding.UTF8.GetBytes("HRMSNotifIV12345"); 
-
+        // Legacy 16-byte IV for backward compatibility with pre-existing records
+        private static readonly byte[] LegacyIv = Encoding.UTF8.GetBytes("HRMSNotifIV12345"); 
 
         public static string Encrypt(string plainText)
         {
@@ -19,17 +18,21 @@ namespace HRMS.Infrastructure
 
             using var aes = Aes.Create();
             aes.Key = Key;
-            aes.IV = Iv;
+            aes.GenerateIV(); // Cryptographically secure random 16-byte IV per encryption
+            var iv = aes.IV;
 
-            using var encryptor = aes.CreateEncryptor(aes.Key, aes.IV);
+            using var encryptor = aes.CreateEncryptor(aes.Key, iv);
             using var ms = new MemoryStream();
+            
+            // Prepend IV to ciphertext output
+            ms.Write(iv, 0, iv.Length);
+
             using (var cs = new CryptoStream(ms, encryptor, CryptoStreamMode.Write))
+            using (var sw = new StreamWriter(cs, Encoding.UTF8))
             {
-                using (var sw = new StreamWriter(cs))
-                {
-                    sw.Write(plainText);
-                }
+                sw.Write(plainText);
             }
+
             return Convert.ToBase64String(ms.ToArray());
         }
 
@@ -39,19 +42,41 @@ namespace HRMS.Infrastructure
 
             try
             {
-                using var aes = Aes.Create();
-                aes.Key = Key;
-                aes.IV = Iv;
+                byte[] allBytes = Convert.FromBase64String(cipherText);
+                if (allBytes.Length < 16) return cipherText;
 
-                using var decryptor = aes.CreateDecryptor(aes.Key, aes.IV);
-                using var ms = new MemoryStream(Convert.FromBase64String(cipherText));
-                using var cs = new CryptoStream(ms, decryptor, CryptoStreamMode.Read);
-                using var sr = new StreamReader(cs);
-                return sr.ReadToEnd();
+                // Try decrypting with prepended dynamic IV
+                try
+                {
+                    byte[] iv = new byte[16];
+                    Buffer.BlockCopy(allBytes, 0, iv, 0, 16);
+
+                    using var aes = Aes.Create();
+                    aes.Key = Key;
+                    aes.IV = iv;
+
+                    using var decryptor = aes.CreateDecryptor(aes.Key, aes.IV);
+                    using var ms = new MemoryStream(allBytes, 16, allBytes.Length - 16);
+                    using var cs = new CryptoStream(ms, decryptor, CryptoStreamMode.Read);
+                    using var sr = new StreamReader(cs, Encoding.UTF8);
+                    return sr.ReadToEnd();
+                }
+                catch
+                {
+                    // Fallback to legacy format with static LegacyIv
+                    using var aes = Aes.Create();
+                    aes.Key = Key;
+                    aes.IV = LegacyIv;
+
+                    using var decryptor = aes.CreateDecryptor(aes.Key, aes.IV);
+                    using var ms = new MemoryStream(allBytes);
+                    using var cs = new CryptoStream(ms, decryptor, CryptoStreamMode.Read);
+                    using var sr = new StreamReader(cs, Encoding.UTF8);
+                    return sr.ReadToEnd();
+                }
             }
             catch
             {
-                // Return plainText in case it was not encrypted
                 return cipherText;
             }
         }

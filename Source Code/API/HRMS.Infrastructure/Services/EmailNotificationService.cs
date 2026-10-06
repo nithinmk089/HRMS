@@ -26,7 +26,8 @@ namespace HRMS.Infrastructure.Services
             var smtpHost = await _configRepo.GetValueAsync(tenantId, "Email_SmtpHost") ?? "smtp.mailtrap.io";
             var smtpPortStr = await _configRepo.GetValueAsync(tenantId, "Email_SmtpPort") ?? "587";
             var smtpUsername = await _configRepo.GetValueAsync(tenantId, "Email_SmtpUsername") ?? "";
-            var smtpPassword = await _configRepo.GetValueAsync(tenantId, "Email_SmtpPassword") ?? "";
+            var rawPassword = await _configRepo.GetValueAsync(tenantId, "Email_SmtpPassword") ?? "";
+            var smtpPassword = EncryptionHelper.Decrypt(rawPassword);
             var enableSslStr = await _configRepo.GetValueAsync(tenantId, "Email_EnableSsl") ?? "True";
             var fromAddress = await _configRepo.GetValueAsync(tenantId, "Email_FromAddress") ?? "noreply@hrms.com";
             var fromName = await _configRepo.GetValueAsync(tenantId, "Email_FromName") ?? "Enterprise HRMS System";
@@ -56,7 +57,8 @@ namespace HRMS.Infrastructure.Services
             await _configRepo.SetValueAsync(tenantId, "Email_SmtpHost", settings.SmtpHost ?? "smtp.mailtrap.io", "String", modifiedBy);
             await _configRepo.SetValueAsync(tenantId, "Email_SmtpPort", settings.SmtpPort.ToString(), "Int", modifiedBy);
             await _configRepo.SetValueAsync(tenantId, "Email_SmtpUsername", settings.SmtpUsername ?? "", "String", modifiedBy);
-            await _configRepo.SetValueAsync(tenantId, "Email_SmtpPassword", settings.SmtpPassword ?? "", "String", modifiedBy);
+            var encryptedPassword = string.IsNullOrEmpty(settings.SmtpPassword) ? "" : EncryptionHelper.Encrypt(settings.SmtpPassword);
+            await _configRepo.SetValueAsync(tenantId, "Email_SmtpPassword", encryptedPassword, "String", modifiedBy);
             await _configRepo.SetValueAsync(tenantId, "Email_EnableSsl", settings.EnableSsl.ToString(), "Boolean", modifiedBy);
             await _configRepo.SetValueAsync(tenantId, "Email_FromAddress", settings.FromAddress ?? "noreply@hrms.com", "String", modifiedBy);
             await _configRepo.SetValueAsync(tenantId, "Email_FromName", settings.FromName ?? "Enterprise HRMS System", "String", modifiedBy);
@@ -79,7 +81,7 @@ namespace HRMS.Infrastructure.Services
             try
             {
                 // Attempt Smtp dispatch if credentials/host present
-                if (!string.IsNullOrWhiteSpace(settings.SmtpHost) && !settings.SmtpHost.Contains("mailtrap.io") && !string.IsNullOrWhiteSpace(settings.SmtpUsername))
+                if (!string.IsNullOrWhiteSpace(settings.SmtpHost) && !string.IsNullOrWhiteSpace(settings.SmtpUsername))
                 {
                     using var mailMsg = new MailMessage
                     {

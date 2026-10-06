@@ -2,6 +2,7 @@ import { Component, OnInit, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule, ReactiveFormsModule, FormBuilder, FormGroup, Validators } from '@angular/forms';
 import { ApiService } from '../../core/services/api.service';
+import { AuthService } from '../../core/services/auth.service';
 import {
   EmployeeDto, EmployeeEmployment, EmployeeAddress, EmployeeContact,
   EmployeeEmergencyContact, EmployeeQualification, EmployeeCertification,
@@ -17,11 +18,12 @@ import {
 })
 export class SelfServiceProfileComponent implements OnInit {
   private api = inject(ApiService);
+  private auth = inject(AuthService);
   private fb = inject(FormBuilder);
 
-  // Simulated logged-in employee (SYSADMIN/Nithin is employee ID 1, tenant ID 1)
-  employeeId = 1;
-  tenantId = 1;
+  // Authenticated employee context
+  employeeId = this.auth.getEmployeeId() || 1;
+  tenantId = this.auth.getTenantId() || 1;
 
   employee: EmployeeDto | null = null;
   employment: EmployeeEmployment | null = null;

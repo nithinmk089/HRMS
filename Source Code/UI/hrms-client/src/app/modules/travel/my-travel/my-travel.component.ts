@@ -1,6 +1,7 @@
 import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { ApiService } from '../../../core/services/api.service';
+import { AuthService } from '../../../core/services/auth.service';
 
 @Component({
   selector: 'app-my-travel',
@@ -199,22 +200,26 @@ export class MyTravelComponent implements OnInit {
   myRequests: any[] = [];
   myAdvances: any[] = [];
   myClaims: any[] = [];
-  employeeId = 5; // Simulating employee self-service login context
+  employeeId = 1;
+  tenantId = 1;
 
-  constructor(private api: ApiService) {}
+  constructor(private api: ApiService, private auth: AuthService) {
+    this.employeeId = this.auth.getEmployeeId() || 1;
+    this.tenantId = this.auth.getTenantId() || 1;
+  }
 
   ngOnInit(): void {
     this.loadMyData();
   }
 
   loadMyData(): void {
-    this.api.getTravelRequests(1, this.employeeId).subscribe(res => {
+    this.api.getTravelRequests(this.tenantId, this.employeeId).subscribe(res => {
       this.myRequests = res.data || [];
     });
-    this.api.getTravelAdvances(1, this.employeeId).subscribe(res => {
+    this.api.getTravelAdvances(this.tenantId, this.employeeId).subscribe(res => {
       this.myAdvances = res.data || [];
     });
-    this.api.getExpenseClaims(1, this.employeeId).subscribe(res => {
+    this.api.getExpenseClaims(this.tenantId, this.employeeId).subscribe(res => {
       this.myClaims = res.data || [];
     });
   }

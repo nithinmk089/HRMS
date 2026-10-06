@@ -10,7 +10,7 @@ namespace HRMS.API.Controllers
     [Route("api/v1/leaves")]
     [ApiController]
     [Authorize]
-    public class LeavesController : ControllerBase
+    public class LeavesController : BaseApiController
     {
         private readonly ILeaveRepository _leaveRepository;
 
@@ -23,7 +23,8 @@ namespace HRMS.API.Controllers
         [Authorize(Roles = "ADMIN,SYSADMIN")]
         public async Task<IActionResult> CreateLeaveType([FromBody] CreateLeaveTypeRequest r)
         {
-            r.CreatedBy = 1;
+            r.CreatedBy = CurrentUserId;
+            if (r.TenantId <= 0) r.TenantId = CurrentTenantId;
             var id = await _leaveRepository.CreateLeaveTypeAsync(r);
             return Ok(ApiResponse<long>.SuccessResult(id, "Leave type created successfully."));
         }
@@ -31,7 +32,7 @@ namespace HRMS.API.Controllers
         [HttpGet("types")]
         public async Task<IActionResult> SearchLeaveTypes([FromQuery] long tenantId, [FromQuery] string? searchTerm)
         {
-            var types = await _leaveRepository.SearchLeaveTypesAsync(tenantId, searchTerm);
+            var types = await _leaveRepository.SearchLeaveTypesAsync(tenantId > 0 ? tenantId : CurrentTenantId, searchTerm);
             return Ok(ApiResponse<IEnumerable<LeaveTypeDto>>.SuccessResult(types));
         }
 
@@ -39,7 +40,8 @@ namespace HRMS.API.Controllers
         [Authorize(Roles = "ADMIN,SYSADMIN")]
         public async Task<IActionResult> CreateLeavePolicy([FromBody] CreateLeavePolicyRequest r)
         {
-            r.CreatedBy = 1;
+            r.CreatedBy = CurrentUserId;
+            if (r.TenantId <= 0) r.TenantId = CurrentTenantId;
             var id = await _leaveRepository.CreateLeavePolicyAsync(r);
             return Ok(ApiResponse<long>.SuccessResult(id, "Leave policy created successfully."));
         }
@@ -47,14 +49,27 @@ namespace HRMS.API.Controllers
         [HttpGet("balances/{employeeId}")]
         public async Task<IActionResult> GetBalances(long employeeId, [FromQuery] long tenantId, [FromQuery] long? leaveTypeId)
         {
-            var balances = await _leaveRepository.GetBalancesAsync(tenantId, employeeId, leaveTypeId);
+            var resolvedTenantId = tenantId > 0 ? tenantId : CurrentTenantId;
+            var targetEmpId = employeeId;
+            if (!IsAdmin && !HasRole("MANAGER") && CurrentEmployeeId.HasValue)
+            {
+                targetEmpId = CurrentEmployeeId.Value;
+            }
+
+            var balances = await _leaveRepository.GetBalancesAsync(resolvedTenantId, targetEmpId, leaveTypeId);
             return Ok(ApiResponse<IEnumerable<LeaveBalanceDto>>.SuccessResult(balances));
         }
 
         [HttpPost("requests")]
         public async Task<IActionResult> CreateLeaveRequest([FromBody] CreateLeaveRequestRequest r)
         {
-            r.CreatedBy = 1;
+            r.CreatedBy = CurrentUserId;
+            if (r.TenantId <= 0) r.TenantId = CurrentTenantId;
+            if (!IsAdmin && CurrentEmployeeId.HasValue)
+            {
+                r.EmployeeId = CurrentEmployeeId.Value;
+            }
+
             var id = await _leaveRepository.CreateLeaveRequestAsync(r);
             return Ok(ApiResponse<long>.SuccessResult(id, "Leave request submitted successfully."));
         }
@@ -62,7 +77,14 @@ namespace HRMS.API.Controllers
         [HttpGet("requests")]
         public async Task<IActionResult> SearchLeaveRequests([FromQuery] long tenantId, [FromQuery] long? employeeId, [FromQuery] string? status)
         {
-            var requests = await _leaveRepository.SearchLeaveRequestsAsync(tenantId, employeeId, status);
+            var resolvedTenantId = tenantId > 0 ? tenantId : CurrentTenantId;
+            var targetEmpId = employeeId;
+            if (!IsAdmin && !HasRole("MANAGER") && CurrentEmployeeId.HasValue)
+            {
+                targetEmpId = CurrentEmployeeId.Value;
+            }
+
+            var requests = await _leaveRepository.SearchLeaveRequestsAsync(resolvedTenantId, targetEmpId, status);
             return Ok(ApiResponse<IEnumerable<LeaveRequestDto>>.SuccessResult(requests));
         }
 
@@ -70,7 +92,7 @@ namespace HRMS.API.Controllers
         [Authorize(Roles = "ADMIN,SYSADMIN,MANAGER")]
         public async Task<IActionResult> ApproveLeaveRequest(long id, [FromQuery] long tenantId, [FromQuery] string? remarks)
         {
-            var ok = await _leaveRepository.ApproveLeaveRequestAsync(id, tenantId, 1, remarks);
+            var ok = await _leaveRepository.ApproveLeaveRequestAsync(id, tenantId > 0 ? tenantId : CurrentTenantId, CurrentUserId, remarks);
             return Ok(ApiResponse<bool>.SuccessResult(ok, "Leave request approved."));
         }
 
@@ -78,21 +100,27 @@ namespace HRMS.API.Controllers
         [Authorize(Roles = "ADMIN,SYSADMIN,MANAGER")]
         public async Task<IActionResult> RejectLeaveRequest(long id, [FromQuery] long tenantId, [FromQuery] string? remarks)
         {
-            var ok = await _leaveRepository.RejectLeaveRequestAsync(id, tenantId, 1, remarks);
+            var ok = await _leaveRepository.RejectLeaveRequestAsync(id, tenantId > 0 ? tenantId : CurrentTenantId, CurrentUserId, remarks);
             return Ok(ApiResponse<bool>.SuccessResult(ok, "Leave request rejected."));
         }
 
         [HttpPost("requests/{id}/cancel")]
         public async Task<IActionResult> CancelLeaveRequest(long id, [FromQuery] long tenantId)
         {
-            var ok = await _leaveRepository.CancelLeaveRequestAsync(id, tenantId, 1);
+            var ok = await _leaveRepository.CancelLeaveRequestAsync(id, tenantId > 0 ? tenantId : CurrentTenantId, CurrentUserId);
             return Ok(ApiResponse<bool>.SuccessResult(ok, "Leave request cancelled."));
         }
 
         [HttpPost("encashments")]
         public async Task<IActionResult> CreateLeaveEncashment([FromBody] CreateLeaveEncashmentRequest r)
         {
-            r.CreatedBy = 1;
+            r.CreatedBy = CurrentUserId;
+            if (r.TenantId <= 0) r.TenantId = CurrentTenantId;
+            if (!IsAdmin && CurrentEmployeeId.HasValue)
+            {
+                r.EmployeeId = CurrentEmployeeId.Value;
+            }
+
             var id = await _leaveRepository.CreateLeaveEncashmentAsync(r);
             return Ok(ApiResponse<long>.SuccessResult(id, "Leave encashment request submitted."));
         }
@@ -101,7 +129,7 @@ namespace HRMS.API.Controllers
         [Authorize(Roles = "ADMIN,SYSADMIN")]
         public async Task<IActionResult> ApproveLeaveEncashment(long id, [FromQuery] long tenantId)
         {
-            var ok = await _leaveRepository.ApproveLeaveEncashmentAsync(id, tenantId, 1);
+            var ok = await _leaveRepository.ApproveLeaveEncashmentAsync(id, tenantId > 0 ? tenantId : CurrentTenantId, CurrentUserId);
             return Ok(ApiResponse<bool>.SuccessResult(ok, "Leave encashment request approved."));
         }
     }

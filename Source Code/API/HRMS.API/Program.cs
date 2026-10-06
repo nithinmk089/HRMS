@@ -1,5 +1,6 @@
 using System.Text;
-using System.Threading.Tasks;
+using FluentValidation;
+using HRMS.Application.Validators;
 using HRMS.Infrastructure;
 using HRMS.Infrastructure.Hubs;
 using HRMS.Persistence;
@@ -12,6 +13,9 @@ var builder = WebApplication.CreateBuilder(args);
 builder.Services.AddControllers();
 builder.Services.AddOpenApi();
 builder.Services.AddSignalR();
+
+// Register FluentValidation validators
+builder.Services.AddValidatorsFromAssemblyContaining<CreateTenantRequestValidator>();
 
 // Register Custom Persistence and Infrastructure
 builder.Services.AddPersistence();
@@ -60,8 +64,7 @@ builder.Services.AddCors(options =>
 {
     options.AddPolicy("AllowAngularApp",
         policy => policy
-            .WithOrigins("http://localhost:4200", "https://localhost:4200")
-            .SetIsOriginAllowed(_ => true)
+            .WithOrigins("http://localhost:4200", "https://localhost:4200", "http://127.0.0.1:4200", "https://127.0.0.1:4200")
             .AllowAnyMethod()
             .AllowAnyHeader()
             .AllowCredentials());

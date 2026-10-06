@@ -2,6 +2,7 @@ import { Component, OnInit, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule, ReactiveFormsModule, FormBuilder, FormGroup, Validators } from '@angular/forms';
 import { ApiService } from '../../core/services/api.service';
+import { AuthService } from '../../core/services/auth.service';
 import { Attendance, LeaveBalance, LeaveRequest, LeaveType } from '../../core/models/time-attendance.models';
 
 @Component({
@@ -13,11 +14,12 @@ import { Attendance, LeaveBalance, LeaveRequest, LeaveType } from '../../core/mo
 })
 export class SelfServiceTimeComponent implements OnInit {
   private api = inject(ApiService);
+  private auth = inject(AuthService);
   private fb = inject(FormBuilder);
 
-  // Constants / Session context mocks
-  currentEmployeeId = 1; // Assuming employee id is 1 for self-service context mock
-  currentTenantId = 1;
+  // Authenticated session context
+  currentEmployeeId = this.auth.getEmployeeId() || 1;
+  currentTenantId = this.auth.getTenantId() || 1;
 
   attendanceRecords: Attendance[] = [];
   leaveBalances: LeaveBalance[] = [];

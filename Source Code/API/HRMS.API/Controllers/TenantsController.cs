@@ -42,6 +42,7 @@ namespace HRMS.API.Controllers
         }
 
         [HttpGet("{id}")]
+        [Authorize(Roles = "SYSADMIN")]
         public async Task<IActionResult> GetById(long id)
         {
             var tenant = await _tenantRepository.GetByIdAsync(id);
@@ -50,6 +51,7 @@ namespace HRMS.API.Controllers
         }
 
         [HttpGet]
+        [Authorize(Roles = "SYSADMIN")]
         public async Task<IActionResult> Search([FromQuery] string? searchText, [FromQuery] string? status, [FromQuery] int page = 1, [FromQuery] int pageSize = 50)
         {
             var tenants = await _tenantRepository.SearchAsync(searchText, status, page, pageSize);

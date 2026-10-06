@@ -119,11 +119,24 @@ namespace HRMS.API.Controllers
                 new Claim("lastName", authResponse.User?.LastName ?? "")
             };
 
+            if (authResponse.User?.EmployeeId.HasValue == true)
+            {
+                claims.Add(new Claim("employeeId", authResponse.User.EmployeeId.Value.ToString()));
+            }
+
             if (authResponse.Roles != null)
             {
                 foreach (var role in authResponse.Roles)
                 {
                     claims.Add(new Claim(ClaimTypes.Role, role));
+                }
+            }
+
+            if (authResponse.Permissions != null)
+            {
+                foreach (var perm in authResponse.Permissions)
+                {
+                    claims.Add(new Claim("permission", perm));
                 }
             }
 

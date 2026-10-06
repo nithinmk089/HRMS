@@ -23,6 +23,7 @@ namespace HRMS.Application.DTOs.Auth
     public class UserDto
     {
         public long UserId { get; set; }
+        public long? EmployeeId { get; set; }
         public string Email { get; set; }
         public string FirstName { get; set; }
         public string LastName { get; set; }

@@ -17,13 +17,16 @@ namespace HRMS.Persistence.Repositories
         public async Task<long> CreateAsync(CreateUserRequest request)
         {
             using var conn = new SqlConnection(_connectionString);
+            var (hash, salt) = HRMS.Application.Common.PasswordHelper.HashPassword(
+                string.IsNullOrWhiteSpace(request.Password) ? "Admin@123" : request.Password);
+
             var p = new DynamicParameters();
             p.Add("@TenantID", request.TenantId);
             p.Add("@EmployeeID", request.EmployeeId);
             p.Add("@UserName", request.UserName);
             p.Add("@Email", request.Email);
-            p.Add("@PasswordHash", request.Password);
-            p.Add("@PasswordSalt", "salt_placeholder");
+            p.Add("@PasswordHash", hash);
+            p.Add("@PasswordSalt", salt);
             p.Add("@CreatedBy", request.CreatedBy);
             p.Add("@UserID", dbType: DbType.Int64, direction: ParameterDirection.Output);
             await conn.ExecuteAsync("security.usp_User_Create", p, commandType: CommandType.StoredProcedure);

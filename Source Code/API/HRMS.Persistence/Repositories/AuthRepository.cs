@@ -217,8 +217,8 @@ namespace HRMS.Persistence.Repositories
                 );
 
                 // 8. Create Admin User Account in security.[User]
-                string passwordHash = "AQAAAAEAACcQAAAAEHASH"; // Standard hash placeholder
-                string passwordSalt = "SALT123";
+                var (passwordHash, passwordSalt) = HRMS.Application.Common.PasswordHelper.HashPassword(
+                    string.IsNullOrWhiteSpace(request.Password) ? "Admin@123" : request.Password);
 
                 var userId = await connection.ExecuteScalarAsync<long>(
                     @"INSERT INTO security.[User] (TenantID, EmployeeID, UserName, Email, PasswordHash, PasswordSalt, IsLocked, CreatedBy, IsDeleted, VersionNo)
@@ -290,9 +290,40 @@ namespace HRMS.Persistence.Repositories
 
             var userRow = firstResult; 
 
+            // Verify password securely using PasswordHelper
+            string storedHash = userRow != null ? Convert.ToString(userRow.PasswordHash) ?? "" : "";
+            string storedSalt = userRow != null ? Convert.ToString(userRow.PasswordSalt) ?? "" : "";
+
+            if (!HRMS.Application.Common.PasswordHelper.VerifyPassword(password, storedHash, storedSalt))
+            {
+                return new AuthResponse { Success = false, Message = "Invalid email/username or password." };
+            }
+
+            // Auto-upgrade legacy hash on successful login
+            if (storedHash == "AQAAAAEAACcQAAAAEHASH" && userRow != null)
+            {
+                try
+                {
+                    var (newHash, newSalt) = HRMS.Application.Common.PasswordHelper.HashPassword(password);
+                    await connection.ExecuteAsync(
+                        "UPDATE security.[User] SET PasswordHash = @Hash, PasswordSalt = @Salt, ModifiedDate = GETUTCDATE() WHERE UserID = @UserID",
+                        new { Hash = newHash, Salt = newSalt, UserID = Convert.ToInt64(userRow.UserID) }
+                    );
+                }
+                catch { /* Ignore upgrade failure */ }
+            }
+
+            var userDict = userRow as IDictionary<string, object>;
+            long? employeeId = null;
+            if (userDict != null && userDict.ContainsKey("EmployeeID") && userDict["EmployeeID"] != null && userDict["EmployeeID"] != DBNull.Value)
+            {
+                employeeId = Convert.ToInt64(userDict["EmployeeID"]);
+            }
+
             var userDto = new UserDto
             {
                 UserId = userRow != null ? Convert.ToInt64(userRow.UserID) : 1,
+                EmployeeId = employeeId,
                 Email = userRow != null ? Convert.ToString(userRow.Email) : email,
                 FirstName = userRow != null ? Convert.ToString(userRow.FirstName) : "Admin",
                 LastName = userRow != null ? Convert.ToString(userRow.LastName) : "User",

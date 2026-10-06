@@ -1,4 +1,3 @@
-
 SET ANSI_NULLS ON;
 GO
 SET QUOTED_IDENTIFIER ON;
@@ -6,26 +5,29 @@ GO
 
 CREATE OR ALTER PROCEDURE security.usp_User_Login
     @Email VARCHAR(200),
-    @IPAddress VARCHAR(50),
-    @BrowserInfo VARCHAR(500)
+    @IPAddress VARCHAR(50) = '127.0.0.1',
+    @BrowserInfo VARCHAR(500) = 'Internal'
 AS
 BEGIN
     SET NOCOUNT ON;
     SET ANSI_NULLS ON;
     SET QUOTED_IDENTIFIER ON;
+
     DECLARE @UserID BIGINT;
     DECLARE @TenantID BIGINT;
     DECLARE @IsLocked BIT;
     DECLARE @PasswordHash VARCHAR(500);
     DECLARE @PasswordSalt VARCHAR(500);
+    DECLARE @UserName VARCHAR(100);
 
-    -- Find user
+    -- Find user by Email or UserName
     SELECT 
         @UserID = UserID,
         @TenantID = TenantID,
         @IsLocked = IsLocked,
         @PasswordHash = PasswordHash,
-        @PasswordSalt = PasswordSalt
+        @PasswordSalt = PasswordSalt,
+        @UserName = UserName
     FROM security.[User]
     WHERE (Email = @Email OR UserName = @Email) AND IsDeleted = 0;
 
@@ -46,6 +48,7 @@ BEGIN
         1 AS Success,
         'Login successful.' AS [Message],
         u.UserID,
+        u.EmployeeID,
         u.Email,
         u.UserName,
         ISNULL(NULLIF(e.FirstName, ''), ISNULL(NULLIF(u.UserName, ''), 'User')) AS FirstName,
@@ -83,10 +86,11 @@ BEGIN
 
     -- Log login success to AuditLog
     INSERT INTO system.AuditLog (TenantID, TableName, RecordID, ActionType, OldValueJSON, NewValueJSON, PerformedBy)
-    VALUES (@TenantID, 'User', @UserID, 'LOGIN', NULL, '{"IP":"' + @IPAddress + '","Browser":"' + @BrowserInfo + '"}', @UserID);
+    VALUES (@TenantID, 'User', @UserID, 'LOGIN', NULL, '{"IP":"' + ISNULL(@IPAddress,'127.0.0.1') + '","Browser":"' + ISNULL(@BrowserInfo, 'Browser') + '"}', @UserID);
 
     -- Update LastLoginDate
     UPDATE security.[User]
     SET LastLoginDate = GETUTCDATE()
     WHERE UserID = @UserID;
 END;
+GO
