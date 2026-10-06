@@ -1,53 +1,48 @@
 import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { ReactiveFormsModule, FormBuilder, FormGroup, Validators } from '@angular/forms';
 import { ApiService } from '../../../core/services/api.service';
+import { AuthService } from '../../../core/services/auth.service';
 
 @Component({
   selector: 'app-my-learning',
   standalone: true,
-  imports: [CommonModule, ReactiveFormsModule],
+  imports: [CommonModule],
   templateUrl: './my-learning.component.html',
   styleUrls: ['./my-learning.component.scss']
 })
 export class MyLearningComponent implements OnInit {
-  items: any[] = [];
-  form!: FormGroup;
-  showModal = false;
-  successMessage = '';
+  assignments: any[] = [];
+  courses: any[] = [];
   errorMessage = '';
+  isLoading = false;
+  tenantId = 1;
+  employeeId: number | null = null;
 
-  constructor(private api: ApiService, private fb: FormBuilder) {}
+  constructor(
+    private api: ApiService,
+    private auth: AuthService
+  ) {}
 
   ngOnInit(): void {
-    this.initForm();
+    this.tenantId = this.auth.getTenantId() || 1;
+    this.employeeId = this.auth.getEmployeeId();
     this.loadData();
   }
 
-  initForm(): void {
-    this.form = this.fb.group({
-      tenantId: [1],
-      name: ['', Validators.required],
-      description: ['']
-    });
-  }
-
   loadData(): void {
-    this.api.getCourses(1).subscribe(res => {
-      this.items = res.data || [];
+    this.isLoading = true;
+    this.api.getLearningAssignments(this.tenantId, this.employeeId ?? undefined).subscribe({
+      next: (res) => {
+        this.assignments = res.data || [];
+        this.isLoading = false;
+      },
+      error: () => this.isLoading = false
     });
-  }
 
-  openCreateModal(): void {
-    this.form.reset({ tenantId: 1 });
-    this.showModal = true;
-  }
-
-  closeModal(): void { this.showModal = false; }
-
-  onSubmit(): void {
-    if (this.form.invalid) return;
-    this.successMessage = 'Operation completed successfully!';
-    this.closeModal();
+    this.api.getCourses(this.tenantId).subscribe({
+      next: (res) => {
+        this.courses = res.data || [];
+      }
+    });
   }
 }

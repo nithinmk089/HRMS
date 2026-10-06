@@ -74,8 +74,13 @@ namespace HRMS.Persistence.Repositories
         public async Task<IEnumerable<LearningAssignmentDto>> GetAssignmentsAsync(long tenantId, long? employeeId)
         {
             using var conn = new SqlConnection(_connectionString);
-            var sql = "SELECT * FROM learning.LearningAssignment WHERE TenantID = @TenantID AND IsDeleted = 0";
-            if (employeeId.HasValue) sql += " AND EmployeeID = @EmployeeID";
+            var sql = @"SELECT a.LearningAssignmentID, a.TenantID, a.EmployeeID, CONCAT(e.FirstName, ' ', e.LastName) AS EmployeeName,
+                               a.CourseID, c.CourseName, a.AssignmentType, a.DueDate, a.AssignmentStatus
+                        FROM learning.LearningAssignment a
+                        LEFT JOIN hr.Employee e ON a.EmployeeID = e.EmployeeID
+                        LEFT JOIN learning.Course c ON a.CourseID = c.CourseID
+                        WHERE a.TenantID = @TenantID AND a.IsDeleted = 0";
+            if (employeeId.HasValue) sql += " AND a.EmployeeID = @EmployeeID";
             return await conn.QueryAsync<LearningAssignmentDto>(sql, new { TenantID = tenantId, EmployeeID = employeeId });
         }
 

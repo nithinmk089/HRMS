@@ -1,53 +1,58 @@
 import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { ReactiveFormsModule, FormBuilder, FormGroup, Validators } from '@angular/forms';
+import { RouterModule } from '@angular/router';
 import { ApiService } from '../../../core/services/api.service';
+import { AuthService } from '../../../core/services/auth.service';
 
 @Component({
   selector: 'app-learning-dashboard',
   standalone: true,
-  imports: [CommonModule, ReactiveFormsModule],
+  imports: [CommonModule, RouterModule],
   templateUrl: './learning-dashboard.component.html',
   styleUrls: ['./learning-dashboard.component.scss']
 })
 export class LearningDashboardComponent implements OnInit {
-  items: any[] = [];
-  form!: FormGroup;
-  showModal = false;
-  successMessage = '';
-  errorMessage = '';
+  courses: any[] = [];
+  categories: any[] = [];
+  enrollments: any[] = [];
+  assignments: any[] = [];
+  isLoading = false;
+  tenantId = 1;
 
-  constructor(private api: ApiService, private fb: FormBuilder) {}
+  constructor(
+    private api: ApiService,
+    private auth: AuthService
+  ) {}
 
   ngOnInit(): void {
-    this.initForm();
-    this.loadData();
+    this.tenantId = this.auth.getTenantId() || 1;
+    this.loadDashboardData();
   }
 
-  initForm(): void {
-    this.form = this.fb.group({
-      tenantId: [1],
-      name: ['', Validators.required],
-      description: ['']
+  loadDashboardData(): void {
+    this.isLoading = true;
+    this.api.getCourses(this.tenantId).subscribe({
+      next: (res) => this.courses = res.data || []
+    });
+
+    this.api.getCourseCategories(this.tenantId).subscribe({
+      next: (res) => this.categories = res.data || []
+    });
+
+    this.api.getLearningEnrollments(this.tenantId).subscribe({
+      next: (res) => this.enrollments = res.data || []
+    });
+
+    this.api.getLearningAssignments(this.tenantId).subscribe({
+      next: (res) => {
+        this.assignments = res.data || [];
+        this.isLoading = false;
+      },
+      error: () => this.isLoading = false
     });
   }
 
-  loadData(): void {
-    this.api.getCourses(1).subscribe(res => {
-      this.items = res.data || [];
-    });
-  }
-
-  openCreateModal(): void {
-    this.form.reset({ tenantId: 1 });
-    this.showModal = true;
-  }
-
-  closeModal(): void { this.showModal = false; }
-
-  onSubmit(): void {
-    if (this.form.invalid) return;
-    this.successMessage = 'Operation completed successfully!';
-    this.closeModal();
+  get completedEnrollmentsCount(): number {
+    return this.enrollments.filter(e => e.enrollmentStatus === 'Completed' || (e.completionPercentage && e.completionPercentage >= 100)).length;
   }
 }

@@ -1,53 +1,42 @@
 import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { ReactiveFormsModule, FormBuilder, FormGroup, Validators } from '@angular/forms';
 import { ApiService } from '../../../core/services/api.service';
+import { AuthService } from '../../../core/services/auth.service';
 
 @Component({
   selector: 'app-compliance-management',
   standalone: true,
-  imports: [CommonModule, ReactiveFormsModule],
+  imports: [CommonModule],
   templateUrl: './compliance-management.component.html',
   styleUrls: ['./compliance-management.component.scss']
 })
 export class ComplianceManagementComponent implements OnInit {
   items: any[] = [];
-  form!: FormGroup;
-  showModal = false;
-  successMessage = '';
   errorMessage = '';
+  isLoading = false;
+  tenantId = 1;
 
-  constructor(private api: ApiService, private fb: FormBuilder) {}
+  constructor(
+    private api: ApiService,
+    private auth: AuthService
+  ) {}
 
   ngOnInit(): void {
-    this.initForm();
+    this.tenantId = this.auth.getTenantId() || 1;
     this.loadData();
   }
 
-  initForm(): void {
-    this.form = this.fb.group({
-      tenantId: [1],
-      name: ['', Validators.required],
-      description: ['']
-    });
-  }
-
   loadData(): void {
-    this.api.getCourses(1).subscribe(res => {
-      this.items = res.data || [];
+    this.isLoading = true;
+    this.api.getComplianceTraining(this.tenantId).subscribe({
+      next: (res) => {
+        this.items = res.data || [];
+        this.isLoading = false;
+      },
+      error: (err) => {
+        this.errorMessage = err?.error?.message || 'Failed to load compliance training programs';
+        this.isLoading = false;
+      }
     });
-  }
-
-  openCreateModal(): void {
-    this.form.reset({ tenantId: 1 });
-    this.showModal = true;
-  }
-
-  closeModal(): void { this.showModal = false; }
-
-  onSubmit(): void {
-    if (this.form.invalid) return;
-    this.successMessage = 'Operation completed successfully!';
-    this.closeModal();
   }
 }

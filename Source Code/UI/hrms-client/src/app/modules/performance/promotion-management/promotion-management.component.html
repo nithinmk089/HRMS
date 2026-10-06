@@ -1,79 +1,49 @@
 <div class="page-toolbar">
   <div>
-    <h1 class="page-title text-main">Promotion Management</h1>
-    <div class="text-secondary mt-1">Set cycles, goals, OKRs, and appraisal reviews.</div>
-  </div>
-  <div>
-    <button class="btn btn-primary btn-sm  " (click)="openCreateModal()">
-      <i class="bi bi-plus-lg me-1"></i>New Setup
-    </button>
+    <h1 class="page-title text-main">Promotions & Role Advancements</h1>
+    <div class="text-secondary mt-1">Review promotion candidates, merit recommendations, and grade band progressions.</div>
   </div>
 </div>
 
-<div class="card">
-    
-    <div class="table-responsive">
-      <table class="table-enterprise">
-        <thead>
-          <tr>
-            <th>Ref ID</th>
-            <th scope="col">Title / Parameter</th>
-            <th scope="col">Status</th>
-            <th class="text-end">Actions</th>
-          </tr>
-        </thead>
-        <tbody>
-          <tr *ngFor="let item of items">
-            <td class="px-4 fw-bold text-primary">#{{ item.id || '928' }}</td>
-            <td>{{ item.title || 'Standard PMS Summary Item' }}</td>
-            <td><span class="badge badge-success">Active</span></td>
-            <td class="text-end px-4">
-              <button class="btn btn-outline btn-sm p-1 me-2"><i class="bi bi-eye text-primary"></i></button>
-              <button class="btn btn-outline btn-sm p-1"><i class="bi bi-trash text-danger"></i></button>
-            </td>
-          </tr>
-          <tr *ngIf="items.length === 0">
-            <td colspan="4" class="text-center py-5 text-muted">
-              <i class="bi bi-inbox fs-2 d-block mb-2"></i>
-              No active records found. Click "New Setup" to begin.
-            </td>
-          </tr>
-        </tbody>
-      </table>
-    </div>
-  </div>
+<div *ngIf="errorMessage" class="alert alert-danger alert-dismissible fade show mb-3" role="alert">
+  <i class="bi bi-exclamation-triangle-fill me-2"></i>{{ errorMessage }}
+  <button type="button" class="btn-close" (click)="errorMessage = ''"></button>
+</div>
 
-  <!-- Modal Form -->
-  @if (showModal) {
-  <div class="modal-backdrop-custom"></div>
-}
-<div class="modal fade show d-block" tabindex="-1" role="dialog" aria-modal="true" *ngIf="showModal" >
-    <div class="modal-dialog modal-dialog-centered">
-      <div class="modal-content">
-        <div class="modal-header">
-          <h5 class="modal-title fw-bold">Add New Setup</h5>
-          <button type="button" class="btn-close" (click)="closeModal()"></button>
-        </div>
-        <div class="modal-body">
-          <form [formGroup]="form" (ngSubmit)="onSubmit()">
-            <div class="mb-3">
-              <label class="form-label fw-semibold">Title</label>
-              <input type="text" class="form-control" formControlName="title" placeholder="e.g. Goal Title">
-            </div>
-            <div class="mb-3">
-              <label class="form-label fw-semibold">Weightage (1-100%)</label>
-              <input type="number" class="form-control" formControlName="weightage" placeholder="10">
-            </div>
-            <div class="mb-4">
-              <label class="form-label fw-semibold">Description</label>
-              <textarea class="form-control" formControlName="description" rows="3" placeholder="Enter description..."></textarea>
-            </div>
-            <div class="d-flex justify-content-end gap-2">
-              <button type="button" class="btn btn-outline" (click)="closeModal()">Cancel</button>
-              <button type="submit" class="btn btn-primary" [disabled]="form.invalid">Submit</button>
-            </div>
-          </form>
-        </div>
-      </div>
-    </div>
+<div class="card">
+  <div class="table-responsive">
+    <table class="table-enterprise">
+      <thead>
+        <tr>
+          <th>Employee Code</th>
+          <th scope="col">Candidate Name</th>
+          <th scope="col">Designation / Role</th>
+          <th scope="col">Tenure Status</th>
+          <th scope="col">Readiness</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr *ngFor="let emp of employees">
+          <td class="fw-bold text-primary">{{ emp.employeeCode || emp.employeeNumber || ('EMP-' + emp.employeeId) }}</td>
+          <td class="fw-semibold">{{ emp.firstName }} {{ emp.lastName }}</td>
+          <td>{{ emp.designationName || emp.departmentName || 'Software Engineer' }}</td>
+          <td><span class="badge badge-success">{{ emp.status || 'Active' }}</span></td>
+          <td>
+            <span class="badge badge-info">Eligible for Review</span>
+          </td>
+        </tr>
+        <tr *ngIf="employees.length === 0 && !isLoading">
+          <td colspan="5" class="text-center py-5 text-muted">
+            <i class="bi bi-graph-up-arrow fs-2 d-block mb-2"></i>
+            No active employee records available for promotion review.
+          </td>
+        </tr>
+        <tr *ngIf="isLoading">
+          <td colspan="5" class="text-center py-4 text-muted">
+            <span class="spinner-border spinner-border-sm me-2"></span>Loading promotion candidates...
+          </td>
+        </tr>
+      </tbody>
+    </table>
   </div>
+</div>

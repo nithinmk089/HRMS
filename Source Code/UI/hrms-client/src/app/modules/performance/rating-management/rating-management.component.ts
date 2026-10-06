@@ -1,64 +1,56 @@
 import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { ReactiveFormsModule, FormBuilder, FormGroup, Validators } from '@angular/forms';
 import { ApiService } from '../../../core/services/api.service';
+import { AuthService } from '../../../core/services/auth.service';
 
 @Component({
   selector: 'app-rating-management',
   standalone: true,
-  imports: [CommonModule, ReactiveFormsModule],
+  imports: [CommonModule],
   templateUrl: './rating-management.component.html',
   styleUrls: ['./rating-management.component.scss']
 })
 export class RatingManagementComponent implements OnInit {
   items: any[] = [];
-  employees: any[] = [];
-  form!: FormGroup;
-  showModal = false;
-  successMessage = '';
   errorMessage = '';
+  isLoading = false;
+  tenantId = 1;
 
-  constructor(private api: ApiService, private fb: FormBuilder) {}
+  constructor(
+    private api: ApiService,
+    private auth: AuthService
+  ) {}
 
   ngOnInit(): void {
-    this.initForm();
+    this.tenantId = this.auth.getTenantId() || 1;
     this.loadData();
-    this.loadEmployees();
-  }
-
-  initForm(): void {
-    this.form = this.fb.group({
-      tenantId: [1],
-      title: ['', Validators.required],
-      weightage: [10, [Validators.required, Validators.min(1), Validators.max(100)]],
-      description: ['']
-    });
   }
 
   loadData(): void {
-    this.api.getSelfAssessments(1).subscribe(res => {
-      this.items = res.data || [];
+    this.isLoading = true;
+    this.api.getGoals(this.tenantId).subscribe({
+      next: (res) => {
+        this.items = res.data || [];
+        this.isLoading = false;
+      },
+      error: (err) => {
+        this.errorMessage = err?.error?.message || 'Failed to load ratings';
+        this.isLoading = false;
+      }
     });
   }
 
-  loadEmployees(): void {
-    this.api.getEmployees(1).subscribe(res => {
-      this.employees = res.data || [];
-    });
+  getRatingLabel(pct: number): string {
+    if (pct >= 90) return '5 - Outstanding';
+    if (pct >= 75) return '4 - Exceeds Expectations';
+    if (pct >= 60) return '3 - Meets Expectations';
+    if (pct >= 40) return '2 - Needs Improvement';
+    return '1 - Unsatisfactory';
   }
 
-  openCreateModal(): void {
-    this.form.reset({ tenantId: 1, weightage: 10 });
-    this.showModal = true;
-  }
-
-  closeModal(): void {
-    this.showModal = false;
-  }
-
-  onSubmit(): void {
-    if (this.form.invalid) return;
-    this.successMessage = 'Operation completed successfully!';
-    this.closeModal();
+  getRatingBadgeClass(pct: number): string {
+    if (pct >= 75) return 'badge-success';
+    if (pct >= 60) return 'badge-info';
+    return 'badge-warning';
   }
 }

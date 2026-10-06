@@ -1,72 +1,98 @@
 <div class="page-toolbar">
   <div>
-    <h1 class="page-title text-main">Assessment Management</h1>
-    <div class="text-secondary mt-1">Manage training, assessments, and compliance tracking.</div>
+    <h1 class="page-title text-main">Learning Assessments & Quizzes</h1>
+    <div class="text-secondary mt-1">Design course evaluations, benchmark pass criteria, and test employee mastery.</div>
   </div>
   <div>
-    <button class="btn btn-primary btn-sm  " (click)="openCreateModal()">
-      <i class="bi bi-plus-lg me-1"></i>New Entry
+    <button class="btn btn-primary btn-sm" (click)="openCreateModal()">
+      <i class="bi bi-question-circle me-1"></i>New Assessment
     </button>
   </div>
 </div>
 
-<div class="card">
-    
-    <div class="table-responsive">
-      <table class="table-enterprise">
-        <thead>
-          <tr>
-            <th>ID</th>
-            <th scope="col">Name</th>
-            <th scope="col">Status</th>
-            <th class="text-end">Actions</th>
-          </tr>
-        </thead>
-        <tbody>
-          <tr *ngFor="let item of items">
-            <td class="px-4 fw-bold text-primary">#{{ item.id || 'Ã¢â‚¬â€' }}</td>
-            <td>{{ item.name || 'Record' }}</td>
-            <td><span class="badge bg-success-subtle text-success py-2 px-3 rounded-pill">Active</span></td>
-            <td class="text-end px-4">
-              <button class="btn btn-outline btn-sm p-1 me-2"><i class="bi bi-eye text-primary"></i></button>
-            </td>
-          </tr>
-          <tr *ngIf="items.length === 0">
-            <td colspan="4" class="text-center py-5 text-muted">
-              <i class="bi bi-inbox fs-2 d-block mb-2"></i>No records found.
-            </td>
-          </tr>
-        </tbody>
-      </table>
-    </div>
-  </div>
+<div *ngIf="successMessage" class="alert alert-success alert-dismissible fade show mb-3" role="alert">
+  <i class="bi bi-check-circle-fill me-2"></i>{{ successMessage }}
+  <button type="button" class="btn-close" (click)="successMessage = ''"></button>
+</div>
 
-  @if (showModal) {
+<div *ngIf="errorMessage" class="alert alert-danger alert-dismissible fade show mb-3" role="alert">
+  <i class="bi bi-exclamation-triangle-fill me-2"></i>{{ errorMessage }}
+  <button type="button" class="btn-close" (click)="errorMessage = ''"></button>
+</div>
+
+<div class="card">
+  <div class="table-responsive">
+    <table class="table-enterprise">
+      <thead>
+        <tr>
+          <th>Assessment ID</th>
+          <th scope="col">Assessment Name</th>
+          <th scope="col">Course ID</th>
+          <th scope="col">Passing Threshold</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr *ngFor="let item of items">
+          <td class="fw-bold text-primary">#ASM-{{ item.assessmentID }}</td>
+          <td class="fw-semibold">{{ item.assessmentName }}</td>
+          <td>Course #{{ item.courseID }}</td>
+          <td><span class="badge badge-success">{{ item.passPercentage }}% Minimum Score</span></td>
+        </tr>
+        <tr *ngIf="items.length === 0 && !isLoading">
+          <td colspan="4" class="text-center py-5 text-muted">
+            <i class="bi bi-journal-text fs-2 d-block mb-2"></i>
+            No assessments defined. Click "New Assessment" to create one.
+          </td>
+        </tr>
+        <tr *ngIf="isLoading">
+          <td colspan="4" class="text-center py-4 text-muted">
+            <span class="spinner-border spinner-border-sm me-2"></span>Loading assessments...
+          </td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+</div>
+
+<!-- Modal Form -->
+@if (showModal) {
   <div class="modal-backdrop-custom"></div>
 }
-<div class="modal fade show d-block" tabindex="-1" role="dialog" aria-modal="true" *ngIf="showModal" >
-    <div class="modal-dialog modal-dialog-centered">
-      <div class="modal-content">
-        <div class="modal-header">
-          <h5 class="modal-title fw-bold">New Entry</h5>
-          <button type="button" class="btn-close" (click)="closeModal()"></button>
-        </div>
-        <div class="modal-body">
-          <form [formGroup]="form" (ngSubmit)="onSubmit()">
-            <div class="mb-3">
-              <label class="form-label fw-semibold">Name</label>
-              <input type="text" class="form-control" formControlName="name">
-            </div>
-            <div class="mb-4">
-              <label class="form-label fw-semibold">Description</label>
-              <textarea class="form-control" formControlName="description" rows="3"></textarea>
-            </div>
-            <div class="d-flex justify-content-end gap-2">
-              <button type="button" class="btn btn-outline" (click)="closeModal()">Cancel</button>
-              <button type="submit" class="btn btn-primary" [disabled]="form.invalid">Submit</button>
-            </div>
-          </form>
-        </div>
+<div class="modal fade show d-block" tabindex="-1" role="dialog" aria-modal="true" *ngIf="showModal">
+  <div class="modal-dialog modal-dialog-centered">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title fw-bold">Create Course Assessment</h5>
+        <button type="button" class="btn-close" (click)="closeModal()"></button>
+      </div>
+      <div class="modal-body">
+        <form [formGroup]="form" (ngSubmit)="onSubmit()">
+          <div class="mb-3">
+            <label class="form-label fw-semibold">Associated Course *</label>
+            <select class="form-select" formControlName="courseId">
+              <option value="" disabled>Select Course</option>
+              <option *ngFor="let crs of courses" [value]="crs.courseID">
+                {{ crs.courseName }} ({{ crs.courseCode }})
+              </option>
+            </select>
+          </div>
+          <div class="mb-3">
+            <label class="form-label fw-semibold">Assessment Title *</label>
+            <input type="text" class="form-control" formControlName="assessmentName" placeholder="e.g. Final Certification Exam">
+          </div>
+          <div class="mb-4">
+            <label class="form-label fw-semibold">Passing Threshold (1-100%) *</label>
+            <input type="number" class="form-control" formControlName="passPercentage" min="1" max="100">
+          </div>
+          <div class="d-flex justify-content-end gap-2">
+            <button type="button" class="btn btn-outline" (click)="closeModal()">Cancel</button>
+            <button type="submit" class="btn btn-primary" [disabled]="form.invalid || isLoading">
+              <span *ngIf="isLoading" class="spinner-border spinner-border-sm me-1"></span>
+              Create Assessment
+            </button>
+          </div>
+        </form>
       </div>
     </div>
   </div>
+</div>

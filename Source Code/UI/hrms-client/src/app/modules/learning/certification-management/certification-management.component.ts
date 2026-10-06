@@ -1,53 +1,42 @@
 import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { ReactiveFormsModule, FormBuilder, FormGroup, Validators } from '@angular/forms';
 import { ApiService } from '../../../core/services/api.service';
+import { AuthService } from '../../../core/services/auth.service';
 
 @Component({
   selector: 'app-certification-management',
   standalone: true,
-  imports: [CommonModule, ReactiveFormsModule],
+  imports: [CommonModule],
   templateUrl: './certification-management.component.html',
   styleUrls: ['./certification-management.component.scss']
 })
 export class CertificationManagementComponent implements OnInit {
   items: any[] = [];
-  form!: FormGroup;
-  showModal = false;
-  successMessage = '';
   errorMessage = '';
+  isLoading = false;
+  tenantId = 1;
 
-  constructor(private api: ApiService, private fb: FormBuilder) {}
+  constructor(
+    private api: ApiService,
+    private auth: AuthService
+  ) {}
 
   ngOnInit(): void {
-    this.initForm();
+    this.tenantId = this.auth.getTenantId() || 1;
     this.loadData();
   }
 
-  initForm(): void {
-    this.form = this.fb.group({
-      tenantId: [1],
-      name: ['', Validators.required],
-      description: ['']
-    });
-  }
-
   loadData(): void {
-    this.api.getCourses(1).subscribe(res => {
-      this.items = res.data || [];
+    this.isLoading = true;
+    this.api.getLearningCertifications(this.tenantId).subscribe({
+      next: (res) => {
+        this.items = res.data || [];
+        this.isLoading = false;
+      },
+      error: (err) => {
+        this.errorMessage = err?.error?.message || 'Failed to load certifications';
+        this.isLoading = false;
+      }
     });
-  }
-
-  openCreateModal(): void {
-    this.form.reset({ tenantId: 1 });
-    this.showModal = true;
-  }
-
-  closeModal(): void { this.showModal = false; }
-
-  onSubmit(): void {
-    if (this.form.invalid) return;
-    this.successMessage = 'Operation completed successfully!';
-    this.closeModal();
   }
 }

@@ -1,64 +1,64 @@
 import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { ReactiveFormsModule, FormBuilder, FormGroup, Validators } from '@angular/forms';
+import { RouterModule } from '@angular/router';
 import { ApiService } from '../../../core/services/api.service';
+import { AuthService } from '../../../core/services/auth.service';
 
 @Component({
   selector: 'app-performance-dashboard',
   standalone: true,
-  imports: [CommonModule, ReactiveFormsModule],
+  imports: [CommonModule, RouterModule],
   templateUrl: './performance-dashboard.component.html',
   styleUrls: ['./performance-dashboard.component.scss']
 })
 export class PerformanceDashboardComponent implements OnInit {
-  items: any[] = [];
-  employees: any[] = [];
-  form!: FormGroup;
-  showModal = false;
-  successMessage = '';
-  errorMessage = '';
+  cycles: any[] = [];
+  goals: any[] = [];
+  feedback: any[] = [];
+  checkins: any[] = [];
+  isLoading = false;
+  tenantId = 1;
 
-  constructor(private api: ApiService, private fb: FormBuilder) {}
+  constructor(
+    private api: ApiService,
+    private auth: AuthService
+  ) {}
 
   ngOnInit(): void {
-    this.initForm();
-    this.loadData();
-    this.loadEmployees();
+    this.tenantId = this.auth.getTenantId() || 1;
+    this.loadDashboardData();
   }
 
-  initForm(): void {
-    this.form = this.fb.group({
-      tenantId: [1],
-      title: ['', Validators.required],
-      weightage: [10, [Validators.required, Validators.min(1), Validators.max(100)]],
-      description: ['']
+  loadDashboardData(): void {
+    this.isLoading = true;
+    this.api.getPerformanceCycles(this.tenantId).subscribe({
+      next: (res) => this.cycles = res.data || []
+    });
+
+    this.api.getGoals(this.tenantId).subscribe({
+      next: (res) => {
+        this.goals = res.data || [];
+        this.isLoading = false;
+      },
+      error: () => this.isLoading = false
+    });
+
+    this.api.getContinuousFeedback(this.tenantId).subscribe({
+      next: (res) => this.feedback = res.data || []
+    });
+
+    this.api.getCheckIns(this.tenantId).subscribe({
+      next: (res) => this.checkins = res.data || []
     });
   }
 
-  loadData(): void {
-    this.api.getSelfAssessments(1).subscribe(res => {
-      this.items = res.data || [];
-    });
+  get completedGoalsCount(): number {
+    return this.goals.filter(g => g.goalStatus === 'Completed' || (g.achievementPercentage && g.achievementPercentage >= 100)).length;
   }
 
-  loadEmployees(): void {
-    this.api.getEmployees(1).subscribe(res => {
-      this.employees = res.data || [];
-    });
-  }
-
-  openCreateModal(): void {
-    this.form.reset({ tenantId: 1, weightage: 10 });
-    this.showModal = true;
-  }
-
-  closeModal(): void {
-    this.showModal = false;
-  }
-
-  onSubmit(): void {
-    if (this.form.invalid) return;
-    this.successMessage = 'Operation completed successfully!';
-    this.closeModal();
+  get avgGoalAchievement(): number {
+    if (this.goals.length === 0) return 0;
+    const total = this.goals.reduce((acc, g) => acc + (Number(g.achievementPercentage) || 0), 0);
+    return Math.round(total / this.goals.length);
   }
 }

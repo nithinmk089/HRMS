@@ -1,72 +1,130 @@
 <div class="page-toolbar">
   <div>
-    <h1 class="page-title text-main">Learning Dashboard</h1>
-    <div class="text-secondary mt-1">Manage training, assessments, and compliance tracking.</div>
+    <h1 class="page-title text-main">Learning & Compliance Management</h1>
+    <div class="text-secondary mt-1">Enterprise LMS overview: courses, corporate compliance training, skill pathways, and completions.</div>
   </div>
-  <div>
-    <button class="btn btn-primary btn-sm  " (click)="openCreateModal()">
-      <i class="bi bi-plus-lg me-1"></i>New Entry
-    </button>
+  <div class="d-flex gap-2">
+    <a routerLink="/learning/courses" class="btn btn-primary btn-sm">
+      <i class="bi bi-mortarboard me-1"></i>Manage Courses
+    </a>
+    <a routerLink="/learning/assignments" class="btn btn-outline-primary btn-sm">
+      <i class="bi bi-person-check me-1"></i>Assign Training
+    </a>
   </div>
 </div>
 
-<div class="card">
-    
-    <div class="table-responsive">
-      <table class="table-enterprise">
-        <thead>
-          <tr>
-            <th>ID</th>
-            <th scope="col">Name</th>
-            <th scope="col">Status</th>
-            <th class="text-end">Actions</th>
-          </tr>
-        </thead>
-        <tbody>
-          <tr *ngFor="let item of items">
-            <td class="px-4 fw-bold text-primary">#{{ item.id || 'Ã¢â‚¬â€' }}</td>
-            <td>{{ item.name || 'Record' }}</td>
-            <td><span class="badge bg-success-subtle text-success py-2 px-3 rounded-pill">Active</span></td>
-            <td class="text-end px-4">
-              <button class="btn btn-outline btn-sm p-1 me-2"><i class="bi bi-eye text-primary"></i></button>
-            </td>
-          </tr>
-          <tr *ngIf="items.length === 0">
-            <td colspan="4" class="text-center py-5 text-muted">
-              <i class="bi bi-inbox fs-2 d-block mb-2"></i>No records found.
-            </td>
-          </tr>
-        </tbody>
-      </table>
+<!-- KPI Cards -->
+<div class="row g-3 mb-4">
+  <div class="col-md-3">
+    <div class="card p-3 border-0 shadow-sm rounded-3">
+      <div class="d-flex align-items-center justify-content-between mb-2">
+        <span class="text-muted fw-semibold small text-uppercase">Course Catalog</span>
+        <span class="badge bg-primary-subtle text-primary p-2 rounded-circle">
+          <i class="bi bi-book fs-5"></i>
+        </span>
+      </div>
+      <div class="fs-3 fw-bold text-main">{{ courses.length }}</div>
+      <small class="text-muted">{{ categories.length }} curriculum categories</small>
     </div>
   </div>
+  <div class="col-md-3">
+    <div class="card p-3 border-0 shadow-sm rounded-3">
+      <div class="d-flex align-items-center justify-content-between mb-2">
+        <span class="text-muted fw-semibold small text-uppercase">Active Assignments</span>
+        <span class="badge bg-danger-subtle text-danger p-2 rounded-circle">
+          <i class="bi bi-bell fs-5"></i>
+        </span>
+      </div>
+      <div class="fs-3 fw-bold text-main">{{ assignments.length }}</div>
+      <small class="text-muted">Mandatory & regulatory</small>
+    </div>
+  </div>
+  <div class="col-md-3">
+    <div class="card p-3 border-0 shadow-sm rounded-3">
+      <div class="d-flex align-items-center justify-content-between mb-2">
+        <span class="text-muted fw-semibold small text-uppercase">Enrollments</span>
+        <span class="badge bg-info-subtle text-info p-2 rounded-circle">
+          <i class="bi bi-people fs-5"></i>
+        </span>
+      </div>
+      <div class="fs-3 fw-bold text-main">{{ enrollments.length }}</div>
+      <small class="text-success fw-semibold">{{ completedEnrollmentsCount }} completed</small>
+    </div>
+  </div>
+  <div class="col-md-3">
+    <div class="card p-3 border-0 shadow-sm rounded-3">
+      <div class="d-flex align-items-center justify-content-between mb-2">
+        <span class="text-muted fw-semibold small text-uppercase">Learning Pathways</span>
+        <span class="badge bg-success-subtle text-success p-2 rounded-circle">
+          <i class="bi bi-award fs-5"></i>
+        </span>
+      </div>
+      <div class="fs-3 fw-bold text-main">{{ categories.length }}</div>
+      <small class="text-muted">Engineering, Security, Leadership...</small>
+    </div>
+  </div>
+</div>
 
-  @if (showModal) {
-  <div class="modal-backdrop-custom"></div>
-}
-<div class="modal fade show d-block" tabindex="-1" role="dialog" aria-modal="true" *ngIf="showModal" >
-    <div class="modal-dialog modal-dialog-centered">
-      <div class="modal-content">
-        <div class="modal-header">
-          <h5 class="modal-title fw-bold">New Entry</h5>
-          <button type="button" class="btn-close" (click)="closeModal()"></button>
-        </div>
-        <div class="modal-body">
-          <form [formGroup]="form" (ngSubmit)="onSubmit()">
-            <div class="mb-3">
-              <label class="form-label fw-semibold">Name</label>
-              <input type="text" class="form-control" formControlName="name">
-            </div>
-            <div class="mb-4">
-              <label class="form-label fw-semibold">Description</label>
-              <textarea class="form-control" formControlName="description" rows="3"></textarea>
-            </div>
-            <div class="d-flex justify-content-end gap-2">
-              <button type="button" class="btn btn-outline" (click)="closeModal()">Cancel</button>
-              <button type="submit" class="btn btn-primary" [disabled]="form.invalid">Submit</button>
-            </div>
-          </form>
-        </div>
+<div class="row g-4">
+  <!-- Courses Table -->
+  <div class="col-lg-6">
+    <div class="card h-100">
+      <div class="card-header bg-white d-flex align-items-center justify-content-between py-3">
+        <h5 class="card-title mb-0 fw-bold">Recent Courses</h5>
+        <a routerLink="/learning/courses" class="btn btn-sm btn-link text-decoration-none">View All</a>
+      </div>
+      <div class="table-responsive">
+        <table class="table-enterprise mb-0">
+          <thead>
+            <tr>
+              <th>Code</th>
+              <th>Title</th>
+              <th>Category</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr *ngFor="let c of courses.slice(0, 5)">
+              <td class="fw-semibold text-primary">{{ c.courseCode }}</td>
+              <td>{{ c.courseName }}</td>
+              <td><span class="badge bg-light text-dark border">{{ c.categoryName || 'General' }}</span></td>
+            </tr>
+            <tr *ngIf="courses.length === 0">
+              <td colspan="3" class="text-center py-4 text-muted">No courses created yet.</td>
+            </tr>
+          </tbody>
+        </table>
       </div>
     </div>
   </div>
+
+  <!-- Assignments Table -->
+  <div class="col-lg-6">
+    <div class="card h-100">
+      <div class="card-header bg-white d-flex align-items-center justify-content-between py-3">
+        <h5 class="card-title mb-0 fw-bold">Recent Assignments</h5>
+        <a routerLink="/learning/assignments" class="btn btn-sm btn-link text-decoration-none">View All</a>
+      </div>
+      <div class="table-responsive">
+        <table class="table-enterprise mb-0">
+          <thead>
+            <tr>
+              <th>Employee</th>
+              <th>Course</th>
+              <th>Due Date</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr *ngFor="let a of assignments.slice(0, 5)">
+              <td class="fw-semibold">{{ a.employeeName || ('Employee #' + a.employeeId) }}</td>
+              <td>{{ a.courseName || ('Course #' + a.courseId) }}</td>
+              <td><small class="text-muted">{{ a.dueDate | date:'shortDate' }}</small></td>
+            </tr>
+            <tr *ngIf="assignments.length === 0">
+              <td colspan="3" class="text-center py-4 text-muted">No course assignments yet.</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+</div>

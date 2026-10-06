@@ -52,7 +52,9 @@ namespace HRMS.Application.DTOs
         public long EnrollmentID { get; set; }
         public long TenantID { get; set; }
         public long EmployeeID { get; set; }
+        public string? EmployeeName { get; set; }
         public long CourseID { get; set; }
+        public string? CourseName { get; set; }
         public DateTime EnrollmentDate { get; set; }
         public string EnrollmentStatus { get; set; } = string.Empty;
         public decimal CompletionPercentage { get; set; }
@@ -72,7 +74,9 @@ namespace HRMS.Application.DTOs
         public long LearningAssignmentID { get; set; }
         public long TenantID { get; set; }
         public long EmployeeID { get; set; }
+        public string? EmployeeName { get; set; }
         public long CourseID { get; set; }
+        public string? CourseName { get; set; }
         public string AssignmentType { get; set; } = string.Empty;
         public DateTime? DueDate { get; set; }
         public string AssignmentStatus { get; set; } = string.Empty;

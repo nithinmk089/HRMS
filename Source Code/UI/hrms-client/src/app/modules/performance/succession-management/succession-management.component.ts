@@ -1,64 +1,42 @@
 import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { ReactiveFormsModule, FormBuilder, FormGroup, Validators } from '@angular/forms';
 import { ApiService } from '../../../core/services/api.service';
+import { AuthService } from '../../../core/services/auth.service';
 
 @Component({
   selector: 'app-succession-management',
   standalone: true,
-  imports: [CommonModule, ReactiveFormsModule],
+  imports: [CommonModule],
   templateUrl: './succession-management.component.html',
   styleUrls: ['./succession-management.component.scss']
 })
 export class SuccessionManagementComponent implements OnInit {
-  items: any[] = [];
   employees: any[] = [];
-  form!: FormGroup;
-  showModal = false;
-  successMessage = '';
   errorMessage = '';
+  isLoading = false;
+  tenantId = 1;
 
-  constructor(private api: ApiService, private fb: FormBuilder) {}
+  constructor(
+    private api: ApiService,
+    private auth: AuthService
+  ) {}
 
   ngOnInit(): void {
-    this.initForm();
+    this.tenantId = this.auth.getTenantId() || 1;
     this.loadData();
-    this.loadEmployees();
-  }
-
-  initForm(): void {
-    this.form = this.fb.group({
-      tenantId: [1],
-      title: ['', Validators.required],
-      weightage: [10, [Validators.required, Validators.min(1), Validators.max(100)]],
-      description: ['']
-    });
   }
 
   loadData(): void {
-    this.api.getSelfAssessments(1).subscribe(res => {
-      this.items = res.data || [];
+    this.isLoading = true;
+    this.api.getEmployees(this.tenantId).subscribe({
+      next: (res) => {
+        this.employees = res.data || [];
+        this.isLoading = false;
+      },
+      error: (err) => {
+        this.errorMessage = err?.error?.message || 'Failed to load employees for succession';
+        this.isLoading = false;
+      }
     });
-  }
-
-  loadEmployees(): void {
-    this.api.getEmployees(1).subscribe(res => {
-      this.employees = res.data || [];
-    });
-  }
-
-  openCreateModal(): void {
-    this.form.reset({ tenantId: 1, weightage: 10 });
-    this.showModal = true;
-  }
-
-  closeModal(): void {
-    this.showModal = false;
-  }
-
-  onSubmit(): void {
-    if (this.form.invalid) return;
-    this.successMessage = 'Operation completed successfully!';
-    this.closeModal();
   }
 }

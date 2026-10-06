@@ -35,7 +35,7 @@ namespace HRMS.Persistence.Repositories
         {
             using var conn = new SqlConnection(_connectionString);
             var affected = await conn.ExecuteAsync("performance.usp_PerformanceCycle_Open", new { PerformanceCycleID = id, TenantID = tenantId, ModifiedBy = modifiedBy }, commandType: CommandType.StoredProcedure);
-            return affected > 0;
+            return affected > 0 || affected == -1;
         }
 
         public async Task<IEnumerable<PerformanceCycleDto>> GetCyclesAsync(long tenantId)
@@ -116,8 +116,12 @@ namespace HRMS.Persistence.Repositories
         public async Task<IEnumerable<FeedbackDto>> GetFeedbackAsync(long tenantId, long? employeeId)
         {
             using var conn = new SqlConnection(_connectionString);
-            var sql = "SELECT * FROM performance.Feedback WHERE TenantID = @TenantID AND IsDeleted = 0";
-            if (employeeId.HasValue) sql += " AND EmployeeID = @EmployeeID";
+            var sql = @"SELECT f.FeedbackID, f.TenantID, f.EmployeeID, CONCAT(e.FirstName, ' ', e.LastName) AS EmployeeName,
+                               f.FeedbackDate, f.FeedbackText
+                        FROM performance.Feedback f
+                        LEFT JOIN hr.Employee e ON f.EmployeeID = e.EmployeeID
+                        WHERE f.TenantID = @TenantID AND f.IsDeleted = 0";
+            if (employeeId.HasValue) sql += " AND f.EmployeeID = @EmployeeID";
             return await conn.QueryAsync<FeedbackDto>(sql, new { TenantID = tenantId, EmployeeID = employeeId });
         }
 
@@ -131,8 +135,14 @@ namespace HRMS.Persistence.Repositories
         public async Task<IEnumerable<CheckInMeetingDto>> GetCheckInsAsync(long tenantId, long? employeeId)
         {
             using var conn = new SqlConnection(_connectionString);
-            var sql = "SELECT * FROM performance.CheckInMeeting WHERE TenantID = @TenantID AND IsDeleted = 0";
-            if (employeeId.HasValue) sql += " AND EmployeeID = @EmployeeID";
+            var sql = @"SELECT c.CheckInMeetingID, c.TenantID, c.EmployeeID, CONCAT(e.FirstName, ' ', e.LastName) AS EmployeeName,
+                               c.ManagerID, CONCAT(m.FirstName, ' ', m.LastName) AS ManagerName,
+                               c.MeetingDate, c.Notes
+                        FROM performance.CheckInMeeting c
+                        LEFT JOIN hr.Employee e ON c.EmployeeID = e.EmployeeID
+                        LEFT JOIN hr.Employee m ON c.ManagerID = m.EmployeeID
+                        WHERE c.TenantID = @TenantID AND c.IsDeleted = 0";
+            if (employeeId.HasValue) sql += " AND c.EmployeeID = @EmployeeID";
             return await conn.QueryAsync<CheckInMeetingDto>(sql, new { TenantID = tenantId, EmployeeID = employeeId });
         }
 
