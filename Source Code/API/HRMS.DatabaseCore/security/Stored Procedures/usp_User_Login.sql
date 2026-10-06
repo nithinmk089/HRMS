@@ -1,9 +1,4 @@
-SET ANSI_NULLS ON;
-GO
-SET QUOTED_IDENTIFIER ON;
-GO
-
-CREATE OR ALTER PROCEDURE security.usp_User_Login
+CREATE PROCEDURE security.usp_User_Login
     @Email VARCHAR(200),
     @IPAddress VARCHAR(50) = '127.0.0.1',
     @BrowserInfo VARCHAR(500) = 'Internal'
@@ -93,4 +88,3 @@ BEGIN
     SET LastLoginDate = GETUTCDATE()
     WHERE UserID = @UserID;
 END;
-GO
