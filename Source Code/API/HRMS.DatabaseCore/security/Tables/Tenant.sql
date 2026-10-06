@@ -1,4 +1,4 @@
-﻿CREATE TABLE [security].[Tenant] (
+CREATE TABLE [security].[Tenant] (
     [TenantID]      BIGINT        IDENTITY (1, 1) NOT NULL,
     [TenantCode]    VARCHAR (50)  NOT NULL,
     [TenantName]    VARCHAR (200) NOT NULL,
@@ -45,10 +45,10 @@ BEGIN
     IF EXISTS (
         SELECT 1 
         FROM inserted 
-        WHERE LEN(TenantCode) < 3 OR TenantCode LIKE '%[^A-Z0-9]%'
+        WHERE LEN(TenantCode) < 3 OR TenantCode LIKE '%[^a-zA-Z0-9_.-]%'
     )
     BEGIN
-        RAISERROR ('Tenant Code must be alphanumeric and at least 3 characters long.', 16, 1);
+        RAISERROR ('Tenant Code must be alphanumeric (hyphens, underscores, and dots allowed) and at least 3 characters long.', 16, 1);
         ROLLBACK TRANSACTION;
     END
 END;

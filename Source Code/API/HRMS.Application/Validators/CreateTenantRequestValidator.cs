@@ -14,7 +14,7 @@ namespace HRMS.Application.Validators
             RuleFor(x => x.TenantCode)
                 .NotEmpty().WithMessage("Tenant Code is required.")
                 .MinimumLength(3).WithMessage("Tenant Code must be at least 3 characters.")
-                .Matches("^[A-Za-z0-9]+$").WithMessage("Tenant Code must be alphanumeric.");
+                .Matches("^[A-Za-z0-9-_.]+$").WithMessage("Tenant Code must be alphanumeric (hyphens, underscores, and dots allowed).");
         }
     }
 }
