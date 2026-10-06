@@ -6,6 +6,7 @@ using HRMS.Infrastructure.Hubs;
 using HRMS.Persistence;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.IdentityModel.Tokens;
+using Scalar.AspNetCore;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -72,11 +73,15 @@ builder.Services.AddCors(options =>
 
 var app = builder.Build();
 
-// Configure the HTTP request pipeline.
 if (app.Environment.IsDevelopment())
 {
     app.MapOpenApi();
+    app.MapScalarApiReference();
 }
+
+app.MapGet("/", () => Results.Redirect("/scalar/v1"));
+app.MapGet("/swagger", () => Results.Redirect("/scalar/v1"));
+app.MapGet("/scalar", () => Results.Redirect("/scalar/v1"));
 
 app.UseCors("AllowAngularApp");
 
