@@ -9,7 +9,7 @@ namespace HRMS.API.Controllers
     [Route("api/v1/locations")]
     [ApiController]
     [Authorize]
-    public class LocationsController : ControllerBase
+    public class LocationsController : BaseApiController
     {
         private readonly ILocationRepository _locationRepository;
         public LocationsController(ILocationRepository locationRepository) => _locationRepository = locationRepository;
@@ -18,7 +18,8 @@ namespace HRMS.API.Controllers
         [Authorize(Roles = "ADMIN,SYSADMIN,HRADMIN")]
         public async Task<IActionResult> Create([FromBody] CreateLocationRequest r)
         {
-            r.CreatedBy = 1;
+            r.TenantId = GetEffectiveTenantId(r.TenantId);
+            r.CreatedBy = CurrentUserId;
             var id = await _locationRepository.CreateAsync(r);
             return Ok(ApiResponse<long>.SuccessResult(id, "Location created."));
         }
@@ -28,7 +29,8 @@ namespace HRMS.API.Controllers
         public async Task<IActionResult> Update(long id, [FromBody] UpdateLocationRequest r)
         {
             r.LocationId = id;
-            r.ModifiedBy = 1;
+            r.TenantId = GetEffectiveTenantId(r.TenantId);
+            r.ModifiedBy = CurrentUserId;
             var ok = await _locationRepository.UpdateAsync(r);
             return Ok(ApiResponse<bool>.SuccessResult(ok, "Location updated."));
         }
@@ -37,14 +39,16 @@ namespace HRMS.API.Controllers
         [Authorize(Roles = "ADMIN,SYSADMIN,HRADMIN")]
         public async Task<IActionResult> Delete(long id, [FromQuery] long tenantId)
         {
-            var ok = await _locationRepository.DeleteAsync(id, tenantId, 1);
+            var effectiveTenantId = GetEffectiveTenantId(tenantId);
+            var ok = await _locationRepository.DeleteAsync(id, effectiveTenantId, CurrentUserId);
             return Ok(ApiResponse<bool>.SuccessResult(ok, "Location deleted."));
         }
 
         [HttpGet]
         public async Task<IActionResult> Search([FromQuery] long tenantId, [FromQuery] string? searchText, [FromQuery] int page = 1, [FromQuery] int pageSize = 50)
         {
-            var locs = await _locationRepository.SearchAsync(tenantId, searchText, page, pageSize);
+            var effectiveTenantId = GetEffectiveTenantId(tenantId);
+            var locs = await _locationRepository.SearchAsync(effectiveTenantId, searchText, page, pageSize);
             return Ok(ApiResponse<System.Collections.Generic.IEnumerable<LocationDto>>.SuccessResult(locs));
         }
     }

@@ -19,7 +19,7 @@ namespace HRMS.API.Controllers
         [HttpGet("cycles")]
         public async Task<IActionResult> GetCycles([FromQuery] long tenantId = 0)
         {
-            var effectiveTenantId = tenantId > 0 ? tenantId : CurrentTenantId;
+            var effectiveTenantId = GetEffectiveTenantId(tenantId);
             var res = await _performanceRepository.GetCyclesAsync(effectiveTenantId);
             return Ok(ApiResponse<IEnumerable<PerformanceCycleDto>>.SuccessResult(res));
         }
@@ -28,7 +28,7 @@ namespace HRMS.API.Controllers
         [Authorize(Roles = "ADMIN,SYSADMIN,HRADMIN")]
         public async Task<IActionResult> CreateCycle([FromBody] CreatePerformanceCycleRequest r)
         {
-            if (r.TenantID <= 0) r.TenantID = CurrentTenantId;
+            r.TenantID = GetEffectiveTenantId(r.TenantID);
             r.CreatedBy = CurrentUserId;
             var id = await _performanceRepository.CreateCycleAsync(r);
             return Ok(ApiResponse<long>.SuccessResult(id, "Performance appraisal cycle created."));
@@ -38,7 +38,7 @@ namespace HRMS.API.Controllers
         [Authorize(Roles = "ADMIN,SYSADMIN,HRADMIN")]
         public async Task<IActionResult> OpenCycle(long id, [FromQuery] long tenantId = 0)
         {
-            var effectiveTenantId = tenantId > 0 ? tenantId : CurrentTenantId;
+            var effectiveTenantId = GetEffectiveTenantId(tenantId);
             var ok = await _performanceRepository.OpenCycleAsync(id, effectiveTenantId, CurrentUserId);
             return Ok(ApiResponse<bool>.SuccessResult(ok, "Cycle opened successfully."));
         }
@@ -47,7 +47,7 @@ namespace HRMS.API.Controllers
         [HttpGet("goals")]
         public async Task<IActionResult> GetGoals([FromQuery] long tenantId = 0, [FromQuery] long? employeeId = null, [FromQuery] long? cycleId = null)
         {
-            var effectiveTenantId = tenantId > 0 ? tenantId : CurrentTenantId;
+            var effectiveTenantId = GetEffectiveTenantId(tenantId);
             var res = await _performanceRepository.GetGoalsAsync(effectiveTenantId, employeeId, cycleId);
             return Ok(ApiResponse<IEnumerable<GoalDto>>.SuccessResult(res));
         }
@@ -55,7 +55,7 @@ namespace HRMS.API.Controllers
         [HttpPost("goals")]
         public async Task<IActionResult> CreateGoal([FromBody] CreateGoalRequest r)
         {
-            if (r.TenantID <= 0) r.TenantID = CurrentTenantId;
+            r.TenantID = GetEffectiveTenantId(r.TenantID);
             r.CreatedBy = CurrentUserId;
             var id = await _performanceRepository.CreateGoalAsync(r);
             return Ok(ApiResponse<long>.SuccessResult(id, "Goal set successfully."));
@@ -66,7 +66,7 @@ namespace HRMS.API.Controllers
         public async Task<IActionResult> LogGoalProgress(long id, [FromBody] CreateGoalProgressRequest r)
         {
             r.GoalID = id;
-            if (r.TenantID <= 0) r.TenantID = CurrentTenantId;
+            r.TenantID = GetEffectiveTenantId(r.TenantID);
             r.CreatedBy = CurrentUserId;
             var pId = await _performanceRepository.CreateGoalProgressAsync(r);
             return Ok(ApiResponse<long>.SuccessResult(pId, "Goal progress logged successfully."));
@@ -75,7 +75,7 @@ namespace HRMS.API.Controllers
         [HttpGet("goals/{id}/progress")]
         public async Task<IActionResult> GetGoalProgress(long id, [FromQuery] long tenantId = 0)
         {
-            var effectiveTenantId = tenantId > 0 ? tenantId : CurrentTenantId;
+            var effectiveTenantId = GetEffectiveTenantId(tenantId);
             var res = await _performanceRepository.GetGoalProgressAsync(id, effectiveTenantId);
             return Ok(ApiResponse<IEnumerable<GoalProgressDto>>.SuccessResult(res));
         }
@@ -84,7 +84,7 @@ namespace HRMS.API.Controllers
         [HttpGet("templates")]
         public async Task<IActionResult> GetTemplates([FromQuery] long tenantId = 0)
         {
-            var effectiveTenantId = tenantId > 0 ? tenantId : CurrentTenantId;
+            var effectiveTenantId = GetEffectiveTenantId(tenantId);
             var res = await _performanceRepository.GetTemplatesAsync(effectiveTenantId);
             return Ok(ApiResponse<IEnumerable<AppraisalTemplateDto>>.SuccessResult(res));
         }
@@ -93,7 +93,7 @@ namespace HRMS.API.Controllers
         [HttpGet("competencies")]
         public async Task<IActionResult> GetCompetencyFrameworks([FromQuery] long tenantId = 0)
         {
-            var effectiveTenantId = tenantId > 0 ? tenantId : CurrentTenantId;
+            var effectiveTenantId = GetEffectiveTenantId(tenantId);
             var res = await _performanceRepository.GetCompetencyFrameworksAsync(effectiveTenantId);
             return Ok(ApiResponse<IEnumerable<CompetencyFrameworkDto>>.SuccessResult(res));
         }
@@ -102,7 +102,7 @@ namespace HRMS.API.Controllers
         [HttpGet("feedback")]
         public async Task<IActionResult> GetFeedback([FromQuery] long tenantId = 0, [FromQuery] long? employeeId = null)
         {
-            var effectiveTenantId = tenantId > 0 ? tenantId : CurrentTenantId;
+            var effectiveTenantId = GetEffectiveTenantId(tenantId);
             var res = await _performanceRepository.GetFeedbackAsync(effectiveTenantId, employeeId);
             return Ok(ApiResponse<IEnumerable<FeedbackDto>>.SuccessResult(res));
         }
@@ -110,7 +110,7 @@ namespace HRMS.API.Controllers
         [HttpPost("feedback")]
         public async Task<IActionResult> CreateFeedback([FromBody] CreateFeedbackRequest r)
         {
-            if (r.TenantID <= 0) r.TenantID = CurrentTenantId;
+            r.TenantID = GetEffectiveTenantId(r.TenantID);
             r.CreatedBy = CurrentUserId;
             var id = await _performanceRepository.CreateFeedbackAsync(r);
             return Ok(ApiResponse<long>.SuccessResult(id, "Continuous feedback logged."));
@@ -120,7 +120,7 @@ namespace HRMS.API.Controllers
         [HttpGet("checkins")]
         public async Task<IActionResult> GetCheckIns([FromQuery] long tenantId = 0, [FromQuery] long? employeeId = null)
         {
-            var effectiveTenantId = tenantId > 0 ? tenantId : CurrentTenantId;
+            var effectiveTenantId = GetEffectiveTenantId(tenantId);
             var res = await _performanceRepository.GetCheckInsAsync(effectiveTenantId, employeeId);
             return Ok(ApiResponse<IEnumerable<CheckInMeetingDto>>.SuccessResult(res));
         }
@@ -128,7 +128,7 @@ namespace HRMS.API.Controllers
         [HttpPost("checkins")]
         public async Task<IActionResult> CreateCheckIn([FromBody] CreateCheckInRequest r)
         {
-            if (r.TenantID <= 0) r.TenantID = CurrentTenantId;
+            r.TenantID = GetEffectiveTenantId(r.TenantID);
             r.CreatedBy = CurrentUserId;
             var id = await _performanceRepository.CreateCheckInAsync(r);
             return Ok(ApiResponse<long>.SuccessResult(id, "Check-in 1-on-1 scheduled."));
@@ -138,7 +138,7 @@ namespace HRMS.API.Controllers
         [HttpGet("self-assessments")]
         public async Task<IActionResult> GetSelfAssessments([FromQuery] long tenantId = 0)
         {
-            var effectiveTenantId = tenantId > 0 ? tenantId : CurrentTenantId;
+            var effectiveTenantId = GetEffectiveTenantId(tenantId);
             var res = await _performanceRepository.GetSelfAssessmentsAsync(effectiveTenantId);
             return Ok(ApiResponse<IEnumerable<SelfAssessmentDto>>.SuccessResult(res));
         }
@@ -146,7 +146,7 @@ namespace HRMS.API.Controllers
         [HttpPost("self-assessments")]
         public async Task<IActionResult> CreateSelfAssessment([FromBody] CreateSelfAssessmentRequest r)
         {
-            if (r.TenantID <= 0) r.TenantID = CurrentTenantId;
+            r.TenantID = GetEffectiveTenantId(r.TenantID);
             r.CreatedBy = CurrentUserId;
             var id = await _performanceRepository.CreateSelfAssessmentAsync(r);
             return Ok(ApiResponse<long>.SuccessResult(id, "Self assessment record generated."));

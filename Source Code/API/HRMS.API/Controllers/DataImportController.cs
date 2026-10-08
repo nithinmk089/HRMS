@@ -12,7 +12,7 @@ namespace HRMS.API.Controllers
     [Route("api/v1/import")]
     [ApiController]
     [Authorize]
-    public class DataImportController : ControllerBase
+    public class DataImportController : BaseApiController
     {
         private readonly IDataImportService _importService;
 
@@ -38,8 +38,8 @@ namespace HRMS.API.Controllers
                 return BadRequest(ApiResponse<ImportResultDto>.FailureResult("Please upload a valid CSV or Excel file."));
             }
 
-            long tenantId = GetTenantId();
-            long userId = GetUserId();
+            long tenantId = CurrentTenantId;
+            long userId = CurrentUserId;
 
             using var stream = file.OpenReadStream();
             var result = await _importService.ImportEmployeesAsync(tenantId, userId, stream, file.FileName);
@@ -54,8 +54,8 @@ namespace HRMS.API.Controllers
                 return BadRequest(ApiResponse<ImportResultDto>.FailureResult("Please upload a valid CSV or Excel file."));
             }
 
-            long tenantId = GetTenantId();
-            long userId = GetUserId();
+            long tenantId = CurrentTenantId;
+            long userId = CurrentUserId;
 
             using var stream = file.OpenReadStream();
             var result = await _importService.ImportMasterDataAsync(tenantId, userId, entityType, stream, file.FileName);
@@ -70,24 +70,12 @@ namespace HRMS.API.Controllers
                 return BadRequest(ApiResponse<ImportResultDto>.FailureResult("Please upload a valid CSV or Excel file."));
             }
 
-            long tenantId = GetTenantId();
-            long userId = GetUserId();
+            long tenantId = CurrentTenantId;
+            long userId = CurrentUserId;
 
             using var stream = file.OpenReadStream();
             var result = await _importService.ImportOperationalDataAsync(tenantId, userId, entityType, stream, file.FileName);
             return Ok(ApiResponse<ImportResultDto>.SuccessResult(result, result.Message));
-        }
-
-        private long GetTenantId()
-        {
-            var claim = User.FindFirst("tenantId")?.Value;
-            return long.TryParse(claim, out var tid) ? tid : 1;
-        }
-
-        private long GetUserId()
-        {
-            var claim = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
-            return long.TryParse(claim, out var uid) ? uid : 1;
         }
     }
 }

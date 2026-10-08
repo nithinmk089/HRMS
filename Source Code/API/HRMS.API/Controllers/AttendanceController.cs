@@ -24,7 +24,7 @@ namespace HRMS.API.Controllers
         public async Task<IActionResult> ClockIn([FromBody] CreateAttendanceRequest r)
         {
             r.CreatedBy = CurrentUserId;
-            if (r.TenantId <= 0) r.TenantId = CurrentTenantId;
+            r.TenantId = GetEffectiveTenantId(r.TenantId);
             if (!IsAdmin && CurrentEmployeeId.HasValue)
             {
                 r.EmployeeId = CurrentEmployeeId.Value;
@@ -44,7 +44,7 @@ namespace HRMS.API.Controllers
         public async Task<IActionResult> ClockOut([FromBody] UpdateAttendanceRequest r)
         {
             r.ModifiedBy = CurrentUserId;
-            if (r.TenantId <= 0) r.TenantId = CurrentTenantId;
+            r.TenantId = GetEffectiveTenantId(r.TenantId);
             // Enforce server-side timestamp
             r.ClockOutTime = DateTime.UtcNow;
 
@@ -53,17 +53,18 @@ namespace HRMS.API.Controllers
         }
 
         [HttpGet("{id}")]
-        public async Task<IActionResult> GetById(long id, [FromQuery] long tenantId)
+        public async Task<IActionResult> GetById(long id, [FromQuery] long tenantId = 0)
         {
-            var attendance = await _attendanceRepository.GetByIdAsync(id, tenantId > 0 ? tenantId : CurrentTenantId);
+            var effectiveTenantId = GetEffectiveTenantId(tenantId);
+            var attendance = await _attendanceRepository.GetByIdAsync(id, effectiveTenantId);
             if (attendance == null) return NotFound(ApiResponse<AttendanceDto>.FailureResult("Attendance record not found."));
             return Ok(ApiResponse<AttendanceDto>.SuccessResult(attendance));
         }
 
         [HttpGet]
-        public async Task<IActionResult> Search([FromQuery] long tenantId, [FromQuery] long? employeeId, [FromQuery] DateTime? startDate, [FromQuery] DateTime? endDate)
+        public async Task<IActionResult> Search([FromQuery] long tenantId = 0, [FromQuery] long? employeeId = null, [FromQuery] DateTime? startDate = null, [FromQuery] DateTime? endDate = null)
         {
-            var resolvedTenantId = tenantId > 0 ? tenantId : CurrentTenantId;
+            var resolvedTenantId = GetEffectiveTenantId(tenantId);
             if (!IsAdmin && !HasRole("MANAGER"))
             {
                 if (CurrentEmployeeId.HasValue)
@@ -78,9 +79,10 @@ namespace HRMS.API.Controllers
 
         [HttpPost("recalculate")]
         [Authorize(Roles = "ADMIN,SYSADMIN")]
-        public async Task<IActionResult> Recalculate([FromQuery] long tenantId, [FromQuery] long employeeId, [FromQuery] DateTime attendanceDate)
+        public async Task<IActionResult> Recalculate([FromQuery] long tenantId = 0, [FromQuery] long employeeId = 0, [FromQuery] DateTime attendanceDate = default)
         {
-            var ok = await _attendanceRepository.RecalculateAsync(tenantId > 0 ? tenantId : CurrentTenantId, employeeId, attendanceDate, CurrentUserId);
+            var effectiveTenantId = GetEffectiveTenantId(tenantId);
+            var ok = await _attendanceRepository.RecalculateAsync(effectiveTenantId, employeeId, attendanceDate, CurrentUserId);
             return Ok(ApiResponse<bool>.SuccessResult(ok, "Recalculation completed."));
         }
 
@@ -88,24 +90,26 @@ namespace HRMS.API.Controllers
         public async Task<IActionResult> CreateAdjustment([FromBody] CreateAttendanceAdjustmentRequest r)
         {
             r.CreatedBy = CurrentUserId;
-            if (r.TenantId <= 0) r.TenantId = CurrentTenantId;
+            r.TenantId = GetEffectiveTenantId(r.TenantId);
             var id = await _attendanceRepository.CreateAdjustmentAsync(r);
             return Ok(ApiResponse<long>.SuccessResult(id, "Attendance adjustment request submitted."));
         }
 
         [HttpPost("adjustments/{id}/approve")]
         [Authorize(Roles = "ADMIN,SYSADMIN,MANAGER")]
-        public async Task<IActionResult> ApproveAdjustment(long id, [FromQuery] long tenantId)
+        public async Task<IActionResult> ApproveAdjustment(long id, [FromQuery] long tenantId = 0)
         {
-            var ok = await _attendanceRepository.ApproveAdjustmentAsync(id, tenantId > 0 ? tenantId : CurrentTenantId, CurrentUserId);
+            var effectiveTenantId = GetEffectiveTenantId(tenantId);
+            var ok = await _attendanceRepository.ApproveAdjustmentAsync(id, effectiveTenantId, CurrentUserId);
             return Ok(ApiResponse<bool>.SuccessResult(ok, "Attendance adjustment approved."));
         }
 
         [HttpPost("adjustments/{id}/reject")]
         [Authorize(Roles = "ADMIN,SYSADMIN,MANAGER")]
-        public async Task<IActionResult> RejectAdjustment(long id, [FromQuery] long tenantId)
+        public async Task<IActionResult> RejectAdjustment(long id, [FromQuery] long tenantId = 0)
         {
-            var ok = await _attendanceRepository.RejectAdjustmentAsync(id, tenantId > 0 ? tenantId : CurrentTenantId, CurrentUserId);
+            var effectiveTenantId = GetEffectiveTenantId(tenantId);
+            var ok = await _attendanceRepository.RejectAdjustmentAsync(id, effectiveTenantId, CurrentUserId);
             return Ok(ApiResponse<bool>.SuccessResult(ok, "Attendance adjustment rejected."));
         }
 
@@ -113,7 +117,7 @@ namespace HRMS.API.Controllers
         public async Task<IActionResult> CreateRegularization([FromBody] CreateAttendanceRegularizationRequest r)
         {
             r.CreatedBy = CurrentUserId;
-            if (r.TenantId <= 0) r.TenantId = CurrentTenantId;
+            r.TenantId = GetEffectiveTenantId(r.TenantId);
             if (!IsAdmin && !HasRole("MANAGER") && CurrentEmployeeId.HasValue)
             {
                 r.EmployeeId = CurrentEmployeeId.Value;
@@ -124,17 +128,19 @@ namespace HRMS.API.Controllers
 
         [HttpPost("regularizations/{id}/approve")]
         [Authorize(Roles = "ADMIN,SYSADMIN,MANAGER")]
-        public async Task<IActionResult> ApproveRegularization(long id, [FromQuery] long tenantId)
+        public async Task<IActionResult> ApproveRegularization(long id, [FromQuery] long tenantId = 0)
         {
-            var ok = await _attendanceRepository.ApproveRegularizationAsync(id, tenantId > 0 ? tenantId : CurrentTenantId, CurrentUserId);
+            var effectiveTenantId = GetEffectiveTenantId(tenantId);
+            var ok = await _attendanceRepository.ApproveRegularizationAsync(id, effectiveTenantId, CurrentUserId);
             return Ok(ApiResponse<bool>.SuccessResult(ok, "Regularization request approved."));
         }
 
         [HttpPost("regularizations/{id}/reject")]
         [Authorize(Roles = "ADMIN,SYSADMIN,MANAGER")]
-        public async Task<IActionResult> RejectRegularization(long id, [FromQuery] long tenantId)
+        public async Task<IActionResult> RejectRegularization(long id, [FromQuery] long tenantId = 0)
         {
-            var ok = await _attendanceRepository.RejectRegularizationAsync(id, tenantId > 0 ? tenantId : CurrentTenantId, CurrentUserId);
+            var effectiveTenantId = GetEffectiveTenantId(tenantId);
+            var ok = await _attendanceRepository.RejectRegularizationAsync(id, effectiveTenantId, CurrentUserId);
             return Ok(ApiResponse<bool>.SuccessResult(ok, "Regularization request rejected."));
         }
     }

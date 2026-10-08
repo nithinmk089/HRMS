@@ -10,7 +10,7 @@ namespace HRMS.API.Controllers
     [Route("api/v1/overtime")]
     [ApiController]
     [Authorize]
-    public class OvertimeController : ControllerBase
+    public class OvertimeController : BaseApiController
     {
         private readonly IOvertimeRepository _overtimeRepository;
 
@@ -22,7 +22,8 @@ namespace HRMS.API.Controllers
         [HttpPost]
         public async Task<IActionResult> Create([FromBody] CreateOvertimeRequestRequest r)
         {
-            r.CreatedBy = 1;
+            r.TenantId = GetEffectiveTenantId(r.TenantId);
+            r.CreatedBy = CurrentUserId;
             var id = await _overtimeRepository.CreateOvertimeRequestAsync(r);
             return Ok(ApiResponse<long>.SuccessResult(id, "Overtime request submitted."));
         }
@@ -30,7 +31,8 @@ namespace HRMS.API.Controllers
         [HttpGet]
         public async Task<IActionResult> Search([FromQuery] long tenantId, [FromQuery] long? employeeId, [FromQuery] string? status)
         {
-            var requests = await _overtimeRepository.SearchOvertimeRequestsAsync(tenantId, employeeId, status);
+            var effectiveTenantId = GetEffectiveTenantId(tenantId);
+            var requests = await _overtimeRepository.SearchOvertimeRequestsAsync(effectiveTenantId, employeeId, status);
             return Ok(ApiResponse<IEnumerable<OvertimeRequestDto>>.SuccessResult(requests));
         }
 
@@ -38,7 +40,8 @@ namespace HRMS.API.Controllers
         [Authorize(Roles = "ADMIN,SYSADMIN,MANAGER")]
         public async Task<IActionResult> Approve(long id, [FromQuery] long tenantId, [FromQuery] string? remarks)
         {
-            var ok = await _overtimeRepository.ApproveOvertimeRequestAsync(id, tenantId, 1, remarks);
+            var effectiveTenantId = GetEffectiveTenantId(tenantId);
+            var ok = await _overtimeRepository.ApproveOvertimeRequestAsync(id, effectiveTenantId, CurrentUserId, remarks);
             return Ok(ApiResponse<bool>.SuccessResult(ok, "Overtime request approved."));
         }
 
@@ -46,7 +49,8 @@ namespace HRMS.API.Controllers
         [Authorize(Roles = "ADMIN,SYSADMIN,MANAGER")]
         public async Task<IActionResult> Reject(long id, [FromQuery] long tenantId, [FromQuery] string? remarks)
         {
-            var ok = await _overtimeRepository.RejectOvertimeRequestAsync(id, tenantId, 1, remarks);
+            var effectiveTenantId = GetEffectiveTenantId(tenantId);
+            var ok = await _overtimeRepository.RejectOvertimeRequestAsync(id, effectiveTenantId, CurrentUserId, remarks);
             return Ok(ApiResponse<bool>.SuccessResult(ok, "Overtime request rejected."));
         }
     }

@@ -10,7 +10,7 @@ namespace HRMS.API.Controllers
     [Route("api/v1/transfers")]
     [ApiController]
     [Authorize]
-    public class TransfersController : ControllerBase
+    public class TransfersController : BaseApiController
     {
         private readonly IEmployeeTransferRepository _transferRepository;
 
@@ -23,7 +23,8 @@ namespace HRMS.API.Controllers
         [Authorize(Roles = "ADMIN,SYSADMIN,HRADMIN")]
         public async Task<IActionResult> Create([FromBody] CreateEmployeeTransferRequest r)
         {
-            r.CreatedBy = 1;
+            r.TenantId = GetEffectiveTenantId(r.TenantId);
+            r.CreatedBy = CurrentUserId;
             var id = await _transferRepository.CreateAsync(r);
             return Ok(ApiResponse<long>.SuccessResult(id, "Transfer request initiated."));
         }
@@ -32,7 +33,8 @@ namespace HRMS.API.Controllers
         [Authorize(Roles = "ADMIN,SYSADMIN,HRADMIN")]
         public async Task<IActionResult> Approve(long id, [FromQuery] long tenantId)
         {
-            var ok = await _transferRepository.ApproveAsync(id, tenantId, 1);
+            var effectiveTenantId = GetEffectiveTenantId(tenantId);
+            var ok = await _transferRepository.ApproveAsync(id, effectiveTenantId, CurrentUserId);
             return Ok(ApiResponse<bool>.SuccessResult(ok, "Transfer request approved."));
         }
 
@@ -40,14 +42,16 @@ namespace HRMS.API.Controllers
         [Authorize(Roles = "ADMIN,SYSADMIN,HRADMIN")]
         public async Task<IActionResult> Complete(long id, [FromQuery] long tenantId)
         {
-            var ok = await _transferRepository.CompleteAsync(id, tenantId, 1);
+            var effectiveTenantId = GetEffectiveTenantId(tenantId);
+            var ok = await _transferRepository.CompleteAsync(id, effectiveTenantId, CurrentUserId);
             return Ok(ApiResponse<bool>.SuccessResult(ok, "Transfer request completed."));
         }
 
         [HttpGet("report")]
         public async Task<IActionResult> GetReport([FromQuery] long tenantId, [FromQuery] long? employeeId)
         {
-            var history = await _transferRepository.GetTransferHistoryReportAsync(tenantId, employeeId);
+            var effectiveTenantId = GetEffectiveTenantId(tenantId);
+            var history = await _transferRepository.GetTransferHistoryReportAsync(effectiveTenantId, employeeId);
             return Ok(ApiResponse<IEnumerable<EmployeeTransferDto>>.SuccessResult(history));
         }
     }

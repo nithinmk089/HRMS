@@ -9,7 +9,7 @@ namespace HRMS.API.Controllers
     [Route("api/v1/permissions")]
     [ApiController]
     [Authorize(Roles = "ADMIN,SYSADMIN")]
-    public class PermissionsController : ControllerBase
+    public class PermissionsController : BaseApiController
     {
         private readonly IPermissionRepository _permissionRepository;
         public PermissionsController(IPermissionRepository permissionRepository) => _permissionRepository = permissionRepository;
@@ -17,7 +17,8 @@ namespace HRMS.API.Controllers
         [HttpPost]
         public async Task<IActionResult> Create([FromBody] CreatePermissionRequest r)
         {
-            r.CreatedBy = 1;
+            r.TenantId = GetEffectiveTenantId(r.TenantId);
+            r.CreatedBy = CurrentUserId;
             var id = await _permissionRepository.CreateAsync(r);
             return Ok(ApiResponse<long>.SuccessResult(id, "Permission created."));
         }
@@ -26,50 +27,56 @@ namespace HRMS.API.Controllers
         public async Task<IActionResult> Update(long id, [FromBody] UpdatePermissionRequest r)
         {
             r.PermissionId = id;
-            r.ModifiedBy = 1;
+            r.ModifiedBy = CurrentUserId;
             var ok = await _permissionRepository.UpdateAsync(r);
             return Ok(ApiResponse<bool>.SuccessResult(ok, "Permission updated."));
         }
 
         [HttpDelete("{id}")]
-        public async Task<IActionResult> Delete(long id, [FromQuery] long tenantId)
+        public async Task<IActionResult> Delete(long id, [FromQuery] long tenantId = 0)
         {
-            var ok = await _permissionRepository.DeleteAsync(id, tenantId, 1);
+            var effectiveTenantId = GetEffectiveTenantId(tenantId);
+            var ok = await _permissionRepository.DeleteAsync(id, effectiveTenantId, CurrentUserId);
             return Ok(ApiResponse<bool>.SuccessResult(ok, "Permission deleted."));
         }
 
         [HttpGet]
-        public async Task<IActionResult> Search([FromQuery] long tenantId, [FromQuery] string? searchText, [FromQuery] int page = 1, [FromQuery] int pageSize = 50)
+        public async Task<IActionResult> Search([FromQuery] long tenantId = 0, [FromQuery] string? searchText = null, [FromQuery] int page = 1, [FromQuery] int pageSize = 50)
         {
-            var perms = await _permissionRepository.SearchAsync(tenantId, searchText, page, pageSize);
+            var effectiveTenantId = GetEffectiveTenantId(tenantId);
+            var perms = await _permissionRepository.SearchAsync(effectiveTenantId, searchText, page, pageSize);
             return Ok(ApiResponse<System.Collections.Generic.IEnumerable<PermissionDto>>.SuccessResult(perms));
         }
 
         [HttpPost("assign-role")]
-        public async Task<IActionResult> AssignRole([FromQuery] long tenantId, [FromQuery] long roleId, [FromQuery] long permissionId)
+        public async Task<IActionResult> AssignRole([FromQuery] long tenantId = 0, [FromQuery] long roleId = 0, [FromQuery] long permissionId = 0)
         {
-            var ok = await _permissionRepository.AssignToRoleAsync(tenantId, roleId, permissionId, 1);
+            var effectiveTenantId = GetEffectiveTenantId(tenantId);
+            var ok = await _permissionRepository.AssignToRoleAsync(effectiveTenantId, roleId, permissionId, CurrentUserId);
             return Ok(ApiResponse<bool>.SuccessResult(ok, "Permission assigned to role."));
         }
 
         [HttpPost("remove-role")]
-        public async Task<IActionResult> RemoveRole([FromQuery] long tenantId, [FromQuery] long roleId, [FromQuery] long permissionId)
+        public async Task<IActionResult> RemoveRole([FromQuery] long tenantId = 0, [FromQuery] long roleId = 0, [FromQuery] long permissionId = 0)
         {
-            var ok = await _permissionRepository.RemoveFromRoleAsync(tenantId, roleId, permissionId, 1);
+            var effectiveTenantId = GetEffectiveTenantId(tenantId);
+            var ok = await _permissionRepository.RemoveFromRoleAsync(effectiveTenantId, roleId, permissionId, CurrentUserId);
             return Ok(ApiResponse<bool>.SuccessResult(ok, "Permission removed from role."));
         }
 
         [HttpPost("assign-user")]
-        public async Task<IActionResult> AssignUser([FromQuery] long tenantId, [FromQuery] long userId, [FromQuery] long permissionId, [FromQuery] bool isAllowed = true)
+        public async Task<IActionResult> AssignUser([FromQuery] long tenantId = 0, [FromQuery] long userId = 0, [FromQuery] long permissionId = 0, [FromQuery] bool isAllowed = true)
         {
-            var ok = await _permissionRepository.AssignToUserAsync(tenantId, userId, permissionId, isAllowed, 1);
+            var effectiveTenantId = GetEffectiveTenantId(tenantId);
+            var ok = await _permissionRepository.AssignToUserAsync(effectiveTenantId, userId, permissionId, isAllowed, CurrentUserId);
             return Ok(ApiResponse<bool>.SuccessResult(ok, "Permission assigned to user."));
         }
 
         [HttpPost("remove-user")]
-        public async Task<IActionResult> RemoveUser([FromQuery] long tenantId, [FromQuery] long userId, [FromQuery] long permissionId)
+        public async Task<IActionResult> RemoveUser([FromQuery] long tenantId = 0, [FromQuery] long userId = 0, [FromQuery] long permissionId = 0)
         {
-            var ok = await _permissionRepository.RemoveFromUserAsync(tenantId, userId, permissionId, 1);
+            var effectiveTenantId = GetEffectiveTenantId(tenantId);
+            var ok = await _permissionRepository.RemoveFromUserAsync(effectiveTenantId, userId, permissionId, CurrentUserId);
             return Ok(ApiResponse<bool>.SuccessResult(ok, "Permission removed from user."));
         }
     }

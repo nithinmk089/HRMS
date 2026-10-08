@@ -9,7 +9,7 @@ namespace HRMS.API.Controllers
     [Route("api/v1/departments")]
     [ApiController]
     [Authorize]
-    public class DepartmentsController : ControllerBase
+    public class DepartmentsController : BaseApiController
     {
         private readonly IDepartmentRepository _departmentRepository;
         public DepartmentsController(IDepartmentRepository departmentRepository) => _departmentRepository = departmentRepository;
@@ -18,7 +18,8 @@ namespace HRMS.API.Controllers
         [Authorize(Roles = "ADMIN,SYSADMIN,HRADMIN")]
         public async Task<IActionResult> Create([FromBody] CreateDepartmentRequest r)
         {
-            r.CreatedBy = 1;
+            r.TenantId = GetEffectiveTenantId(r.TenantId);
+            r.CreatedBy = CurrentUserId;
             var id = await _departmentRepository.CreateAsync(r);
             return Ok(ApiResponse<long>.SuccessResult(id, "Department created."));
         }
@@ -28,7 +29,8 @@ namespace HRMS.API.Controllers
         public async Task<IActionResult> Update(long id, [FromBody] UpdateDepartmentRequest r)
         {
             r.DepartmentId = id;
-            r.ModifiedBy = 1;
+            r.TenantId = GetEffectiveTenantId(r.TenantId);
+            r.ModifiedBy = CurrentUserId;
             var ok = await _departmentRepository.UpdateAsync(r);
             return Ok(ApiResponse<bool>.SuccessResult(ok, "Department updated."));
         }
@@ -37,14 +39,16 @@ namespace HRMS.API.Controllers
         [Authorize(Roles = "ADMIN,SYSADMIN,HRADMIN")]
         public async Task<IActionResult> Delete(long id, [FromQuery] long tenantId)
         {
-            var ok = await _departmentRepository.DeleteAsync(id, tenantId, 1);
+            var effectiveTenantId = GetEffectiveTenantId(tenantId);
+            var ok = await _departmentRepository.DeleteAsync(id, effectiveTenantId, CurrentUserId);
             return Ok(ApiResponse<bool>.SuccessResult(ok, "Department deleted."));
         }
 
         [HttpGet]
         public async Task<IActionResult> Search([FromQuery] long tenantId, [FromQuery] long? businessUnitId, [FromQuery] string? searchText, [FromQuery] int page = 1, [FromQuery] int pageSize = 50)
         {
-            var depts = await _departmentRepository.SearchAsync(tenantId, businessUnitId, searchText, page, pageSize);
+            var effectiveTenantId = GetEffectiveTenantId(tenantId);
+            var depts = await _departmentRepository.SearchAsync(effectiveTenantId, businessUnitId, searchText, page, pageSize);
             return Ok(ApiResponse<System.Collections.Generic.IEnumerable<DepartmentDto>>.SuccessResult(depts));
         }
     }

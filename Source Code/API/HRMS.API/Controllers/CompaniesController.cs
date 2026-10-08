@@ -9,7 +9,7 @@ namespace HRMS.API.Controllers
     [Route("api/v1/companies")]
     [ApiController]
     [Authorize(Roles = "ADMIN,SYSADMIN,HRADMIN")]
-    public class CompaniesController : ControllerBase
+    public class CompaniesController : BaseApiController
     {
         private readonly ICompanyRepository _companyRepository;
         public CompaniesController(ICompanyRepository companyRepository) => _companyRepository = companyRepository;
@@ -17,7 +17,8 @@ namespace HRMS.API.Controllers
         [HttpPost]
         public async Task<IActionResult> Create([FromBody] CreateCompanyRequest r)
         {
-            r.CreatedBy = 1;
+            r.TenantId = GetEffectiveTenantId(r.TenantId);
+            r.CreatedBy = CurrentUserId;
             var id = await _companyRepository.CreateAsync(r);
             return CreatedAtAction(nameof(GetById), new { id }, ApiResponse<long>.SuccessResult(id, "Company created."));
         }
@@ -26,7 +27,8 @@ namespace HRMS.API.Controllers
         public async Task<IActionResult> Update(long id, [FromBody] UpdateCompanyRequest r)
         {
             r.CompanyId = id;
-            r.ModifiedBy = 1;
+            r.TenantId = GetEffectiveTenantId(r.TenantId);
+            r.ModifiedBy = CurrentUserId;
             var ok = await _companyRepository.UpdateAsync(r);
             return Ok(ApiResponse<bool>.SuccessResult(ok, "Company updated."));
         }
@@ -34,14 +36,16 @@ namespace HRMS.API.Controllers
         [HttpDelete("{id}")]
         public async Task<IActionResult> Delete(long id, [FromQuery] long tenantId)
         {
-            var ok = await _companyRepository.DeleteAsync(id, tenantId, 1);
+            var effectiveTenantId = GetEffectiveTenantId(tenantId);
+            var ok = await _companyRepository.DeleteAsync(id, effectiveTenantId, CurrentUserId);
             return Ok(ApiResponse<bool>.SuccessResult(ok, "Company deleted."));
         }
 
         [HttpGet("{id}")]
         public async Task<IActionResult> GetById(long id, [FromQuery] long tenantId)
         {
-            var company = await _companyRepository.GetByIdAsync(id, tenantId);
+            var effectiveTenantId = GetEffectiveTenantId(tenantId);
+            var company = await _companyRepository.GetByIdAsync(id, effectiveTenantId);
             if (company == null) return NotFound(ApiResponse<CompanyDto>.FailureResult("Company not found."));
             return Ok(ApiResponse<CompanyDto>.SuccessResult(company));
         }
@@ -49,7 +53,8 @@ namespace HRMS.API.Controllers
         [HttpGet]
         public async Task<IActionResult> Search([FromQuery] long tenantId, [FromQuery] string? searchText, [FromQuery] int page = 1, [FromQuery] int pageSize = 50)
         {
-            var companies = await _companyRepository.SearchAsync(tenantId, searchText, page, pageSize);
+            var effectiveTenantId = GetEffectiveTenantId(tenantId);
+            var companies = await _companyRepository.SearchAsync(effectiveTenantId, searchText, page, pageSize);
             return Ok(ApiResponse<System.Collections.Generic.IEnumerable<CompanyDto>>.SuccessResult(companies));
         }
     }

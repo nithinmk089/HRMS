@@ -11,7 +11,7 @@ namespace HRMS.API.Controllers
     [Route("api/v1/offboarding")]
     [ApiController]
     [Authorize]
-    public class OffboardingController : ControllerBase
+    public class OffboardingController : BaseApiController
     {
         private readonly IOffboardingRepository _offboardingRepository;
 
@@ -23,7 +23,8 @@ namespace HRMS.API.Controllers
         [HttpPost("exit-requests")]
         public async Task<IActionResult> CreateExitRequest([FromBody] CreateExitRequest request)
         {
-            request.CreatedBy = 1;
+            request.TenantID = GetEffectiveTenantId(request.TenantID);
+            request.CreatedBy = CurrentUserId;
             var id = await _offboardingRepository.CreateExitRequestAsync(request);
             return Ok(ApiResponse<long>.SuccessResult(id, "Resignation request submitted successfully."));
         }
@@ -32,7 +33,8 @@ namespace HRMS.API.Controllers
         public async Task<IActionResult> UpdateExitRequest(long id, [FromBody] UpdateExitRequest request)
         {
             request.ExitRequestID = id;
-            request.ModifiedBy = 1;
+            request.TenantID = GetEffectiveTenantId(request.TenantID);
+            request.ModifiedBy = CurrentUserId;
             var success = await _offboardingRepository.UpdateExitRequestAsync(request);
             return Ok(ApiResponse<bool>.SuccessResult(success, "Resignation request updated successfully."));
         }
@@ -40,7 +42,8 @@ namespace HRMS.API.Controllers
         [HttpPost("exit-requests/{id}/submit")]
         public async Task<IActionResult> SubmitExitRequest(long id, [FromQuery] long tenantId)
         {
-            var success = await _offboardingRepository.SubmitExitRequestAsync(id, tenantId, 1);
+            var effectiveTenantId = GetEffectiveTenantId(tenantId);
+            var success = await _offboardingRepository.SubmitExitRequestAsync(id, effectiveTenantId, CurrentUserId);
             return Ok(ApiResponse<bool>.SuccessResult(success, "Resignation request officially submitted."));
         }
 
@@ -49,7 +52,8 @@ namespace HRMS.API.Controllers
         public async Task<IActionResult> ApproveExitRequest(long id, [FromBody] ApproveExitRequest request)
         {
             request.ExitRequestID = id;
-            request.ApproverID = 1;
+            request.TenantID = GetEffectiveTenantId(request.TenantID);
+            request.ApproverID = CurrentUserId;
             var approvalId = await _offboardingRepository.ApproveExitRequestAsync(request);
             return Ok(ApiResponse<long>.SuccessResult(approvalId, "Resignation request approved."));
         }
@@ -59,7 +63,8 @@ namespace HRMS.API.Controllers
         public async Task<IActionResult> RejectExitRequest(long id, [FromBody] RejectExitRequest request)
         {
             request.ExitRequestID = id;
-            request.ApproverID = 1;
+            request.TenantID = GetEffectiveTenantId(request.TenantID);
+            request.ApproverID = CurrentUserId;
             var approvalId = await _offboardingRepository.RejectExitRequestAsync(request);
             return Ok(ApiResponse<long>.SuccessResult(approvalId, "Resignation request rejected."));
         }
@@ -67,7 +72,8 @@ namespace HRMS.API.Controllers
         [HttpPost("clearances")]
         public async Task<IActionResult> CreateClearanceRequest([FromBody] CreateClearanceRequest request)
         {
-            request.CreatedBy = 1;
+            request.TenantID = GetEffectiveTenantId(request.TenantID);
+            request.CreatedBy = CurrentUserId;
             var id = await _offboardingRepository.CreateClearanceRequestAsync(request);
             return Ok(ApiResponse<long>.SuccessResult(id, "Clearance request initiated."));
         }
@@ -76,21 +82,24 @@ namespace HRMS.API.Controllers
         [Authorize(Roles = "ADMIN,SYSADMIN,MANAGER")]
         public async Task<IActionResult> ApproveClearanceRequest(long id, [FromQuery] long tenantId)
         {
-            var success = await _offboardingRepository.ApproveClearanceRequestAsync(id, tenantId, 1);
+            var effectiveTenantId = GetEffectiveTenantId(tenantId);
+            var success = await _offboardingRepository.ApproveClearanceRequestAsync(id, effectiveTenantId, CurrentUserId);
             return Ok(ApiResponse<bool>.SuccessResult(success, "Clearance request approved and completed."));
         }
 
         [HttpPost("clearances/tasks/{id}/complete")]
         public async Task<IActionResult> CompleteClearanceTask(long id, [FromQuery] long tenantId)
         {
-            var success = await _offboardingRepository.CompleteClearanceTaskAsync(id, tenantId, 1);
+            var effectiveTenantId = GetEffectiveTenantId(tenantId);
+            var success = await _offboardingRepository.CompleteClearanceTaskAsync(id, effectiveTenantId, CurrentUserId);
             return Ok(ApiResponse<bool>.SuccessResult(success, "Clearance department task marked as completed."));
         }
 
         [HttpPost("asset-returns")]
         public async Task<IActionResult> CreateAssetReturn([FromBody] CreateAssetReturnRequest request)
         {
-            request.CreatedBy = 1;
+            request.TenantID = GetEffectiveTenantId(request.TenantID);
+            request.CreatedBy = CurrentUserId;
             var id = await _offboardingRepository.CreateAssetReturnAsync(request);
             return Ok(ApiResponse<long>.SuccessResult(id, "Asset return logged."));
         }
@@ -100,7 +109,8 @@ namespace HRMS.API.Controllers
         public async Task<IActionResult> VerifyAssetReturn(long id, [FromBody] VerifyAssetReturnRequest request)
         {
             request.AssetReturnID = id;
-            request.ModifiedBy = 1;
+            request.TenantID = GetEffectiveTenantId(request.TenantID);
+            request.ModifiedBy = CurrentUserId;
             var success = await _offboardingRepository.VerifyAssetReturnAsync(request);
             return Ok(ApiResponse<bool>.SuccessResult(success, "Asset condition and return verified."));
         }
@@ -108,7 +118,8 @@ namespace HRMS.API.Controllers
         [HttpPost("knowledge-transfers")]
         public async Task<IActionResult> CreateKnowledgeTransfer([FromBody] CreateKnowledgeTransferRequest request)
         {
-            request.CreatedBy = 1;
+            request.TenantID = GetEffectiveTenantId(request.TenantID);
+            request.CreatedBy = CurrentUserId;
             var id = await _offboardingRepository.CreateKnowledgeTransferAsync(request);
             return Ok(ApiResponse<long>.SuccessResult(id, "KT handover details logged."));
         }
@@ -116,7 +127,8 @@ namespace HRMS.API.Controllers
         [HttpPost("knowledge-transfers/{id}/complete")]
         public async Task<IActionResult> CompleteKnowledgeTransfer(long id, [FromQuery] long tenantId)
         {
-            var success = await _offboardingRepository.CompleteKnowledgeTransferAsync(id, tenantId, 1);
+            var effectiveTenantId = GetEffectiveTenantId(tenantId);
+            var success = await _offboardingRepository.CompleteKnowledgeTransferAsync(id, effectiveTenantId, CurrentUserId);
             return Ok(ApiResponse<bool>.SuccessResult(success, "KT handover confirmed as completed."));
         }
 
@@ -124,7 +136,8 @@ namespace HRMS.API.Controllers
         [Authorize(Roles = "ADMIN,SYSADMIN")]
         public async Task<IActionResult> GenerateExperienceLetter([FromBody] GenerateExperienceLetterRequest request)
         {
-            request.CreatedBy = 1;
+            request.TenantID = GetEffectiveTenantId(request.TenantID);
+            request.CreatedBy = CurrentUserId;
             var id = await _offboardingRepository.GenerateExperienceLetterAsync(request);
             return Ok(ApiResponse<long>.SuccessResult(id, "Experience letter generated successfully."));
         }
@@ -133,7 +146,8 @@ namespace HRMS.API.Controllers
         [Authorize(Roles = "ADMIN,SYSADMIN")]
         public async Task<IActionResult> CalculateFullAndFinalSettlement([FromBody] CalculateFFSRequest request)
         {
-            request.CreatedBy = 1;
+            request.TenantID = GetEffectiveTenantId(request.TenantID);
+            request.CreatedBy = CurrentUserId;
             var id = await _offboardingRepository.CalculateFullAndFinalSettlementAsync(request);
             return Ok(ApiResponse<long>.SuccessResult(id, "Full and final settlement calculated."));
         }
@@ -142,7 +156,8 @@ namespace HRMS.API.Controllers
         [Authorize(Roles = "ADMIN,SYSADMIN")]
         public async Task<IActionResult> ApproveFullAndFinalSettlement(long id, [FromQuery] long tenantId)
         {
-            var success = await _offboardingRepository.ApproveFullAndFinalSettlementAsync(id, tenantId, 1);
+            var effectiveTenantId = GetEffectiveTenantId(tenantId);
+            var success = await _offboardingRepository.ApproveFullAndFinalSettlementAsync(id, effectiveTenantId, CurrentUserId);
             return Ok(ApiResponse<bool>.SuccessResult(success, "Full and final settlement approved."));
         }
 
@@ -150,28 +165,32 @@ namespace HRMS.API.Controllers
         [Authorize(Roles = "ADMIN,SYSADMIN")]
         public async Task<IActionResult> CloseFullAndFinalSettlement(long id, [FromQuery] long tenantId)
         {
-            var success = await _offboardingRepository.CloseFullAndFinalSettlementAsync(id, tenantId, 1);
+            var effectiveTenantId = GetEffectiveTenantId(tenantId);
+            var success = await _offboardingRepository.CloseFullAndFinalSettlementAsync(id, effectiveTenantId, CurrentUserId);
             return Ok(ApiResponse<bool>.SuccessResult(success, "Full and final settlement closed and paid."));
         }
 
         [HttpGet("reports/exit-status")]
         public async Task<IActionResult> GetExitStatusReport([FromQuery] long tenantId)
         {
-            var report = await _offboardingRepository.GetExitStatusReportAsync(tenantId);
+            var effectiveTenantId = GetEffectiveTenantId(tenantId);
+            var report = await _offboardingRepository.GetExitStatusReportAsync(effectiveTenantId);
             return Ok(ApiResponse<IEnumerable<ExitStatusReportDto>>.SuccessResult(report));
         }
 
         [HttpGet("reports/clearance-status")]
         public async Task<IActionResult> GetClearanceStatusReport([FromQuery] long tenantId)
         {
-            var report = await _offboardingRepository.GetClearanceStatusReportAsync(tenantId);
+            var effectiveTenantId = GetEffectiveTenantId(tenantId);
+            var report = await _offboardingRepository.GetClearanceStatusReportAsync(effectiveTenantId);
             return Ok(ApiResponse<IEnumerable<ClearanceStatusReportDto>>.SuccessResult(report));
         }
 
         [HttpGet("reports/settlement-summary")]
         public async Task<IActionResult> GetFullAndFinalSummaryReport([FromQuery] long tenantId)
         {
-            var report = await _offboardingRepository.GetFullAndFinalSummaryReportAsync(tenantId);
+            var effectiveTenantId = GetEffectiveTenantId(tenantId);
+            var report = await _offboardingRepository.GetFullAndFinalSummaryReportAsync(effectiveTenantId);
             return Ok(ApiResponse<IEnumerable<FullAndFinalSummaryReportDto>>.SuccessResult(report));
         }
     }

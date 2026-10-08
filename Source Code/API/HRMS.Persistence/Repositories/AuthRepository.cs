@@ -45,6 +45,16 @@ namespace HRMS.Persistence.Repositories
 
         public async Task<AuthResponse> PerformInitialSetupAsync(InitialSystemSetupRequest request, string ipAddress, string browserInfo)
         {
+            var status = await GetSetupStatusAsync();
+            if (!status.NeedsSetup)
+            {
+                return new AuthResponse 
+                { 
+                    Success = false, 
+                    Message = "Initial system setup has already been performed. Additional tenant and administrator provisioning must be performed through the security administration portal." 
+                };
+            }
+
             using var connection = new SqlConnection(_connectionString);
             await connection.OpenAsync();
             using var transaction = connection.BeginTransaction();

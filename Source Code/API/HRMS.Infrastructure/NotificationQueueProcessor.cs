@@ -164,6 +164,7 @@ namespace HRMS.Infrastructure
         {
             using var scope = _serviceProvider.CreateScope();
             var repo = scope.ServiceProvider.GetRequiredService<INotificationRepository>();
+            var emailService = scope.ServiceProvider.GetRequiredService<IEmailNotificationService>();
 
             int[] hoursRules = { 24, 48, 72 };
 
@@ -178,11 +179,16 @@ namespace HRMS.Infrastructure
 
                     await repo.EscalateNotificationAsync(notif.NotificationQueueId, notif.TenantId, label, modifiedBy: 1);
 
+                    var tenantSettings = await emailService.GetEmailSettingsAsync(notif.TenantId);
+                    string escalationRecipient = !string.IsNullOrWhiteSpace(tenantSettings?.DevRecipient)
+                        ? tenantSettings.DevRecipient
+                        : $"admin_tenant{notif.TenantId}@hrms.com";
+
                     await repo.QueueNotificationAsync(new SendNotificationRequest
                     {
                         TenantId = notif.TenantId,
                         Sender = "System Escalation Service",
-                        Recipient = "admin@hrms.com",
+                        Recipient = escalationRecipient,
                         Channel = "Email",
                         BusinessEvent = notif.BusinessEvent,
                         Subject = $"[ESCALATION - {hours}H] Notification unread for recipient: {notif.Recipient}",

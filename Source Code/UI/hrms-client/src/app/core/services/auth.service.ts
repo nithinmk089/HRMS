@@ -125,6 +125,9 @@ export class AuthService {
     if (decoded && decoded['tenantId']) {
       return Number(decoded['tenantId']);
     }
+    if (this.currentUserValue && this.currentUserValue.tenantId) {
+      return Number(this.currentUserValue.tenantId);
+    }
     const storedTenant = localStorage.getItem('tenantId');
     return storedTenant ? Number(storedTenant) : 1;
   }

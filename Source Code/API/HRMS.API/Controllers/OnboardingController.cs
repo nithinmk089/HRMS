@@ -11,7 +11,7 @@ namespace HRMS.API.Controllers
     [Route("api/v1/onboarding")]
     [ApiController]
     [Authorize]
-    public class OnboardingController : ControllerBase
+    public class OnboardingController : BaseApiController
     {
         private readonly IOnboardingRepository _onboardingRepository;
 
@@ -24,7 +24,8 @@ namespace HRMS.API.Controllers
         [Authorize(Roles = "ADMIN,SYSADMIN")]
         public async Task<IActionResult> CreateWorkflow([FromBody] CreateOnboardingWorkflowRequest request)
         {
-            request.CreatedBy = 1;
+            request.TenantID = GetEffectiveTenantId(request.TenantID);
+            request.CreatedBy = CurrentUserId;
             var id = await _onboardingRepository.CreateWorkflowAsync(request);
             return Ok(ApiResponse<long>.SuccessResult(id, "Onboarding workflow created successfully."));
         }
@@ -34,7 +35,8 @@ namespace HRMS.API.Controllers
         public async Task<IActionResult> UpdateWorkflow(long id, [FromBody] UpdateOnboardingWorkflowRequest request)
         {
             request.OnboardingWorkflowID = id;
-            request.ModifiedBy = 1;
+            request.TenantID = GetEffectiveTenantId(request.TenantID);
+            request.ModifiedBy = CurrentUserId;
             var success = await _onboardingRepository.UpdateWorkflowAsync(request);
             return Ok(ApiResponse<bool>.SuccessResult(success, "Onboarding workflow updated successfully."));
         }
@@ -42,21 +44,24 @@ namespace HRMS.API.Controllers
         [HttpPost("workflows/{id}/start")]
         public async Task<IActionResult> StartWorkflow(long id, [FromQuery] long tenantId)
         {
-            var success = await _onboardingRepository.StartWorkflowAsync(id, tenantId, 1);
+            var effectiveTenantId = GetEffectiveTenantId(tenantId);
+            var success = await _onboardingRepository.StartWorkflowAsync(id, effectiveTenantId, CurrentUserId);
             return Ok(ApiResponse<bool>.SuccessResult(success, "Onboarding workflow started."));
         }
 
         [HttpPost("workflows/{id}/complete")]
         public async Task<IActionResult> CompleteWorkflow(long id, [FromQuery] long tenantId)
         {
-            var success = await _onboardingRepository.CompleteWorkflowAsync(id, tenantId, 1);
+            var effectiveTenantId = GetEffectiveTenantId(tenantId);
+            var success = await _onboardingRepository.CompleteWorkflowAsync(id, effectiveTenantId, CurrentUserId);
             return Ok(ApiResponse<bool>.SuccessResult(success, "Onboarding workflow completed."));
         }
 
         [HttpGet("workflows")]
         public async Task<IActionResult> SearchWorkflows([FromQuery] long tenantId, [FromQuery] long? employeeId, [FromQuery] string? status)
         {
-            var workflows = await _onboardingRepository.SearchWorkflowsAsync(tenantId, employeeId, status);
+            var effectiveTenantId = GetEffectiveTenantId(tenantId);
+            var workflows = await _onboardingRepository.SearchWorkflowsAsync(effectiveTenantId, employeeId, status);
             return Ok(ApiResponse<IEnumerable<OnboardingWorkflowDto>>.SuccessResult(workflows));
         }
 
@@ -64,7 +69,8 @@ namespace HRMS.API.Controllers
         [Authorize(Roles = "ADMIN,SYSADMIN")]
         public async Task<IActionResult> CreateTask([FromBody] CreateOnboardingTaskRequest request)
         {
-            request.CreatedBy = 1;
+            request.TenantID = GetEffectiveTenantId(request.TenantID);
+            request.CreatedBy = CurrentUserId;
             var id = await _onboardingRepository.CreateTaskAsync(request);
             return Ok(ApiResponse<long>.SuccessResult(id, "Onboarding task dictionary definition created."));
         }
@@ -74,7 +80,8 @@ namespace HRMS.API.Controllers
         public async Task<IActionResult> UpdateTask(long id, [FromBody] UpdateOnboardingTaskRequest request)
         {
             request.OnboardingTaskID = id;
-            request.ModifiedBy = 1;
+            request.TenantID = GetEffectiveTenantId(request.TenantID);
+            request.ModifiedBy = CurrentUserId;
             var success = await _onboardingRepository.UpdateTaskAsync(request);
             return Ok(ApiResponse<bool>.SuccessResult(success, "Onboarding task dictionary definition updated."));
         }
@@ -83,7 +90,8 @@ namespace HRMS.API.Controllers
         [Authorize(Roles = "ADMIN,SYSADMIN")]
         public async Task<IActionResult> DeleteTask(long id, [FromQuery] long tenantId)
         {
-            var success = await _onboardingRepository.DeleteTaskAsync(id, tenantId, 1);
+            var effectiveTenantId = GetEffectiveTenantId(tenantId);
+            var success = await _onboardingRepository.DeleteTaskAsync(id, effectiveTenantId, CurrentUserId);
             return Ok(ApiResponse<bool>.SuccessResult(success, "Onboarding task definition deleted."));
         }
 
@@ -91,7 +99,8 @@ namespace HRMS.API.Controllers
         public async Task<IActionResult> AssignTask(long id, [FromBody] AssignOnboardingTaskRequest request)
         {
             request.OnboardingTaskID = id;
-            request.CreatedBy = 1;
+            request.TenantID = GetEffectiveTenantId(request.TenantID);
+            request.CreatedBy = CurrentUserId;
             var assignmentId = await _onboardingRepository.AssignTaskAsync(request);
             return Ok(ApiResponse<long>.SuccessResult(assignmentId, "Onboarding task assigned to employee."));
         }
@@ -99,14 +108,16 @@ namespace HRMS.API.Controllers
         [HttpPost("tasks/{id}/complete")]
         public async Task<IActionResult> CompleteTaskAssignment(long id, [FromQuery] long tenantId)
         {
-            var success = await _onboardingRepository.CompleteTaskAssignmentAsync(id, tenantId, 1);
+            var effectiveTenantId = GetEffectiveTenantId(tenantId);
+            var success = await _onboardingRepository.CompleteTaskAssignmentAsync(id, effectiveTenantId, CurrentUserId);
             return Ok(ApiResponse<bool>.SuccessResult(success, "Onboarding task marked as completed."));
         }
 
         [HttpPost("documents")]
         public async Task<IActionResult> CreateDocumentSubmission([FromBody] CreateDocumentSubmissionRequest request)
         {
-            request.CreatedBy = 1;
+            request.TenantID = GetEffectiveTenantId(request.TenantID);
+            request.CreatedBy = CurrentUserId;
             var id = await _onboardingRepository.CreateDocumentSubmissionAsync(request);
             return Ok(ApiResponse<long>.SuccessResult(id, "Document submission uploaded successfully."));
         }
@@ -114,7 +125,8 @@ namespace HRMS.API.Controllers
         [HttpGet("documents")]
         public async Task<IActionResult> SearchDocumentSubmissions([FromQuery] long tenantId, [FromQuery] long? employeeId)
         {
-            var documents = await _onboardingRepository.SearchDocumentSubmissionsAsync(tenantId, employeeId);
+            var effectiveTenantId = GetEffectiveTenantId(tenantId);
+            var documents = await _onboardingRepository.SearchDocumentSubmissionsAsync(effectiveTenantId, employeeId);
             return Ok(ApiResponse<IEnumerable<DocumentSubmissionDto>>.SuccessResult(documents));
         }
 
@@ -123,7 +135,8 @@ namespace HRMS.API.Controllers
         public async Task<IActionResult> ApproveDocumentVerification(long id, [FromBody] ApproveDocumentVerificationRequest request)
         {
             request.EmployeeDocumentSubmissionID = id;
-            request.VerifiedBy = 1;
+            request.TenantID = GetEffectiveTenantId(request.TenantID);
+            request.VerifiedBy = CurrentUserId;
             var verificationId = await _onboardingRepository.ApproveDocumentVerificationAsync(request);
             return Ok(ApiResponse<long>.SuccessResult(verificationId, "Document verification approved."));
         }
@@ -133,7 +146,8 @@ namespace HRMS.API.Controllers
         public async Task<IActionResult> RejectDocumentVerification(long id, [FromBody] RejectDocumentVerificationRequest request)
         {
             request.EmployeeDocumentSubmissionID = id;
-            request.VerifiedBy = 1;
+            request.TenantID = GetEffectiveTenantId(request.TenantID);
+            request.VerifiedBy = CurrentUserId;
             var verificationId = await _onboardingRepository.RejectDocumentVerificationAsync(request);
             return Ok(ApiResponse<long>.SuccessResult(verificationId, "Document verification rejected."));
         }
@@ -142,7 +156,8 @@ namespace HRMS.API.Controllers
         public async Task<IActionResult> RecordPolicyAcceptance(long id, [FromBody] RecordPolicyAcceptanceRequest request)
         {
             request.PolicyID = id;
-            request.CreatedBy = 1;
+            request.TenantID = GetEffectiveTenantId(request.TenantID);
+            request.CreatedBy = CurrentUserId;
             var idAccepted = await _onboardingRepository.RecordPolicyAcceptanceAsync(request);
             return Ok(ApiResponse<long>.SuccessResult(idAccepted, "Policy acceptance recorded."));
         }
@@ -150,7 +165,8 @@ namespace HRMS.API.Controllers
         [HttpPost("e-signatures")]
         public async Task<IActionResult> CreateESignature([FromBody] CreateESignatureRequest request)
         {
-            request.CreatedBy = 1;
+            request.TenantID = GetEffectiveTenantId(request.TenantID);
+            request.CreatedBy = CurrentUserId;
             var id = await _onboardingRepository.CreateESignatureAsync(request);
             return Ok(ApiResponse<long>.SuccessResult(id, "E-signature saved successfully."));
         }
@@ -158,7 +174,8 @@ namespace HRMS.API.Controllers
         [HttpPost("equipment")]
         public async Task<IActionResult> CreateEquipmentProvisioning([FromBody] CreateEquipmentProvisioningRequest request)
         {
-            request.CreatedBy = 1;
+            request.TenantID = GetEffectiveTenantId(request.TenantID);
+            request.CreatedBy = CurrentUserId;
             var id = await _onboardingRepository.CreateEquipmentProvisioningAsync(request);
             return Ok(ApiResponse<long>.SuccessResult(id, "Equipment provisioning item recorded."));
         }
@@ -166,7 +183,8 @@ namespace HRMS.API.Controllers
         [HttpPost("probation-reviews")]
         public async Task<IActionResult> CreateProbationReview([FromBody] CreateProbationReviewRequest request)
         {
-            request.CreatedBy = 1;
+            request.TenantID = GetEffectiveTenantId(request.TenantID);
+            request.CreatedBy = CurrentUserId;
             var id = await _onboardingRepository.CreateProbationReviewAsync(request);
             return Ok(ApiResponse<long>.SuccessResult(id, "Probation review decision saved."));
         }
@@ -174,14 +192,16 @@ namespace HRMS.API.Controllers
         [HttpGet("reports/status")]
         public async Task<IActionResult> GetOnboardingStatusReport([FromQuery] long tenantId)
         {
-            var report = await _onboardingRepository.GetOnboardingStatusReportAsync(tenantId);
+            var effectiveTenantId = GetEffectiveTenantId(tenantId);
+            var report = await _onboardingRepository.GetOnboardingStatusReportAsync(effectiveTenantId);
             return Ok(ApiResponse<IEnumerable<OnboardingStatusReportDto>>.SuccessResult(report));
         }
 
         [HttpGet("reports/pending-tasks")]
         public async Task<IActionResult> GetPendingTasksReport([FromQuery] long tenantId)
         {
-            var report = await _onboardingRepository.GetPendingTasksReportAsync(tenantId);
+            var effectiveTenantId = GetEffectiveTenantId(tenantId);
+            var report = await _onboardingRepository.GetPendingTasksReportAsync(effectiveTenantId);
             return Ok(ApiResponse<IEnumerable<PendingTasksReportDto>>.SuccessResult(report));
         }
     }

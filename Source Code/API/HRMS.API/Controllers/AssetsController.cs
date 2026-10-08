@@ -11,7 +11,7 @@ namespace HRMS.API.Controllers
     [Route("api/v1/assets")]
     [ApiController]
     [Authorize]
-    public class AssetsController : ControllerBase
+    public class AssetsController : BaseApiController
     {
         private readonly IAssetRepository _assetRepository;
         public AssetsController(IAssetRepository assetRepository) => _assetRepository = assetRepository;
@@ -20,14 +20,16 @@ namespace HRMS.API.Controllers
         [HttpGet("categories")]
         public async Task<IActionResult> SearchCategories([FromQuery] long tenantId, [FromQuery] string? searchText, [FromQuery] int page = 1, [FromQuery] int pageSize = 50)
         {
-            var res = await _assetRepository.SearchCategoriesAsync(tenantId, searchText, page, pageSize);
+            var effectiveTenantId = GetEffectiveTenantId(tenantId);
+            var res = await _assetRepository.SearchCategoriesAsync(effectiveTenantId, searchText, page, pageSize);
             return Ok(ApiResponse<IEnumerable<AssetCategoryDto>>.SuccessResult(res));
         }
 
         [HttpGet("categories/{id}")]
         public async Task<IActionResult> GetCategoryById(long id, [FromQuery] long tenantId)
         {
-            var res = await _assetRepository.GetCategoryByIdAsync(id, tenantId);
+            var effectiveTenantId = GetEffectiveTenantId(tenantId);
+            var res = await _assetRepository.GetCategoryByIdAsync(id, effectiveTenantId);
             if (res == null) return NotFound(ApiResponse<AssetCategoryDto>.FailureResult("Category not found."));
             return Ok(ApiResponse<AssetCategoryDto>.SuccessResult(res));
         }
@@ -36,7 +38,8 @@ namespace HRMS.API.Controllers
         [Authorize(Roles = "ADMIN,SYSADMIN")]
         public async Task<IActionResult> CreateCategory([FromBody] CreateAssetCategoryRequest r)
         {
-            r.CreatedBy = 1; // Simulated system user
+            r.TenantId = GetEffectiveTenantId(r.TenantId);
+            r.CreatedBy = CurrentUserId;
             var id = await _assetRepository.CreateCategoryAsync(r);
             return Ok(ApiResponse<long>.SuccessResult(id, "Category created."));
         }
@@ -46,7 +49,8 @@ namespace HRMS.API.Controllers
         public async Task<IActionResult> UpdateCategory(long id, [FromBody] UpdateAssetCategoryRequest r)
         {
             r.AssetCategoryID = id;
-            r.ModifiedBy = 1;
+            r.TenantId = GetEffectiveTenantId(r.TenantId);
+            r.ModifiedBy = CurrentUserId;
             var ok = await _assetRepository.UpdateCategoryAsync(r);
             return Ok(ApiResponse<bool>.SuccessResult(ok, "Category updated."));
         }
@@ -55,7 +59,8 @@ namespace HRMS.API.Controllers
         [Authorize(Roles = "ADMIN,SYSADMIN")]
         public async Task<IActionResult> DeleteCategory(long id, [FromQuery] long tenantId)
         {
-            var ok = await _assetRepository.DeleteCategoryAsync(id, tenantId, 1);
+            var effectiveTenantId = GetEffectiveTenantId(tenantId);
+            var ok = await _assetRepository.DeleteCategoryAsync(id, effectiveTenantId, CurrentUserId);
             return Ok(ApiResponse<bool>.SuccessResult(ok, "Category deleted."));
         }
 
@@ -63,14 +68,16 @@ namespace HRMS.API.Controllers
         [HttpGet]
         public async Task<IActionResult> Search([FromQuery] long tenantId, [FromQuery] string? searchText, [FromQuery] string? status, [FromQuery] int page = 1, [FromQuery] int pageSize = 50)
         {
-            var res = await _assetRepository.SearchAssetsAsync(tenantId, searchText, status, page, pageSize);
+            var effectiveTenantId = GetEffectiveTenantId(tenantId);
+            var res = await _assetRepository.SearchAssetsAsync(effectiveTenantId, searchText, status, page, pageSize);
             return Ok(ApiResponse<IEnumerable<AssetDto>>.SuccessResult(res));
         }
 
         [HttpGet("{id}")]
         public async Task<IActionResult> GetById(long id, [FromQuery] long tenantId)
         {
-            var res = await _assetRepository.GetAssetByIdAsync(id, tenantId);
+            var effectiveTenantId = GetEffectiveTenantId(tenantId);
+            var res = await _assetRepository.GetAssetByIdAsync(id, effectiveTenantId);
             if (res == null) return NotFound(ApiResponse<AssetDto>.FailureResult("Asset not found."));
             return Ok(ApiResponse<AssetDto>.SuccessResult(res));
         }
@@ -79,7 +86,8 @@ namespace HRMS.API.Controllers
         [Authorize(Roles = "ADMIN,SYSADMIN")]
         public async Task<IActionResult> Create([FromBody] CreateAssetRequest r)
         {
-            r.CreatedBy = 1;
+            r.TenantId = GetEffectiveTenantId(r.TenantId);
+            r.CreatedBy = CurrentUserId;
             var id = await _assetRepository.CreateAssetAsync(r);
             return Ok(ApiResponse<long>.SuccessResult(id, "Asset registered."));
         }
@@ -89,7 +97,8 @@ namespace HRMS.API.Controllers
         public async Task<IActionResult> Update(long id, [FromBody] UpdateAssetRequest r)
         {
             r.AssetID = id;
-            r.ModifiedBy = 1;
+            r.TenantId = GetEffectiveTenantId(r.TenantId);
+            r.ModifiedBy = CurrentUserId;
             var ok = await _assetRepository.UpdateAssetAsync(r);
             return Ok(ApiResponse<bool>.SuccessResult(ok, "Asset updated."));
         }
@@ -98,7 +107,8 @@ namespace HRMS.API.Controllers
         [Authorize(Roles = "ADMIN,SYSADMIN")]
         public async Task<IActionResult> Delete(long id, [FromQuery] long tenantId)
         {
-            var ok = await _assetRepository.DeleteAssetAsync(id, tenantId, 1);
+            var effectiveTenantId = GetEffectiveTenantId(tenantId);
+            var ok = await _assetRepository.DeleteAssetAsync(id, effectiveTenantId, CurrentUserId);
             return Ok(ApiResponse<bool>.SuccessResult(ok, "Asset deleted."));
         }
 
@@ -106,7 +116,8 @@ namespace HRMS.API.Controllers
         [HttpGet("assignments")]
         public async Task<IActionResult> GetAssignments([FromQuery] long tenantId, [FromQuery] long? employeeId, [FromQuery] long? assetId, [FromQuery] string? status, [FromQuery] int page = 1, [FromQuery] int pageSize = 50)
         {
-            var res = await _assetRepository.SearchAssignmentsAsync(tenantId, employeeId, assetId, status, page, pageSize);
+            var effectiveTenantId = GetEffectiveTenantId(tenantId);
+            var res = await _assetRepository.SearchAssignmentsAsync(effectiveTenantId, employeeId, assetId, status, page, pageSize);
             return Ok(ApiResponse<IEnumerable<AssetAssignmentDto>>.SuccessResult(res));
         }
 
@@ -114,7 +125,8 @@ namespace HRMS.API.Controllers
         [Authorize(Roles = "ADMIN,SYSADMIN,HR")]
         public async Task<IActionResult> Assign([FromBody] CreateAssetAssignmentRequest r)
         {
-            r.CreatedBy = 1;
+            r.TenantId = GetEffectiveTenantId(r.TenantId);
+            r.CreatedBy = CurrentUserId;
             var id = await _assetRepository.CreateAssignmentAsync(r);
             return Ok(ApiResponse<long>.SuccessResult(id, "Asset assigned."));
         }
@@ -124,7 +136,8 @@ namespace HRMS.API.Controllers
         public async Task<IActionResult> UpdateAssignment(long id, [FromBody] UpdateAssetAssignmentRequest r)
         {
             r.AssetAssignmentID = id;
-            r.ModifiedBy = 1;
+            r.TenantId = GetEffectiveTenantId(r.TenantId);
+            r.ModifiedBy = CurrentUserId;
             var ok = await _assetRepository.UpdateAssignmentAsync(r);
             return Ok(ApiResponse<bool>.SuccessResult(ok, "Assignment updated."));
         }
@@ -133,7 +146,8 @@ namespace HRMS.API.Controllers
         public async Task<IActionResult> Return(long id, [FromBody] ReturnAssetAssignmentRequest r)
         {
             r.AssetAssignmentID = id;
-            r.CreatedBy = 1;
+            r.TenantId = GetEffectiveTenantId(r.TenantId);
+            r.CreatedBy = CurrentUserId;
             var ok = await _assetRepository.ReturnAssignmentAsync(r);
             return Ok(ApiResponse<bool>.SuccessResult(ok, "Asset returned successfully."));
         }
@@ -142,7 +156,8 @@ namespace HRMS.API.Controllers
         [HttpGet("transfers")]
         public async Task<IActionResult> GetTransfers([FromQuery] long tenantId)
         {
-            var res = await _assetRepository.GetTransfersAsync(tenantId);
+            var effectiveTenantId = GetEffectiveTenantId(tenantId);
+            var res = await _assetRepository.GetTransfersAsync(effectiveTenantId);
             return Ok(ApiResponse<IEnumerable<AssetTransferDto>>.SuccessResult(res));
         }
 
@@ -150,7 +165,8 @@ namespace HRMS.API.Controllers
         [Authorize(Roles = "ADMIN,SYSADMIN,HR")]
         public async Task<IActionResult> Transfer([FromBody] CreateAssetTransferRequest r)
         {
-            r.CreatedBy = 1;
+            r.TenantId = GetEffectiveTenantId(r.TenantId);
+            r.CreatedBy = CurrentUserId;
             var id = await _assetRepository.CreateTransferAsync(r);
             return Ok(ApiResponse<long>.SuccessResult(id, "Transfer request submitted."));
         }
@@ -159,7 +175,8 @@ namespace HRMS.API.Controllers
         [Authorize(Roles = "ADMIN,SYSADMIN")]
         public async Task<IActionResult> ApproveTransfer(long id, [FromQuery] long tenantId)
         {
-            var ok = await _assetRepository.ApproveTransferAsync(id, tenantId, 1);
+            var effectiveTenantId = GetEffectiveTenantId(tenantId);
+            var ok = await _assetRepository.ApproveTransferAsync(id, effectiveTenantId, CurrentUserId);
             return Ok(ApiResponse<bool>.SuccessResult(ok, "Transfer approved."));
         }
 
@@ -167,7 +184,8 @@ namespace HRMS.API.Controllers
         [Authorize(Roles = "ADMIN,SYSADMIN")]
         public async Task<IActionResult> CompleteTransfer(long id, [FromQuery] long tenantId)
         {
-            var ok = await _assetRepository.CompleteTransferAsync(id, tenantId, 1);
+            var effectiveTenantId = GetEffectiveTenantId(tenantId);
+            var ok = await _assetRepository.CompleteTransferAsync(id, effectiveTenantId, CurrentUserId);
             return Ok(ApiResponse<bool>.SuccessResult(ok, "Transfer completed."));
         }
 
@@ -175,7 +193,8 @@ namespace HRMS.API.Controllers
         [HttpGet("maintenance")]
         public async Task<IActionResult> GetMaintenance([FromQuery] long tenantId)
         {
-            var res = await _assetRepository.GetMaintenanceAsync(tenantId);
+            var effectiveTenantId = GetEffectiveTenantId(tenantId);
+            var res = await _assetRepository.GetMaintenanceAsync(effectiveTenantId);
             return Ok(ApiResponse<IEnumerable<AssetMaintenanceDto>>.SuccessResult(res));
         }
 
@@ -183,7 +202,8 @@ namespace HRMS.API.Controllers
         [Authorize(Roles = "ADMIN,SYSADMIN")]
         public async Task<IActionResult> CreateMaintenance([FromBody] CreateAssetMaintenanceRequest r)
         {
-            r.CreatedBy = 1;
+            r.TenantId = GetEffectiveTenantId(r.TenantId);
+            r.CreatedBy = CurrentUserId;
             var id = await _assetRepository.CreateMaintenanceAsync(r);
             return Ok(ApiResponse<long>.SuccessResult(id, "Maintenance scheduled."));
         }
@@ -193,7 +213,8 @@ namespace HRMS.API.Controllers
         public async Task<IActionResult> UpdateMaintenance(long id, [FromBody] UpdateAssetMaintenanceRequest r)
         {
             r.AssetMaintenanceID = id;
-            r.ModifiedBy = 1;
+            r.TenantId = GetEffectiveTenantId(r.TenantId);
+            r.ModifiedBy = CurrentUserId;
             var ok = await _assetRepository.UpdateMaintenanceAsync(r);
             return Ok(ApiResponse<bool>.SuccessResult(ok, "Maintenance updated."));
         }
@@ -202,7 +223,8 @@ namespace HRMS.API.Controllers
         [Authorize(Roles = "ADMIN,SYSADMIN")]
         public async Task<IActionResult> CloseMaintenance(long id, [FromQuery] long tenantId, [FromQuery] string? remarks)
         {
-            var ok = await _assetRepository.CloseMaintenanceAsync(id, tenantId, 1, remarks);
+            var effectiveTenantId = GetEffectiveTenantId(tenantId);
+            var ok = await _assetRepository.CloseMaintenanceAsync(id, effectiveTenantId, CurrentUserId, remarks);
             return Ok(ApiResponse<bool>.SuccessResult(ok, "Maintenance closed."));
         }
 
@@ -210,7 +232,8 @@ namespace HRMS.API.Controllers
         [HttpGet("repairs")]
         public async Task<IActionResult> GetRepairs([FromQuery] long tenantId)
         {
-            var res = await _assetRepository.GetRepairsAsync(tenantId);
+            var effectiveTenantId = GetEffectiveTenantId(tenantId);
+            var res = await _assetRepository.GetRepairsAsync(effectiveTenantId);
             return Ok(ApiResponse<IEnumerable<AssetRepairDto>>.SuccessResult(res));
         }
 
@@ -218,7 +241,8 @@ namespace HRMS.API.Controllers
         [Authorize(Roles = "ADMIN,SYSADMIN")]
         public async Task<IActionResult> CreateRepair([FromBody] CreateAssetRepairRequest r)
         {
-            r.CreatedBy = 1;
+            r.TenantId = GetEffectiveTenantId(r.TenantId);
+            r.CreatedBy = CurrentUserId;
             var id = await _assetRepository.CreateRepairAsync(r);
             return Ok(ApiResponse<long>.SuccessResult(id, "Repair request submitted."));
         }
@@ -228,7 +252,8 @@ namespace HRMS.API.Controllers
         public async Task<IActionResult> UpdateRepair(long id, [FromBody] UpdateAssetRepairRequest r)
         {
             r.AssetRepairID = id;
-            r.ModifiedBy = 1;
+            r.TenantId = GetEffectiveTenantId(r.TenantId);
+            r.ModifiedBy = CurrentUserId;
             var ok = await _assetRepository.UpdateRepairAsync(r);
             return Ok(ApiResponse<bool>.SuccessResult(ok, "Repair details updated."));
         }
@@ -237,7 +262,8 @@ namespace HRMS.API.Controllers
         [Authorize(Roles = "ADMIN,SYSADMIN")]
         public async Task<IActionResult> CloseRepair(long id, [FromQuery] long tenantId, [FromQuery] string? remarks)
         {
-            var ok = await _assetRepository.CloseRepairAsync(id, tenantId, 1, remarks);
+            var effectiveTenantId = GetEffectiveTenantId(tenantId);
+            var ok = await _assetRepository.CloseRepairAsync(id, effectiveTenantId, CurrentUserId, remarks);
             return Ok(ApiResponse<bool>.SuccessResult(ok, "Repair status closed."));
         }
 
@@ -245,7 +271,8 @@ namespace HRMS.API.Controllers
         [HttpGet("warranties")]
         public async Task<IActionResult> GetWarranties([FromQuery] long tenantId)
         {
-            var res = await _assetRepository.GetWarrantiesAsync(tenantId);
+            var effectiveTenantId = GetEffectiveTenantId(tenantId);
+            var res = await _assetRepository.GetWarrantiesAsync(effectiveTenantId);
             return Ok(ApiResponse<IEnumerable<AssetWarrantyDto>>.SuccessResult(res));
         }
 
@@ -253,7 +280,8 @@ namespace HRMS.API.Controllers
         [Authorize(Roles = "ADMIN,SYSADMIN")]
         public async Task<IActionResult> CreateWarranty([FromBody] CreateAssetWarrantyRequest r)
         {
-            r.CreatedBy = 1;
+            r.TenantId = GetEffectiveTenantId(r.TenantId);
+            r.CreatedBy = CurrentUserId;
             var id = await _assetRepository.CreateWarrantyAsync(r);
             return Ok(ApiResponse<long>.SuccessResult(id, "Warranty registered."));
         }
@@ -263,7 +291,8 @@ namespace HRMS.API.Controllers
         public async Task<IActionResult> UpdateWarranty(long id, [FromBody] UpdateAssetWarrantyRequest r)
         {
             r.AssetWarrantyID = id;
-            r.ModifiedBy = 1;
+            r.TenantId = GetEffectiveTenantId(r.TenantId);
+            r.ModifiedBy = CurrentUserId;
             var ok = await _assetRepository.UpdateWarrantyAsync(r);
             return Ok(ApiResponse<bool>.SuccessResult(ok, "Warranty updated."));
         }
@@ -271,7 +300,8 @@ namespace HRMS.API.Controllers
         [HttpGet("warranties/expiry-report")]
         public async Task<IActionResult> GetWarrantyExpiryReport([FromQuery] long tenantId, [FromQuery] int withinDays = 30)
         {
-            var res = await _assetRepository.GetWarrantyExpiryReportAsync(tenantId, withinDays);
+            var effectiveTenantId = GetEffectiveTenantId(tenantId);
+            var res = await _assetRepository.GetWarrantyExpiryReportAsync(effectiveTenantId, withinDays);
             return Ok(ApiResponse<IEnumerable<WarrantyExpiryReportDto>>.SuccessResult(res));
         }
 
@@ -279,7 +309,8 @@ namespace HRMS.API.Controllers
         [HttpGet("depreciation")]
         public async Task<IActionResult> GetDepreciations([FromQuery] long tenantId)
         {
-            var res = await _assetRepository.GetDepreciationsAsync(tenantId);
+            var effectiveTenantId = GetEffectiveTenantId(tenantId);
+            var res = await _assetRepository.GetDepreciationsAsync(effectiveTenantId);
             return Ok(ApiResponse<IEnumerable<AssetDepreciationDto>>.SuccessResult(res));
         }
 
@@ -287,14 +318,16 @@ namespace HRMS.API.Controllers
         [Authorize(Roles = "ADMIN,SYSADMIN")]
         public async Task<IActionResult> RecalculateDepreciation([FromQuery] long tenantId)
         {
-            var ok = await _assetRepository.RecalculateDepreciationAsync(tenantId, 1);
+            var effectiveTenantId = GetEffectiveTenantId(tenantId);
+            var ok = await _assetRepository.RecalculateDepreciationAsync(effectiveTenantId, CurrentUserId);
             return Ok(ApiResponse<bool>.SuccessResult(ok, "Depreciation recalculated."));
         }
 
         [HttpGet("depreciation/report")]
         public async Task<IActionResult> GetDepreciationReport([FromQuery] long tenantId)
         {
-            var res = await _assetRepository.GetDepreciationReportAsync(tenantId);
+            var effectiveTenantId = GetEffectiveTenantId(tenantId);
+            var res = await _assetRepository.GetDepreciationReportAsync(effectiveTenantId);
             return Ok(ApiResponse<IEnumerable<AssetDepreciationReportDto>>.SuccessResult(res));
         }
 
@@ -302,7 +335,8 @@ namespace HRMS.API.Controllers
         [HttpGet("audits")]
         public async Task<IActionResult> GetAudits([FromQuery] long tenantId)
         {
-            var res = await _assetRepository.GetAuditsAsync(tenantId);
+            var effectiveTenantId = GetEffectiveTenantId(tenantId);
+            var res = await _assetRepository.GetAuditsAsync(effectiveTenantId);
             return Ok(ApiResponse<IEnumerable<AssetAuditDto>>.SuccessResult(res));
         }
 
@@ -310,7 +344,8 @@ namespace HRMS.API.Controllers
         [Authorize(Roles = "ADMIN,SYSADMIN")]
         public async Task<IActionResult> CreateAudit([FromBody] CreateAssetAuditRequest r)
         {
-            r.CreatedBy = 1;
+            r.TenantId = GetEffectiveTenantId(r.TenantId);
+            r.CreatedBy = CurrentUserId;
             var id = await _assetRepository.CreateAuditAsync(r);
             return Ok(ApiResponse<long>.SuccessResult(id, "Audit scheduled."));
         }
@@ -319,7 +354,8 @@ namespace HRMS.API.Controllers
         [Authorize(Roles = "ADMIN,SYSADMIN")]
         public async Task<IActionResult> CompleteAudit(long id, [FromQuery] long tenantId, [FromQuery] string status, [FromQuery] string? findings)
         {
-            var ok = await _assetRepository.CompleteAuditAsync(id, tenantId, status, findings, 1);
+            var effectiveTenantId = GetEffectiveTenantId(tenantId);
+            var ok = await _assetRepository.CompleteAuditAsync(id, effectiveTenantId, status, findings, CurrentUserId);
             return Ok(ApiResponse<bool>.SuccessResult(ok, "Audit status finalized."));
         }
 
@@ -327,7 +363,8 @@ namespace HRMS.API.Controllers
         [HttpGet("disposals")]
         public async Task<IActionResult> GetDisposals([FromQuery] long tenantId)
         {
-            var res = await _assetRepository.GetDisposalsAsync(tenantId);
+            var effectiveTenantId = GetEffectiveTenantId(tenantId);
+            var res = await _assetRepository.GetDisposalsAsync(effectiveTenantId);
             return Ok(ApiResponse<IEnumerable<AssetDisposalDto>>.SuccessResult(res));
         }
 
@@ -335,7 +372,8 @@ namespace HRMS.API.Controllers
         [Authorize(Roles = "ADMIN,SYSADMIN")]
         public async Task<IActionResult> CreateDisposal([FromBody] CreateAssetDisposalRequest r)
         {
-            r.CreatedBy = 1;
+            r.TenantId = GetEffectiveTenantId(r.TenantId);
+            r.CreatedBy = CurrentUserId;
             var id = await _assetRepository.CreateDisposalAsync(r);
             return Ok(ApiResponse<long>.SuccessResult(id, "Disposal request submitted."));
         }
@@ -344,7 +382,8 @@ namespace HRMS.API.Controllers
         [Authorize(Roles = "ADMIN,SYSADMIN")]
         public async Task<IActionResult> ApproveDisposal(long id, [FromQuery] long tenantId)
         {
-            var ok = await _assetRepository.ApproveDisposalAsync(id, tenantId, 1);
+            var effectiveTenantId = GetEffectiveTenantId(tenantId);
+            var ok = await _assetRepository.ApproveDisposalAsync(id, effectiveTenantId, CurrentUserId);
             return Ok(ApiResponse<bool>.SuccessResult(ok, "Disposal approved."));
         }
 
@@ -352,7 +391,8 @@ namespace HRMS.API.Controllers
         [Authorize(Roles = "ADMIN,SYSADMIN")]
         public async Task<IActionResult> CloseDisposal(long id, [FromQuery] long tenantId)
         {
-            var ok = await _assetRepository.CloseDisposalAsync(id, tenantId, 1);
+            var effectiveTenantId = GetEffectiveTenantId(tenantId);
+            var ok = await _assetRepository.CloseDisposalAsync(id, effectiveTenantId, CurrentUserId);
             return Ok(ApiResponse<bool>.SuccessResult(ok, "Disposal status closed."));
         }
 
@@ -360,14 +400,16 @@ namespace HRMS.API.Controllers
         [HttpGet("returns")]
         public async Task<IActionResult> GetReturns([FromQuery] long tenantId)
         {
-            var res = await _assetRepository.GetReturnsAsync(tenantId);
+            var effectiveTenantId = GetEffectiveTenantId(tenantId);
+            var res = await _assetRepository.GetReturnsAsync(effectiveTenantId);
             return Ok(ApiResponse<IEnumerable<AssetReturnWorkflowDto>>.SuccessResult(res));
         }
 
         [HttpPost("returns")]
         public async Task<IActionResult> CreateReturn([FromBody] CreateAssetReturnWorkflowRequest r)
         {
-            r.CreatedBy = 1;
+            r.TenantId = GetEffectiveTenantId(r.TenantId);
+            r.CreatedBy = CurrentUserId;
             var id = await _assetRepository.CreateReturnAsync(r);
             return Ok(ApiResponse<long>.SuccessResult(id, "Return logged."));
         }
@@ -376,7 +418,8 @@ namespace HRMS.API.Controllers
         [Authorize(Roles = "ADMIN,SYSADMIN")]
         public async Task<IActionResult> VerifyReturn(long id, [FromQuery] long tenantId, [FromQuery] string? condition)
         {
-            var ok = await _assetRepository.VerifyReturnAsync(id, tenantId, condition, 1);
+            var effectiveTenantId = GetEffectiveTenantId(tenantId);
+            var ok = await _assetRepository.VerifyReturnAsync(id, effectiveTenantId, condition, CurrentUserId);
             return Ok(ApiResponse<bool>.SuccessResult(ok, "Return verified."));
         }
 
@@ -384,7 +427,8 @@ namespace HRMS.API.Controllers
         [HttpGet("inventory")]
         public async Task<IActionResult> GetInventory([FromQuery] long tenantId, [FromQuery] long? locationId, [FromQuery] string? status, [FromQuery] int page = 1, [FromQuery] int pageSize = 50)
         {
-            var res = await _assetRepository.SearchInventoryAsync(tenantId, locationId, status, page, pageSize);
+            var effectiveTenantId = GetEffectiveTenantId(tenantId);
+            var res = await _assetRepository.SearchInventoryAsync(effectiveTenantId, locationId, status, page, pageSize);
             return Ok(ApiResponse<IEnumerable<AssetInventoryDto>>.SuccessResult(res));
         }
 
@@ -392,7 +436,8 @@ namespace HRMS.API.Controllers
         [Authorize(Roles = "ADMIN,SYSADMIN")]
         public async Task<IActionResult> ReconcileInventory([FromQuery] long tenantId, [FromQuery] long assetId, [FromQuery] long locationId, [FromQuery] int quantity, [FromQuery] string status)
         {
-            var id = await _assetRepository.ReconcileInventoryAsync(tenantId, assetId, locationId, quantity, status, 1);
+            var effectiveTenantId = GetEffectiveTenantId(tenantId);
+            var id = await _assetRepository.ReconcileInventoryAsync(effectiveTenantId, assetId, locationId, quantity, status, CurrentUserId);
             return Ok(ApiResponse<long>.SuccessResult(id, "Inventory reconciled."));
         }
     }

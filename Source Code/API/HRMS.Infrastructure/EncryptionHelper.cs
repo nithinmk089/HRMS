@@ -7,10 +7,24 @@ namespace HRMS.Infrastructure
 {
     public static class EncryptionHelper
     {
-        // 32-byte key for AES-256
-        private static readonly byte[] Key = Encoding.UTF8.GetBytes("HRMSNotificationPayloadSecretKey"); 
+        // 32-byte key for AES-256 (Supports HRMS_ENCRYPTION_KEY environment variable)
+        private static byte[] Key => ResolveKey();
         // Legacy 16-byte IV for backward compatibility with pre-existing records
         private static readonly byte[] LegacyIv = Encoding.UTF8.GetBytes("HRMSNotifIV12345"); 
+
+        private static byte[] ResolveKey()
+        {
+            var envKey = Environment.GetEnvironmentVariable("HRMS_ENCRYPTION_KEY");
+            if (!string.IsNullOrWhiteSpace(envKey))
+            {
+                var bytes = Encoding.UTF8.GetBytes(envKey);
+                if (bytes.Length == 32) return bytes;
+                var padded = new byte[32];
+                Array.Copy(bytes, padded, Math.Min(bytes.Length, 32));
+                return padded;
+            }
+            return Encoding.UTF8.GetBytes("HRMSNotificationPayloadSecretKey"); 
+        }
 
         public static string Encrypt(string plainText)
         {

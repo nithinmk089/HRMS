@@ -39,6 +39,12 @@ namespace HRMS.API.Controllers
         [AllowAnonymous]
         public async Task<IActionResult> SetupAdmin([FromBody] InitialSystemSetupRequest request)
         {
+            var status = await _authRepository.GetSetupStatusAsync();
+            if (!status.NeedsSetup)
+            {
+                return BadRequest(ApiResponse<AuthResponse>.FailureResult("System initial administration setup has already been completed. Unauthorized initialization request rejected."));
+            }
+
             var ipAddress = HttpContext.Connection.RemoteIpAddress?.ToString() ?? "127.0.0.1";
             var browserInfo = Request.Headers["User-Agent"].ToString() ?? "Browser";
 
@@ -105,7 +111,7 @@ namespace HRMS.API.Controllers
 
         private string GenerateJwtToken(AuthResponse authResponse)
         {
-            var key = _configuration["Jwt:Key"] ?? "HRMSDevSecretKey_MustBe32CharactersLong!!";
+            var key = Environment.GetEnvironmentVariable("HRMS_JWT_KEY") ?? _configuration["Jwt:Key"] ?? "HRMSDevSecretKey_MustBe32CharactersLong!!";
             var issuer = _configuration["Jwt:Issuer"] ?? "HRMS.API";
             var audience = _configuration["Jwt:Audience"] ?? "HRMS.Client";
             var expiryMinutes = int.Parse(_configuration["Jwt:ExpiryMinutes"] ?? "60");

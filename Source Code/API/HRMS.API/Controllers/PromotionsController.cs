@@ -10,7 +10,7 @@ namespace HRMS.API.Controllers
     [Route("api/v1/promotions")]
     [ApiController]
     [Authorize]
-    public class PromotionsController : ControllerBase
+    public class PromotionsController : BaseApiController
     {
         private readonly IEmployeePromotionRepository _promotionRepository;
 
@@ -23,7 +23,8 @@ namespace HRMS.API.Controllers
         [Authorize(Roles = "ADMIN,SYSADMIN,HRADMIN")]
         public async Task<IActionResult> Create([FromBody] CreateEmployeePromotionRequest r)
         {
-            r.CreatedBy = 1;
+            r.TenantId = GetEffectiveTenantId(r.TenantId);
+            r.CreatedBy = CurrentUserId;
             var id = await _promotionRepository.CreateAsync(r);
             return Ok(ApiResponse<long>.SuccessResult(id, "Promotion request initiated."));
         }
@@ -32,7 +33,8 @@ namespace HRMS.API.Controllers
         [Authorize(Roles = "ADMIN,SYSADMIN,HRADMIN")]
         public async Task<IActionResult> Approve(long id, [FromQuery] long tenantId)
         {
-            var ok = await _promotionRepository.ApproveAsync(id, tenantId, 1);
+            var effectiveTenantId = GetEffectiveTenantId(tenantId);
+            var ok = await _promotionRepository.ApproveAsync(id, effectiveTenantId, CurrentUserId);
             return Ok(ApiResponse<bool>.SuccessResult(ok, "Promotion request approved."));
         }
 
@@ -40,14 +42,16 @@ namespace HRMS.API.Controllers
         [Authorize(Roles = "ADMIN,SYSADMIN,HRADMIN")]
         public async Task<IActionResult> Complete(long id, [FromQuery] long tenantId)
         {
-            var ok = await _promotionRepository.CompleteAsync(id, tenantId, 1);
+            var effectiveTenantId = GetEffectiveTenantId(tenantId);
+            var ok = await _promotionRepository.CompleteAsync(id, effectiveTenantId, CurrentUserId);
             return Ok(ApiResponse<bool>.SuccessResult(ok, "Promotion request completed."));
         }
 
         [HttpGet("report")]
         public async Task<IActionResult> GetReport([FromQuery] long tenantId, [FromQuery] long? employeeId)
         {
-            var history = await _promotionRepository.GetPromotionHistoryReportAsync(tenantId, employeeId);
+            var effectiveTenantId = GetEffectiveTenantId(tenantId);
+            var history = await _promotionRepository.GetPromotionHistoryReportAsync(effectiveTenantId, employeeId);
             return Ok(ApiResponse<IEnumerable<EmployeePromotionDto>>.SuccessResult(history));
         }
     }

@@ -18,9 +18,9 @@ namespace HRMS.API.Controllers
 
         // --- Calendars ---
         [HttpGet("calendars")]
-        public async Task<IActionResult> SearchCalendars([FromQuery] long tenantId, [FromQuery] string? searchText, [FromQuery] int page = 1, [FromQuery] int pageSize = 50)
+        public async Task<IActionResult> SearchCalendars([FromQuery] long tenantId = 0, [FromQuery] string? searchText = null, [FromQuery] int page = 1, [FromQuery] int pageSize = 50)
         {
-            var res = await _payrollRepository.SearchCalendarsAsync(tenantId > 0 ? tenantId : CurrentTenantId, searchText, page, pageSize);
+            var res = await _payrollRepository.SearchCalendarsAsync(GetEffectiveTenantId(tenantId), searchText, page, pageSize);
             return Ok(ApiResponse<IEnumerable<PayrollCalendarDto>>.SuccessResult(res));
         }
 
@@ -29,7 +29,7 @@ namespace HRMS.API.Controllers
         public async Task<IActionResult> CreateCalendar([FromBody] CreatePayrollCalendarRequest r)
         {
             r.CreatedBy = CurrentUserId;
-            if (r.TenantID <= 0) r.TenantID = CurrentTenantId;
+            r.TenantID = GetEffectiveTenantId(r.TenantID);
             var id = await _payrollRepository.CreateCalendarAsync(r);
             return Ok(ApiResponse<long>.SuccessResult(id, "Payroll calendar created."));
         }
@@ -40,24 +40,24 @@ namespace HRMS.API.Controllers
         {
             r.PayrollCalendarID = id;
             r.ModifiedBy = CurrentUserId;
-            if (r.TenantID <= 0) r.TenantID = CurrentTenantId;
+            r.TenantID = GetEffectiveTenantId(r.TenantID);
             var ok = await _payrollRepository.UpdateCalendarAsync(r);
             return Ok(ApiResponse<bool>.SuccessResult(ok, "Payroll calendar updated."));
         }
 
         [HttpDelete("calendars/{id}")]
         [Authorize(Roles = "ADMIN,SYSADMIN")]
-        public async Task<IActionResult> DeleteCalendar(long id, [FromQuery] long tenantId)
+        public async Task<IActionResult> DeleteCalendar(long id, [FromQuery] long tenantId = 0)
         {
-            var ok = await _payrollRepository.DeleteCalendarAsync(id, tenantId > 0 ? tenantId : CurrentTenantId, CurrentUserId);
+            var ok = await _payrollRepository.DeleteCalendarAsync(id, GetEffectiveTenantId(tenantId), CurrentUserId);
             return Ok(ApiResponse<bool>.SuccessResult(ok, "Payroll calendar deleted."));
         }
 
         // --- Periods ---
         [HttpGet("periods")]
-        public async Task<IActionResult> GetPeriods([FromQuery] long tenantId, [FromQuery] long calendarId)
+        public async Task<IActionResult> GetPeriods([FromQuery] long tenantId = 0, [FromQuery] long calendarId = 0)
         {
-            var res = await _payrollRepository.GetPeriodsAsync(tenantId > 0 ? tenantId : CurrentTenantId, calendarId);
+            var res = await _payrollRepository.GetPeriodsAsync(GetEffectiveTenantId(tenantId), calendarId);
             return Ok(ApiResponse<IEnumerable<PayrollPeriodDto>>.SuccessResult(res));
         }
 
@@ -66,40 +66,40 @@ namespace HRMS.API.Controllers
         public async Task<IActionResult> CreatePeriod([FromBody] CreatePayrollPeriodRequest r)
         {
             r.CreatedBy = CurrentUserId;
-            if (r.TenantID <= 0) r.TenantID = CurrentTenantId;
+            r.TenantID = GetEffectiveTenantId(r.TenantID);
             var id = await _payrollRepository.CreatePeriodAsync(r);
             return Ok(ApiResponse<long>.SuccessResult(id, "Payroll period created."));
         }
 
         [HttpPost("periods/{id}/open")]
         [Authorize(Roles = "ADMIN,SYSADMIN")]
-        public async Task<IActionResult> OpenPeriod(long id, [FromQuery] long tenantId)
+        public async Task<IActionResult> OpenPeriod(long id, [FromQuery] long tenantId = 0)
         {
-            var ok = await _payrollRepository.OpenPeriodAsync(id, tenantId > 0 ? tenantId : CurrentTenantId, CurrentUserId);
+            var ok = await _payrollRepository.OpenPeriodAsync(id, GetEffectiveTenantId(tenantId), CurrentUserId);
             return Ok(ApiResponse<bool>.SuccessResult(ok, "Period status updated to Open."));
         }
 
         [HttpPost("periods/{id}/close")]
         [Authorize(Roles = "ADMIN,SYSADMIN")]
-        public async Task<IActionResult> ClosePeriod(long id, [FromQuery] long tenantId)
+        public async Task<IActionResult> ClosePeriod(long id, [FromQuery] long tenantId = 0)
         {
-            var ok = await _payrollRepository.ClosePeriodAsync(id, tenantId > 0 ? tenantId : CurrentTenantId, CurrentUserId);
+            var ok = await _payrollRepository.ClosePeriodAsync(id, GetEffectiveTenantId(tenantId), CurrentUserId);
             return Ok(ApiResponse<bool>.SuccessResult(ok, "Period status updated to Closed."));
         }
 
         [HttpPost("periods/{id}/lock")]
         [Authorize(Roles = "ADMIN,SYSADMIN")]
-        public async Task<IActionResult> LockPeriod(long id, [FromQuery] long tenantId)
+        public async Task<IActionResult> LockPeriod(long id, [FromQuery] long tenantId = 0)
         {
-            var ok = await _payrollRepository.LockPeriodAsync(id, tenantId > 0 ? tenantId : CurrentTenantId, CurrentUserId);
+            var ok = await _payrollRepository.LockPeriodAsync(id, GetEffectiveTenantId(tenantId), CurrentUserId);
             return Ok(ApiResponse<bool>.SuccessResult(ok, "Period locked."));
         }
 
         // --- Salary Structures ---
         [HttpGet("salary-structures")]
-        public async Task<IActionResult> GetSalaryStructures([FromQuery] long tenantId)
+        public async Task<IActionResult> GetSalaryStructures([FromQuery] long tenantId = 0)
         {
-            var res = await _payrollRepository.GetSalaryStructuresAsync(tenantId > 0 ? tenantId : CurrentTenantId);
+            var res = await _payrollRepository.GetSalaryStructuresAsync(GetEffectiveTenantId(tenantId));
             return Ok(ApiResponse<IEnumerable<SalaryStructureDto>>.SuccessResult(res));
         }
 
@@ -108,7 +108,7 @@ namespace HRMS.API.Controllers
         public async Task<IActionResult> CreateSalaryStructure([FromBody] CreateSalaryStructureRequest r)
         {
             r.CreatedBy = CurrentUserId;
-            if (r.TenantID <= 0) r.TenantID = CurrentTenantId;
+            r.TenantID = GetEffectiveTenantId(r.TenantID);
             var id = await _payrollRepository.CreateSalaryStructureAsync(r);
             return Ok(ApiResponse<long>.SuccessResult(id, "Salary structure template added."));
         }
@@ -119,16 +119,16 @@ namespace HRMS.API.Controllers
         {
             r.SalaryStructureID = id;
             r.ModifiedBy = CurrentUserId;
-            if (r.TenantID <= 0) r.TenantID = CurrentTenantId;
+            r.TenantID = GetEffectiveTenantId(r.TenantID);
             var ok = await _payrollRepository.UpdateSalaryStructureAsync(r);
             return Ok(ApiResponse<bool>.SuccessResult(ok, "Salary structure template updated."));
         }
 
         // --- Salary Components ---
         [HttpGet("salary-components")]
-        public async Task<IActionResult> GetSalaryComponents([FromQuery] long tenantId)
+        public async Task<IActionResult> GetSalaryComponents([FromQuery] long tenantId = 0)
         {
-            var res = await _payrollRepository.GetSalaryComponentsAsync(tenantId > 0 ? tenantId : CurrentTenantId);
+            var res = await _payrollRepository.GetSalaryComponentsAsync(GetEffectiveTenantId(tenantId));
             return Ok(ApiResponse<IEnumerable<SalaryComponentDto>>.SuccessResult(res));
         }
 
@@ -137,7 +137,7 @@ namespace HRMS.API.Controllers
         public async Task<IActionResult> CreateSalaryComponent([FromBody] CreateSalaryComponentRequest r)
         {
             r.CreatedBy = CurrentUserId;
-            if (r.TenantID <= 0) r.TenantID = CurrentTenantId;
+            r.TenantID = GetEffectiveTenantId(r.TenantID);
             var id = await _payrollRepository.CreateSalaryComponentAsync(r);
             return Ok(ApiResponse<long>.SuccessResult(id, "Salary component template created."));
         }
@@ -145,9 +145,9 @@ namespace HRMS.API.Controllers
         // --- Employee Compensation ---
         [HttpGet("compensations")]
         [Authorize(Roles = "ADMIN,SYSADMIN,PAYROLLADMIN,HRADMIN")]
-        public async Task<IActionResult> GetEmployeeCompensations([FromQuery] long tenantId)
+        public async Task<IActionResult> GetEmployeeCompensations([FromQuery] long tenantId = 0)
         {
-            var res = await _payrollRepository.GetEmployeeCompensationsAsync(tenantId > 0 ? tenantId : CurrentTenantId);
+            var res = await _payrollRepository.GetEmployeeCompensationsAsync(GetEffectiveTenantId(tenantId));
             return Ok(ApiResponse<IEnumerable<EmployeeCompensationDto>>.SuccessResult(res));
         }
 
@@ -156,7 +156,7 @@ namespace HRMS.API.Controllers
         public async Task<IActionResult> CreateEmployeeCompensation([FromBody] CreateEmployeeCompensationRequest r)
         {
             r.CreatedBy = CurrentUserId;
-            if (r.TenantID <= 0) r.TenantID = CurrentTenantId;
+            r.TenantID = GetEffectiveTenantId(r.TenantID);
             var id = await _payrollRepository.CreateEmployeeCompensationAsync(r);
             return Ok(ApiResponse<long>.SuccessResult(id, "Employee compensation framework mapped."));
         }
@@ -164,9 +164,9 @@ namespace HRMS.API.Controllers
         // --- Payroll Runs ---
         [HttpGet("runs")]
         [Authorize(Roles = "ADMIN,SYSADMIN,PAYROLLADMIN")]
-        public async Task<IActionResult> GetPayrollRuns([FromQuery] long tenantId)
+        public async Task<IActionResult> GetPayrollRuns([FromQuery] long tenantId = 0)
         {
-            var res = await _payrollRepository.GetPayrollRunsAsync(tenantId > 0 ? tenantId : CurrentTenantId);
+            var res = await _payrollRepository.GetPayrollRunsAsync(GetEffectiveTenantId(tenantId));
             return Ok(ApiResponse<IEnumerable<PayrollRunDto>>.SuccessResult(res));
         }
 
@@ -175,33 +175,33 @@ namespace HRMS.API.Controllers
         public async Task<IActionResult> CreatePayrollRun([FromBody] CreatePayrollRunRequest r)
         {
             r.CreatedBy = CurrentUserId;
-            if (r.TenantID <= 0) r.TenantID = CurrentTenantId;
+            r.TenantID = GetEffectiveTenantId(r.TenantID);
             var id = await _payrollRepository.CreatePayrollRunAsync(r);
             return Ok(ApiResponse<long>.SuccessResult(id, "Payroll processing run initiated."));
         }
 
         [HttpPost("runs/{id}/process")]
         [Authorize(Roles = "ADMIN,SYSADMIN,PAYROLLADMIN")]
-        public async Task<IActionResult> ProcessRun(long id, [FromQuery] long tenantId)
+        public async Task<IActionResult> ProcessRun(long id, [FromQuery] long tenantId = 0)
         {
-            var ok = await _payrollRepository.ProcessPayrollRunAsync(id, tenantId > 0 ? tenantId : CurrentTenantId, CurrentUserId);
+            var ok = await _payrollRepository.ProcessPayrollRunAsync(id, GetEffectiveTenantId(tenantId), CurrentUserId);
             return Ok(ApiResponse<bool>.SuccessResult(ok, "Payroll engine run calculation completed."));
         }
 
         [HttpGet("runs/{id}/transactions")]
         [Authorize(Roles = "ADMIN,SYSADMIN,PAYROLLADMIN")]
-        public async Task<IActionResult> GetTransactions(long id, [FromQuery] long tenantId)
+        public async Task<IActionResult> GetTransactions(long id, [FromQuery] long tenantId = 0)
         {
-            var res = await _payrollRepository.GetPayrollTransactionsAsync(id, tenantId > 0 ? tenantId : CurrentTenantId);
+            var res = await _payrollRepository.GetPayrollTransactionsAsync(id, GetEffectiveTenantId(tenantId));
             return Ok(ApiResponse<IEnumerable<PayrollTransactionDto>>.SuccessResult(res));
         }
 
         // --- Adjustments ---
         [HttpGet("adjustments")]
         [Authorize(Roles = "ADMIN,SYSADMIN,PAYROLLADMIN,HRADMIN")]
-        public async Task<IActionResult> GetAdjustments([FromQuery] long tenantId)
+        public async Task<IActionResult> GetAdjustments([FromQuery] long tenantId = 0)
         {
-            var res = await _payrollRepository.GetAdjustmentsAsync(tenantId > 0 ? tenantId : CurrentTenantId);
+            var res = await _payrollRepository.GetAdjustmentsAsync(GetEffectiveTenantId(tenantId));
             return Ok(ApiResponse<IEnumerable<PayrollAdjustmentDto>>.SuccessResult(res));
         }
 
@@ -209,7 +209,7 @@ namespace HRMS.API.Controllers
         public async Task<IActionResult> CreateAdjustment([FromBody] CreatePayrollAdjustmentRequest r)
         {
             r.CreatedBy = CurrentUserId;
-            if (r.TenantID <= 0) r.TenantID = CurrentTenantId;
+            r.TenantID = GetEffectiveTenantId(r.TenantID);
             if (!IsAdmin && !HasRole("PAYROLLADMIN") && CurrentEmployeeId.HasValue)
             {
                 r.EmployeeID = CurrentEmployeeId.Value;
@@ -220,18 +220,18 @@ namespace HRMS.API.Controllers
 
         [HttpPost("adjustments/{id}/approve")]
         [Authorize(Roles = "ADMIN,SYSADMIN,PAYROLLADMIN")]
-        public async Task<IActionResult> ApproveAdjustment(long id, [FromQuery] long tenantId)
+        public async Task<IActionResult> ApproveAdjustment(long id, [FromQuery] long tenantId = 0)
         {
-            var ok = await _payrollRepository.ApproveAdjustmentAsync(id, tenantId > 0 ? tenantId : CurrentTenantId, CurrentUserId);
+            var ok = await _payrollRepository.ApproveAdjustmentAsync(id, GetEffectiveTenantId(tenantId), CurrentUserId);
             return Ok(ApiResponse<bool>.SuccessResult(ok, "Adjustment verified."));
         }
 
         // --- Loans ---
         [HttpGet("loans")]
         [Authorize(Roles = "ADMIN,SYSADMIN,PAYROLLADMIN,HRADMIN")]
-        public async Task<IActionResult> GetLoans([FromQuery] long tenantId)
+        public async Task<IActionResult> GetLoans([FromQuery] long tenantId = 0)
         {
-            var res = await _payrollRepository.GetLoansAsync(tenantId > 0 ? tenantId : CurrentTenantId);
+            var res = await _payrollRepository.GetLoansAsync(GetEffectiveTenantId(tenantId));
             return Ok(ApiResponse<IEnumerable<LoanAdvanceDto>>.SuccessResult(res));
         }
 
@@ -239,7 +239,7 @@ namespace HRMS.API.Controllers
         public async Task<IActionResult> CreateLoan([FromBody] CreateLoanRequest r)
         {
             r.CreatedBy = CurrentUserId;
-            if (r.TenantID <= 0) r.TenantID = CurrentTenantId;
+            r.TenantID = GetEffectiveTenantId(r.TenantID);
             if (!IsAdmin && !HasRole("PAYROLLADMIN") && CurrentEmployeeId.HasValue)
             {
                 r.EmployeeID = CurrentEmployeeId.Value;
@@ -250,26 +250,26 @@ namespace HRMS.API.Controllers
 
         [HttpPost("loans/{id}/approve")]
         [Authorize(Roles = "ADMIN,SYSADMIN,PAYROLLADMIN")]
-        public async Task<IActionResult> ApproveLoan(long id, [FromQuery] long tenantId)
+        public async Task<IActionResult> ApproveLoan(long id, [FromQuery] long tenantId = 0)
         {
-            var ok = await _payrollRepository.ApproveLoanAdvanceAsync(id, tenantId > 0 ? tenantId : CurrentTenantId, CurrentUserId);
+            var ok = await _payrollRepository.ApproveLoanAdvanceAsync(id, GetEffectiveTenantId(tenantId), CurrentUserId);
             return Ok(ApiResponse<bool>.SuccessResult(ok, "Loan advance approved and repayments generated."));
         }
 
         [HttpGet("loans/{id}/repayments")]
         [Authorize(Roles = "ADMIN,SYSADMIN,PAYROLLADMIN")]
-        public async Task<IActionResult> GetRepayments(long id, [FromQuery] long tenantId)
+        public async Task<IActionResult> GetRepayments(long id, [FromQuery] long tenantId = 0)
         {
-            var res = await _payrollRepository.GetLoanRepaymentsAsync(id, tenantId > 0 ? tenantId : CurrentTenantId);
+            var res = await _payrollRepository.GetLoanRepaymentsAsync(id, GetEffectiveTenantId(tenantId));
             return Ok(ApiResponse<IEnumerable<LoanRepaymentDto>>.SuccessResult(res));
         }
 
         // --- Bonus & Incentives ---
         [HttpGet("bonuses")]
         [Authorize(Roles = "ADMIN,SYSADMIN,PAYROLLADMIN,HRADMIN")]
-        public async Task<IActionResult> GetBonuses([FromQuery] long tenantId)
+        public async Task<IActionResult> GetBonuses([FromQuery] long tenantId = 0)
         {
-            var res = await _payrollRepository.GetBonusesAsync(tenantId > 0 ? tenantId : CurrentTenantId);
+            var res = await _payrollRepository.GetBonusesAsync(GetEffectiveTenantId(tenantId));
             return Ok(ApiResponse<IEnumerable<BonusDto>>.SuccessResult(res));
         }
 
@@ -278,16 +278,16 @@ namespace HRMS.API.Controllers
         public async Task<IActionResult> CreateBonus([FromBody] CreateBonusRequest r)
         {
             r.CreatedBy = CurrentUserId;
-            if (r.TenantID <= 0) r.TenantID = CurrentTenantId;
+            r.TenantID = GetEffectiveTenantId(r.TenantID);
             var id = await _payrollRepository.CreateBonusAsync(r);
             return Ok(ApiResponse<long>.SuccessResult(id, "Bonus record created."));
         }
 
         [HttpGet("incentives")]
         [Authorize(Roles = "ADMIN,SYSADMIN,PAYROLLADMIN,HRADMIN")]
-        public async Task<IActionResult> GetIncentives([FromQuery] long tenantId)
+        public async Task<IActionResult> GetIncentives([FromQuery] long tenantId = 0)
         {
-            var res = await _payrollRepository.GetIncentivesAsync(tenantId > 0 ? tenantId : CurrentTenantId);
+            var res = await _payrollRepository.GetIncentivesAsync(GetEffectiveTenantId(tenantId));
             return Ok(ApiResponse<IEnumerable<IncentiveDto>>.SuccessResult(res));
         }
 
@@ -296,16 +296,16 @@ namespace HRMS.API.Controllers
         public async Task<IActionResult> CreateIncentive([FromBody] CreateIncentiveRequest r)
         {
             r.CreatedBy = CurrentUserId;
-            if (r.TenantID <= 0) r.TenantID = CurrentTenantId;
+            r.TenantID = GetEffectiveTenantId(r.TenantID);
             var id = await _payrollRepository.CreateIncentiveAsync(r);
             return Ok(ApiResponse<long>.SuccessResult(id, "Incentive record logged."));
         }
 
         // --- Payslips ---
         [HttpGet("payslips")]
-        public async Task<IActionResult> GetPayslips([FromQuery] long tenantId, [FromQuery] long? employeeId, [FromQuery] long? periodId)
+        public async Task<IActionResult> GetPayslips([FromQuery] long tenantId = 0, [FromQuery] long? employeeId = null, [FromQuery] long? periodId = null)
         {
-            var resolvedTenantId = tenantId > 0 ? tenantId : CurrentTenantId;
+            var resolvedTenantId = GetEffectiveTenantId(tenantId);
             if (!IsAdmin && !HasRole("PAYROLLADMIN"))
             {
                 var callerEmpId = CurrentEmployeeId;
@@ -319,9 +319,9 @@ namespace HRMS.API.Controllers
 
         [HttpPost("payslips/generate")]
         [Authorize(Roles = "ADMIN,SYSADMIN,PAYROLLADMIN")]
-        public async Task<IActionResult> GeneratePayslip([FromQuery] long tenantId, [FromQuery] long employeeId, [FromQuery] long periodId)
+        public async Task<IActionResult> GeneratePayslip([FromQuery] long tenantId = 0, [FromQuery] long employeeId = 0, [FromQuery] long periodId = 0)
         {
-            var id = await _payrollRepository.GeneratePayslipAsync(tenantId > 0 ? tenantId : CurrentTenantId, employeeId, periodId, CurrentUserId);
+            var id = await _payrollRepository.GeneratePayslipAsync(GetEffectiveTenantId(tenantId), employeeId, periodId, CurrentUserId);
             return Ok(ApiResponse<long>.SuccessResult(id, "Payslip generated successfully."));
         }
     }

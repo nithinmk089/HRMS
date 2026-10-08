@@ -11,7 +11,7 @@ namespace HRMS.API.Controllers
     [Route("api/v1/users")]
     [ApiController]
     [Authorize(Roles = "ADMIN,SYSADMIN")]
-    public class UsersController : ControllerBase
+    public class UsersController : BaseApiController
     {
         private readonly IUserRepository _userRepository;
         public UsersController(IUserRepository userRepository) => _userRepository = userRepository;
@@ -21,7 +21,8 @@ namespace HRMS.API.Controllers
         {
             try
             {
-                r.CreatedBy = 1;
+                r.TenantId = GetEffectiveTenantId(r.TenantId);
+                r.CreatedBy = CurrentUserId;
                 var id = await _userRepository.CreateAsync(r);
                 return CreatedAtAction(nameof(GetById), new { id, tenantId = r.TenantId }, ApiResponse<long>.SuccessResult(id, "User created."));
             }
@@ -42,7 +43,7 @@ namespace HRMS.API.Controllers
             try
             {
                 r.UserId = id;
-                r.ModifiedBy = 1;
+                r.ModifiedBy = CurrentUserId;
                 var ok = await _userRepository.UpdateAsync(r);
                 if (!ok)
                 {
@@ -61,38 +62,43 @@ namespace HRMS.API.Controllers
         }
 
         [HttpDelete("{id}")]
-        public async Task<IActionResult> Delete(long id, [FromQuery] long tenantId)
+        public async Task<IActionResult> Delete(long id, [FromQuery] long tenantId = 0)
         {
-            var ok = await _userRepository.DeleteAsync(id, tenantId, 1);
+            var effectiveTenantId = GetEffectiveTenantId(tenantId);
+            var ok = await _userRepository.DeleteAsync(id, effectiveTenantId, CurrentUserId);
             return Ok(ApiResponse<bool>.SuccessResult(ok, "User deleted."));
         }
 
         [HttpGet("{id}")]
-        public async Task<IActionResult> GetById(long id, [FromQuery] long tenantId)
+        public async Task<IActionResult> GetById(long id, [FromQuery] long tenantId = 0)
         {
-            var user = await _userRepository.GetByIdAsync(id, tenantId);
+            var effectiveTenantId = GetEffectiveTenantId(tenantId);
+            var user = await _userRepository.GetByIdAsync(id, effectiveTenantId);
             if (user == null) return NotFound(ApiResponse<ApplicationUserDto>.FailureResult("User not found."));
             return Ok(ApiResponse<ApplicationUserDto>.SuccessResult(user));
         }
 
         [HttpGet]
-        public async Task<IActionResult> Search([FromQuery] long tenantId, [FromQuery] string? searchText, [FromQuery] int page = 1, [FromQuery] int pageSize = 50)
+        public async Task<IActionResult> Search([FromQuery] long tenantId = 0, [FromQuery] string? searchText = null, [FromQuery] int page = 1, [FromQuery] int pageSize = 50)
         {
-            var users = await _userRepository.SearchAsync(tenantId, searchText, page, pageSize);
+            var effectiveTenantId = GetEffectiveTenantId(tenantId);
+            var users = await _userRepository.SearchAsync(effectiveTenantId, searchText, page, pageSize);
             return Ok(ApiResponse<System.Collections.Generic.IEnumerable<ApplicationUserDto>>.SuccessResult(users));
         }
 
         [HttpPost("{id}/lock")]
-        public async Task<IActionResult> Lock(long id, [FromQuery] long tenantId)
+        public async Task<IActionResult> Lock(long id, [FromQuery] long tenantId = 0)
         {
-            var ok = await _userRepository.LockAsync(id, tenantId, 1);
+            var effectiveTenantId = GetEffectiveTenantId(tenantId);
+            var ok = await _userRepository.LockAsync(id, effectiveTenantId, CurrentUserId);
             return Ok(ApiResponse<bool>.SuccessResult(ok, "User locked."));
         }
 
         [HttpPost("{id}/unlock")]
-        public async Task<IActionResult> Unlock(long id, [FromQuery] long tenantId)
+        public async Task<IActionResult> Unlock(long id, [FromQuery] long tenantId = 0)
         {
-            var ok = await _userRepository.UnlockAsync(id, tenantId, 1);
+            var effectiveTenantId = GetEffectiveTenantId(tenantId);
+            var ok = await _userRepository.UnlockAsync(id, effectiveTenantId, CurrentUserId);
             return Ok(ApiResponse<bool>.SuccessResult(ok, "User unlocked."));
         }
     }

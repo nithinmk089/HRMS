@@ -65,24 +65,24 @@ namespace HRMS.API.Controllers
 
         [HttpDelete("templates/{id}")]
         [Authorize(Roles = "ADMIN,SYSADMIN,HRADMIN")]
-        public async Task<IActionResult> DeleteTemplate(long id, [FromQuery] long tenantId)
+        public async Task<IActionResult> DeleteTemplate(long id, [FromQuery] long tenantId = 0)
         {
-            var ok = await _notificationRepository.DeleteTemplateAsync(id, tenantId > 0 ? tenantId : CurrentTenantId, CurrentUserId);
+            var ok = await _notificationRepository.DeleteTemplateAsync(id, GetEffectiveTenantId(tenantId), CurrentUserId);
             return Ok(ApiResponse<bool>.SuccessResult(ok, "Notification template deleted."));
         }
 
         [HttpGet("templates/{id}")]
-        public async Task<IActionResult> GetTemplateById(long id, [FromQuery] long tenantId)
+        public async Task<IActionResult> GetTemplateById(long id, [FromQuery] long tenantId = 0)
         {
-            var template = await _notificationRepository.GetTemplateByIdAsync(id, tenantId > 0 ? tenantId : CurrentTenantId);
+            var template = await _notificationRepository.GetTemplateByIdAsync(id, GetEffectiveTenantId(tenantId));
             if (template == null) return NotFound(ApiResponse<NotificationTemplateDto>.FailureResult("Template not found."));
             return Ok(ApiResponse<NotificationTemplateDto>.SuccessResult(template));
         }
 
         [HttpGet("templates")]
-        public async Task<IActionResult> SearchTemplates([FromQuery] long tenantId, [FromQuery] string? searchText, [FromQuery] int page = 1, [FromQuery] int pageSize = 50)
+        public async Task<IActionResult> SearchTemplates([FromQuery] long tenantId = 0, [FromQuery] string? searchText = null, [FromQuery] int page = 1, [FromQuery] int pageSize = 50)
         {
-            var templates = await _notificationRepository.SearchTemplatesAsync(tenantId > 0 ? tenantId : CurrentTenantId, searchText, page, pageSize);
+            var templates = await _notificationRepository.SearchTemplatesAsync(GetEffectiveTenantId(tenantId), searchText, page, pageSize);
             return Ok(ApiResponse<System.Collections.Generic.IEnumerable<NotificationTemplateDto>>.SuccessResult(templates));
         }
 
@@ -99,7 +99,7 @@ namespace HRMS.API.Controllers
 
             // Encrypt body payload before saving
             r.CreatedBy = CurrentUserId;
-            if (r.TenantId <= 0) r.TenantId = CurrentTenantId;
+            r.TenantId = GetEffectiveTenantId(r.TenantId);
             r.Body = HRMS.Infrastructure.EncryptionHelper.Encrypt(r.Body);
 
             var id = await _notificationRepository.QueueNotificationAsync(r);
@@ -107,33 +107,33 @@ namespace HRMS.API.Controllers
         }
 
         [HttpPost("{id}/retry")]
-        public async Task<IActionResult> RetryNotification(long id, [FromQuery] long tenantId)
+        public async Task<IActionResult> RetryNotification(long id, [FromQuery] long tenantId = 0)
         {
             var ok = await _notificationRepository.UpdateNotificationStatusAsync(
-                id, tenantId > 0 ? tenantId : CurrentTenantId, status: "Queued", retryCount: 0, nextRunDate: DateTime.UtcNow, modifiedBy: CurrentUserId);
+                id, GetEffectiveTenantId(tenantId), status: "Queued", retryCount: 0, nextRunDate: DateTime.UtcNow, modifiedBy: CurrentUserId);
             return Ok(ApiResponse<bool>.SuccessResult(ok, "Notification reset and queued for retry."));
         }
 
         [HttpPost("{id}/cancel")]
-        public async Task<IActionResult> CancelNotification(long id, [FromQuery] long tenantId)
+        public async Task<IActionResult> CancelNotification(long id, [FromQuery] long tenantId = 0)
         {
             var ok = await _notificationRepository.UpdateNotificationStatusAsync(
-                id, tenantId > 0 ? tenantId : CurrentTenantId, status: "Cancelled", modifiedBy: CurrentUserId);
+                id, GetEffectiveTenantId(tenantId), status: "Cancelled", modifiedBy: CurrentUserId);
             return Ok(ApiResponse<bool>.SuccessResult(ok, "Notification successfully cancelled."));
         }
 
         [HttpPost("{id}/read")]
-        public async Task<IActionResult> ReadNotification(long id, [FromQuery] long tenantId)
+        public async Task<IActionResult> ReadNotification(long id, [FromQuery] long tenantId = 0)
         {
             var ok = await _notificationRepository.UpdateNotificationStatusAsync(
-                id, tenantId > 0 ? tenantId : CurrentTenantId, status: "Read", readDate: DateTime.UtcNow, modifiedBy: CurrentUserId);
+                id, GetEffectiveTenantId(tenantId), status: "Read", readDate: DateTime.UtcNow, modifiedBy: CurrentUserId);
             return Ok(ApiResponse<bool>.SuccessResult(ok, "Notification marked as read."));
         }
 
         [HttpGet]
-        public async Task<IActionResult> SearchQueue([FromQuery] long tenantId, [FromQuery] string? channel, [FromQuery] string? status, [FromQuery] string? businessEvent, [FromQuery] int page = 1, [FromQuery] int pageSize = 50)
+        public async Task<IActionResult> SearchQueue([FromQuery] long tenantId = 0, [FromQuery] string? channel = null, [FromQuery] string? status = null, [FromQuery] string? businessEvent = null, [FromQuery] int page = 1, [FromQuery] int pageSize = 50)
         {
-            var queue = await _notificationRepository.SearchQueueAsync(tenantId > 0 ? tenantId : CurrentTenantId, channel, status, businessEvent, page, pageSize);
+            var queue = await _notificationRepository.SearchQueueAsync(GetEffectiveTenantId(tenantId), channel, status, businessEvent, page, pageSize);
             
             // Decrypt bodies for viewing in history
             foreach (var item in queue)
@@ -144,22 +144,22 @@ namespace HRMS.API.Controllers
         }
 
         [HttpGet("metrics")]
-        public async Task<IActionResult> GetMetrics([FromQuery] long tenantId)
+        public async Task<IActionResult> GetMetrics([FromQuery] long tenantId = 0)
         {
-            var metrics = await _notificationRepository.GetMetricsAsync(tenantId > 0 ? tenantId : CurrentTenantId);
+            var metrics = await _notificationRepository.GetMetricsAsync(GetEffectiveTenantId(tenantId));
             return Ok(ApiResponse<NotificationMetricsDto>.SuccessResult(metrics));
         }
 
         // --- Preferences Endpoints ---
         [HttpGet("preferences/{userId}")]
-        public async Task<IActionResult> GetPreferences(long userId, [FromQuery] long tenantId)
+        public async Task<IActionResult> GetPreferences(long userId, [FromQuery] long tenantId = 0)
         {
             if (!IsAdmin && userId != CurrentUserId)
             {
                 return Forbid();
             }
 
-            var preferences = await _notificationRepository.GetUserPreferencesAsync(userId, tenantId > 0 ? tenantId : CurrentTenantId);
+            var preferences = await _notificationRepository.GetUserPreferencesAsync(userId, GetEffectiveTenantId(tenantId));
             return Ok(ApiResponse<System.Collections.Generic.IEnumerable<UserNotificationPreferenceDto>>.SuccessResult(preferences));
         }
 
@@ -178,6 +178,10 @@ namespace HRMS.API.Controllers
                 r.UserID = CurrentUserId;
                 r.TenantId = CurrentTenantId;
             }
+            else
+            {
+                r.TenantId = GetEffectiveTenantId(r.TenantId);
+            }
             r.CreatedBy = CurrentUserId;
             var ok = await _notificationRepository.SaveUserPreferenceAsync(r);
             return Ok(ApiResponse<bool>.SuccessResult(ok, "Preferences updated."));
@@ -186,35 +190,35 @@ namespace HRMS.API.Controllers
         // --- Administration Email & Channel Settings Endpoints ---
         [HttpGet("email-settings")]
         [Authorize(Roles = "ADMIN,SYSADMIN")]
-        public async Task<IActionResult> GetEmailSettings([FromQuery] long tenantId)
+        public async Task<IActionResult> GetEmailSettings([FromQuery] long tenantId = 0)
         {
-            var settings = await _emailNotificationService.GetEmailSettingsAsync(tenantId > 0 ? tenantId : CurrentTenantId);
+            var settings = await _emailNotificationService.GetEmailSettingsAsync(GetEffectiveTenantId(tenantId));
             return Ok(ApiResponse<EmailSettingsDto>.SuccessResult(settings));
         }
 
         [HttpPost("email-settings")]
         [Authorize(Roles = "ADMIN,SYSADMIN")]
-        public async Task<IActionResult> SaveEmailSettings([FromQuery] long tenantId, [FromBody] EmailSettingsDto settings)
+        public async Task<IActionResult> SaveEmailSettings([FromQuery] long tenantId = 0, [FromBody] EmailSettingsDto settings = null!)
         {
-            var ok = await _emailNotificationService.SaveEmailSettingsAsync(tenantId > 0 ? tenantId : CurrentTenantId, settings, modifiedBy: CurrentUserId);
+            var ok = await _emailNotificationService.SaveEmailSettingsAsync(GetEffectiveTenantId(tenantId), settings, modifiedBy: CurrentUserId);
             return Ok(ApiResponse<bool>.SuccessResult(ok, "Email notification settings saved successfully."));
         }
 
         [HttpPost("test-email")]
         [Authorize(Roles = "ADMIN,SYSADMIN")]
-        public async Task<IActionResult> SendTestEmail([FromQuery] long tenantId, [FromQuery] string recipient)
+        public async Task<IActionResult> SendTestEmail([FromQuery] long tenantId = 0, [FromQuery] string recipient = "")
         {
             if (string.IsNullOrWhiteSpace(recipient)) return BadRequest(ApiResponse<NotificationSendResult>.FailureResult("Recipient email address is required."));
-            var result = await _emailNotificationService.SendTestEmailAsync(tenantId > 0 ? tenantId : CurrentTenantId, recipient);
+            var result = await _emailNotificationService.SendTestEmailAsync(GetEffectiveTenantId(tenantId), recipient);
             return Ok(ApiResponse<NotificationSendResult>.SuccessResult(result, "Test email dispatch complete."));
         }
 
         // --- SignalR Broadcast Testing Endpoint ---
         [HttpPost("broadcast-live")]
         [Authorize(Roles = "ADMIN,SYSADMIN")]
-        public async Task<IActionResult> BroadcastLiveNotification([FromQuery] long tenantId, [FromQuery] string subject, [FromQuery] string body)
+        public async Task<IActionResult> BroadcastLiveNotification([FromQuery] long tenantId = 0, [FromQuery] string subject = "", [FromQuery] string body = "")
         {
-            var resolvedTenantId = tenantId > 0 ? tenantId : CurrentTenantId;
+            var resolvedTenantId = GetEffectiveTenantId(tenantId);
             var payload = new
             {
                 NotificationId = DateTime.UtcNow.Ticks,

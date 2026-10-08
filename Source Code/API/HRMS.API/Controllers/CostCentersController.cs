@@ -9,7 +9,7 @@ namespace HRMS.API.Controllers
     [Route("api/v1/cost-centers")]
     [ApiController]
     [Authorize]
-    public class CostCentersController : ControllerBase
+    public class CostCentersController : BaseApiController
     {
         private readonly ICostCenterRepository _costCenterRepository;
         public CostCentersController(ICostCenterRepository costCenterRepository) => _costCenterRepository = costCenterRepository;
@@ -18,7 +18,8 @@ namespace HRMS.API.Controllers
         [Authorize(Roles = "ADMIN,SYSADMIN,HRADMIN")]
         public async Task<IActionResult> Create([FromBody] CreateCostCenterRequest r)
         {
-            r.CreatedBy = 1;
+            r.TenantId = GetEffectiveTenantId(r.TenantId);
+            r.CreatedBy = CurrentUserId;
             var id = await _costCenterRepository.CreateAsync(r);
             return Ok(ApiResponse<long>.SuccessResult(id, "Cost Center created."));
         }
@@ -28,7 +29,8 @@ namespace HRMS.API.Controllers
         public async Task<IActionResult> Update(long id, [FromBody] UpdateCostCenterRequest r)
         {
             r.CostCenterId = id;
-            r.ModifiedBy = 1;
+            r.TenantId = GetEffectiveTenantId(r.TenantId);
+            r.ModifiedBy = CurrentUserId;
             var ok = await _costCenterRepository.UpdateAsync(r);
             return Ok(ApiResponse<bool>.SuccessResult(ok, "Cost Center updated."));
         }
@@ -37,14 +39,16 @@ namespace HRMS.API.Controllers
         [Authorize(Roles = "ADMIN,SYSADMIN,HRADMIN")]
         public async Task<IActionResult> Delete(long id, [FromQuery] long tenantId)
         {
-            var ok = await _costCenterRepository.DeleteAsync(id, tenantId, 1);
+            var effectiveTenantId = GetEffectiveTenantId(tenantId);
+            var ok = await _costCenterRepository.DeleteAsync(id, effectiveTenantId, CurrentUserId);
             return Ok(ApiResponse<bool>.SuccessResult(ok, "Cost Center deleted."));
         }
 
         [HttpGet]
         public async Task<IActionResult> Search([FromQuery] long tenantId, [FromQuery] string? searchText, [FromQuery] int page = 1, [FromQuery] int pageSize = 50)
         {
-            var ccs = await _costCenterRepository.SearchAsync(tenantId, searchText, page, pageSize);
+            var effectiveTenantId = GetEffectiveTenantId(tenantId);
+            var ccs = await _costCenterRepository.SearchAsync(effectiveTenantId, searchText, page, pageSize);
             return Ok(ApiResponse<System.Collections.Generic.IEnumerable<CostCenterDto>>.SuccessResult(ccs));
         }
     }

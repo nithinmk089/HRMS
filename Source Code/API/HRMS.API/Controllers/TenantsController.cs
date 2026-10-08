@@ -9,7 +9,7 @@ namespace HRMS.API.Controllers
     [Route("api/v1/tenants")]
     [ApiController]
     [Authorize]
-    public class TenantsController : ControllerBase
+    public class TenantsController : BaseApiController
     {
         private readonly ITenantRepository _tenantRepository;
         public TenantsController(ITenantRepository tenantRepository) => _tenantRepository = tenantRepository;
@@ -18,7 +18,7 @@ namespace HRMS.API.Controllers
         [Authorize(Roles = "SYSADMIN")]
         public async Task<IActionResult> Create([FromBody] CreateTenantRequest r)
         {
-            r.CreatedBy = 1;
+            r.CreatedBy = CurrentUserId;
             var id = await _tenantRepository.CreateAsync(r);
             return CreatedAtAction(nameof(GetById), new { id }, ApiResponse<long>.SuccessResult(id, "Tenant created successfully."));
         }
@@ -28,7 +28,7 @@ namespace HRMS.API.Controllers
         public async Task<IActionResult> Update(long id, [FromBody] UpdateTenantRequest r)
         {
             r.TenantId = id;
-            r.ModifiedBy = 1;
+            r.ModifiedBy = CurrentUserId;
             var ok = await _tenantRepository.UpdateAsync(r);
             return Ok(ApiResponse<bool>.SuccessResult(ok, "Tenant updated successfully."));
         }
@@ -37,7 +37,7 @@ namespace HRMS.API.Controllers
         [Authorize(Roles = "SYSADMIN")]
         public async Task<IActionResult> Delete(long id)
         {
-            var ok = await _tenantRepository.DeleteAsync(id, 1);
+            var ok = await _tenantRepository.DeleteAsync(id, CurrentUserId);
             return Ok(ApiResponse<bool>.SuccessResult(ok, "Tenant soft-deleted successfully."));
         }
 
@@ -62,7 +62,7 @@ namespace HRMS.API.Controllers
         [Authorize(Roles = "SYSADMIN")]
         public async Task<IActionResult> Activate(long id)
         {
-            var ok = await _tenantRepository.ActivateAsync(id, 1);
+            var ok = await _tenantRepository.ActivateAsync(id, CurrentUserId);
             return Ok(ApiResponse<bool>.SuccessResult(ok, "Tenant activated."));
         }
 
@@ -70,7 +70,7 @@ namespace HRMS.API.Controllers
         [Authorize(Roles = "SYSADMIN")]
         public async Task<IActionResult> Deactivate(long id)
         {
-            var ok = await _tenantRepository.DeactivateAsync(id, 1);
+            var ok = await _tenantRepository.DeactivateAsync(id, CurrentUserId);
             return Ok(ApiResponse<bool>.SuccessResult(ok, "Tenant deactivated."));
         }
     }

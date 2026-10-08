@@ -23,7 +23,9 @@ builder.Services.AddPersistence();
 builder.Services.AddInfrastructure();
 
 // JWT Authentication
-var jwtKey = builder.Configuration["Jwt:Key"] ?? "HRMSDevSecretKey_MustBe32CharactersLong!!";
+var jwtKey = Environment.GetEnvironmentVariable("HRMS_JWT_KEY") 
+    ?? builder.Configuration["Jwt:Key"] 
+    ?? "HRMSDevSecretKey_MustBe32CharactersLong!!";
 var jwtIssuer = builder.Configuration["Jwt:Issuer"] ?? "HRMS.API";
 var jwtAudience = builder.Configuration["Jwt:Audience"] ?? "HRMS.Client";
 
@@ -72,6 +74,32 @@ builder.Services.AddCors(options =>
 });
 
 var app = builder.Build();
+
+// Global Exception & Security Handling Middleware
+app.Use(async (context, next) =>
+{
+    try
+    {
+        await next();
+    }
+    catch (UnauthorizedAccessException ex)
+    {
+        context.Response.StatusCode = StatusCodes.Status403Forbidden;
+        context.Response.ContentType = "application/json";
+        var res = HRMS.Application.DTOs.ApiResponse<object>.FailureResult(ex.Message);
+        await context.Response.WriteAsJsonAsync(res);
+    }
+    catch (Exception ex)
+    {
+        var logger = context.RequestServices.GetRequiredService<ILogger<Program>>();
+        logger.LogError(ex, "Unhandled exception processing request {Path}", context.Request.Path);
+        context.Response.StatusCode = StatusCodes.Status500InternalServerError;
+        context.Response.ContentType = "application/json";
+        var msg = app.Environment.IsDevelopment() ? ex.Message : "An unexpected server error occurred. Please contact system support.";
+        var res = HRMS.Application.DTOs.ApiResponse<object>.FailureResult(msg);
+        await context.Response.WriteAsJsonAsync(res);
+    }
+});
 
 if (app.Environment.IsDevelopment())
 {

@@ -9,7 +9,7 @@ namespace HRMS.API.Controllers
     [Route("api/v1/employment")]
     [ApiController]
     [Authorize]
-    public class EmploymentController : ControllerBase
+    public class EmploymentController : BaseApiController
     {
         private readonly IEmployeeEmploymentRepository _employmentRepository;
 
@@ -21,7 +21,8 @@ namespace HRMS.API.Controllers
         [HttpGet("{employeeId}")]
         public async Task<IActionResult> GetByEmployeeId(long employeeId, [FromQuery] long tenantId)
         {
-            var emp = await _employmentRepository.GetByEmployeeIdAsync(employeeId, tenantId);
+            var effectiveTenantId = GetEffectiveTenantId(tenantId);
+            var emp = await _employmentRepository.GetByEmployeeIdAsync(employeeId, effectiveTenantId);
             return Ok(ApiResponse<EmployeeEmploymentDto>.SuccessResult(emp));
         }
 
@@ -29,7 +30,8 @@ namespace HRMS.API.Controllers
         [Authorize(Roles = "ADMIN,SYSADMIN")]
         public async Task<IActionResult> Create([FromBody] CreateEmployeeEmploymentRequest r)
         {
-            r.CreatedBy = 1;
+            r.TenantId = GetEffectiveTenantId(r.TenantId);
+            r.CreatedBy = CurrentUserId;
             var id = await _employmentRepository.CreateAsync(r);
             return Ok(ApiResponse<long>.SuccessResult(id, "Employment details created."));
         }
@@ -39,7 +41,8 @@ namespace HRMS.API.Controllers
         public async Task<IActionResult> Update(long id, [FromBody] UpdateEmployeeEmploymentRequest r)
         {
             r.EmployeeEmploymentId = id;
-            r.ModifiedBy = 1;
+            r.TenantId = GetEffectiveTenantId(r.TenantId);
+            r.ModifiedBy = CurrentUserId;
             var ok = await _employmentRepository.UpdateAsync(r);
             return Ok(ApiResponse<bool>.SuccessResult(ok, "Employment details updated."));
         }

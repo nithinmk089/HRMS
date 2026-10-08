@@ -41,15 +41,6 @@ namespace HRMS.API.Controllers
             return CurrentEmployeeId ?? 1;
         }
 
-        private long GetEffectiveTenantId(long requestedTenantId)
-        {
-            if (!IsAdmin || requestedTenantId <= 0)
-            {
-                return CurrentTenantId;
-            }
-            return requestedTenantId;
-        }
-
         [HttpGet("profile")]
         public async Task<IActionResult> GetProfile([FromQuery] long employeeId, [FromQuery] long tenantId)
         {
